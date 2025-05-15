@@ -1,4 +1,4 @@
--- ตารางผู้ใช้งาน
+-- ตารางผู้ใช้งาน  DB_NAME=document_request_system
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     student_id VARCHAR(20) UNIQUE NOT NULL,
