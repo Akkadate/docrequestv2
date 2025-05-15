@@ -174,4 +174,27 @@ module.exports = (pool) => {
       
       // คำขอล่าสุด 5 รายการ
       const recentRequests = await pool.query(
-        `SELECT dr.id, dr.status, dr.created_at, dr.total_price, dt.na
+        `SELECT dr.id, dr.status, dr.created_at, dr.total_price, dt.name_th as document_name, u.full_name, u.student_id
+        FROM document_requests dr
+        JOIN document_types dt ON dr.document_type_id = dt.id
+        JOIN users u ON dr.user_id = u.id
+        ORDER BY dr.created_at DESC
+        LIMIT 5`
+      );
+      
+      res.status(200).json({
+        totalRequests: parseInt(totalRequests.rows[0].count),
+        pendingRequests: parseInt(pendingRequests.rows[0].count),
+        processingRequests: parseInt(processingRequests.rows[0].count),
+        completedRequests: parseInt(completedRequests.rows[0].count),
+        totalRevenue: parseFloat(totalRevenue.rows[0].sum || 0),
+        recentRequests: recentRequests.rows
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลแดชบอร์ด' });
+    }
+  });
+  
+  return router;
+};
