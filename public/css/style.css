@@ -1,0 +1,176 @@
+/* Global Styles */
+:root {
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --success-color: #198754;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #0dcaf0;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+}
+
+body {
+  font-family: 'Prompt', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar-brand {
+  font-weight: 600;
+}
+
+.footer {
+  margin-top: auto;
+}
+
+/* Forms */
+.form-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+.required::after {
+  content: " *";
+  color: var(--danger-color);
+}
+
+/* Cards */
+.card {
+  border-radius: 0.5rem;
+  box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+}
+
+.card-header {
+  font-weight: 600;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 0.25rem;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: #0a58ca;
+  border-color: #0a58ca;
+}
+
+/* Status badges */
+.status-badge {
+  padding: 0.35em 0.65em;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  font-size: 0.875em;
+}
+
+.status-pending {
+  background-color: var(--warning-color);
+  color: var(--dark-color);
+}
+
+.status-processing {
+  background-color: var(--info-color);
+  color: var(--dark-color);
+}
+
+.status-ready {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.status-completed {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.status-rejected {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+/* Language selector */
+.language-selector button {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* QR Code Container */
+.qr-code-container {
+  text-align: center;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.qr-code-container img {
+  max-width: 100%;
+}
+
+/* Admin panel styles */
+.admin-card {
+  height: 100%;
+  border-left: 5px solid var(--primary-color);
+}
+
+.admin-card .card-body {
+  padding-left: 1.5rem;
+}
+
+.admin-icon {
+  font-size: 2rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+/* Dashboard summary cards */
+.summary-card {
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  height: 100%;
+}
+
+.summary-card .number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.summary-card .label {
+  font-size: 1rem;
+  color: var(--secondary-color);
+}
+
+.summary-card.card-1 {
+  background-color: rgba(13, 110, 253, 0.1);
+  border: 1px solid rgba(13, 110, 253, 0.2);
+}
+
+.summary-card.card-2 {
+  background-color: rgba(25, 135, 84, 0.1);
+  border: 1px solid rgba(25, 135, 84, 0.2);
+}
+
+.summary-card.card-3 {
+  background-color: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.summary-card.card-4 {
+  background-color: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
