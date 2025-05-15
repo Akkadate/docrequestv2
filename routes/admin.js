@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcrypt');
 const authenticateJWT = require('../middleware/auth');
 const isAdmin = require('../middleware/admin');
 
@@ -37,7 +38,7 @@ module.exports = (pool) => {
   router.put('/request/:id/status', authenticateJWT, isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const { status } = req.body;
+      const { status, note } = req.body;
       
       const validStatuses = ['pending', 'processing', 'ready', 'completed', 'rejected'];
       
@@ -50,10 +51,47 @@ module.exports = (pool) => {
         [status, id]
       );
       
+      // บันทึกประวัติสถานะ (ถ้ามีตาราง status_history)
+      // await pool.query(
+      //   'INSERT INTO status_history (request_id, status, note, created_by) VALUES ($1, $2, $3, $4)',
+      //   [id, status, note, req.user.id]
+      // );
+      
       res.status(200).json({ message: 'อัปเดตสถานะคำขอเอกสารสำเร็จ' });
     } catch (err) {
-
-    // จัดการผู้ใช้งาน---------------------------------------------------------------
+      console.error(err);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการอัปเดตสถานะคำขอเอกสาร' });
+    }
+  });
+  
+  // ดึงรายละเอียดคำขอเอกสาร
+  router.get('/request/:id', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const lang = req.query.lang || 'th';
+      const column = `name_${lang}`;
+      
+      const request = await pool.query(
+        `SELECT dr.*, dt.${column} as document_name, u.full_name, u.student_id, u.email, u.phone, u.faculty
+        FROM document_requests dr
+        JOIN document_types dt ON dr.document_type_id = dt.id
+        JOIN users u ON dr.user_id = u.id
+        WHERE dr.id = $1`,
+        [id]
+      );
+      
+      if (request.rows.length === 0) {
+        return res.status(404).json({ message: 'ไม่พบคำขอเอกสาร' });
+      }
+      
+      res.status(200).json(request.rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลคำขอเอกสาร' });
+    }
+  });
+  
+  // จัดการผู้ใช้งาน
   router.get('/users', authenticateJWT, isAdmin, async (req, res) => {
     try {
       const users = await pool.query(
@@ -61,6 +99,27 @@ module.exports = (pool) => {
       );
       
       res.status(200).json(users.rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้' });
+    }
+  });
+  
+  // ดึงข้อมูลผู้ใช้คนเดียว
+  router.get('/user/:id', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const user = await pool.query(
+        'SELECT id, student_id, full_name, email, phone, faculty, role, created_at FROM users WHERE id = $1',
+        [id]
+      );
+      
+      if (user.rows.length === 0) {
+        return res.status(404).json({ message: 'ไม่พบผู้ใช้' });
+      }
+      
+      res.status(200).json(user.rows[0]);
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้' });
@@ -99,5 +158,20 @@ module.exports = (pool) => {
     }
   });
   
-  return router;
-};
+  // Dashboard สำหรับผู้ดูแลระบบ
+  router.get('/dashboard-summary', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+      // จำนวนคำขอทั้งหมด
+      const totalRequests = await pool.query('SELECT COUNT(*) FROM document_requests');
+      
+      // จำนวนคำขอตามสถานะ
+      const pendingRequests = await pool.query('SELECT COUNT(*) FROM document_requests WHERE status = $1', ['pending']);
+      const processingRequests = await pool.query('SELECT COUNT(*) FROM document_requests WHERE status = $1 OR status = $2', ['processing', 'ready']);
+      const completedRequests = await pool.query('SELECT COUNT(*) FROM document_requests WHERE status = $1', ['completed']);
+      
+      // รายได้ทั้งหมด
+      const totalRevenue = await pool.query('SELECT SUM(total_price) FROM document_requests');
+      
+      // คำขอล่าสุด 5 รายการ
+      const recentRequests = await pool.query(
+        `SELECT dr.id, dr.status, dr.created_at, dr.total_price, dt.na
