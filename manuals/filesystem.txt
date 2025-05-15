@@ -1,0 +1,41 @@
+/document-request-system/
+├── .env                 # ไฟล์เก็บค่า config ระบบ
+├── package.json         # ไฟล์กำหนด dependencies
+├── server.js            # ไฟล์หลักของ Node.js server
+├── database/
+│   ├── connection.js    # การเชื่อมต่อกับ PostgreSQL
+│   └── schema.sql       # โครงสร้างฐานข้อมูล
+├── routes/
+│   ├── auth.js          # เส้นทางสำหรับการลงทะเบียนและล็อกอิน
+│   ├── documents.js     # เส้นทางสำหรับการขอเอกสาร
+│   ├── admin.js         # เส้นทางสำหรับผู้ดูแลระบบ
+│   └── reports.js       # เส้นทางสำหรับรายงาน
+├── public/
+│   ├── index.html       # หน้าหลัก
+│   ├── login.html       # หน้าล็อกอิน
+│   ├── register.html    # หน้าลงทะเบียน
+│   ├── dashboard.html   # หน้าแดชบอร์ด
+│   ├── request.html     # หน้าขอเอกสาร
+│   ├── status.html      # หน้าตรวจสอบสถานะ
+│   ├── admin/
+│   │   ├── dashboard.html  # หน้าแดชบอร์ดสำหรับผู้ดูแล
+│   │   └── reports.html    # หน้ารายงานสำหรับผู้บริหาร
+│   ├── css/
+│   │   ├── style.css       # ไฟล์ CSS หลัก
+│   │   └── responsive.css  # ไฟล์ CSS สำหรับการแสดงผลบนอุปกรณ์ต่างๆ
+│   ├── js/
+│   │   ├── main.js         # JavaScript หลัก
+│   │   ├── auth.js         # JavaScript สำหรับการลงทะเบียนและล็อกอิน
+│   │   ├── request.js      # JavaScript สำหรับการขอเอกสาร
+│   │   ├── status.js       # JavaScript สำหรับการตรวจสอบสถานะ
+│   │   ├── admin.js        # JavaScript สำหรับผู้ดูแลระบบ
+│   │   ├── reports.js      # JavaScript สำหรับรายงาน
+│   │   └── language.js     # JavaScript สำหรับการเปลี่ยนภาษา
+│   ├── img/               # โฟลเดอร์สำหรับรูปภาพ
+│   └── locales/           # ไฟล์ภาษาต่างๆ
+│       ├── th.json        # ภาษาไทย
+│       ├── en.json        # ภาษาอังกฤษ
+│       └── zh.json        # ภาษาจีน
+└── middleware/
+    ├── auth.js           # Middleware สำหรับตรวจสอบการล็อกอิน
+    └── admin.js          # Middleware สำหรับตรวจสอบสิทธิ์ผู้ดูแลระบบ
