@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="title">ระบบขอเอกสารออนไลน์สำหรับนักศึกษามหาวิทยาลัยนอร์ทกรุงเทพ</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#" data-i18n="navbar.title">ระบบขอเอกสารออนไลน์</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="index.html" data-i18n="navbar.home">หน้าหลัก</a>
+          </li>
+          <li class="nav-item user-menu" style="display: none;">
+            <a class="nav-link" href="dashboard.html" data-i18n="navbar.dashboard">แดชบอร์ด</a>
+          </li>
+          <li class="nav-item user-menu" style="display: none;">
+            <a class="nav-link" href="request.html" data-i18n="navbar.request">ขอเอกสาร</a>
+          </li>
+          <li class="nav-item user-menu" style="display: none;">
+            <a class="nav-link" href="status.html" data-i18n="navbar.status">ตรวจสอบสถานะ</a>
+          </li>
+          <li class="nav-item admin-menu" style="display: none;">
+            <a class="nav-link" href="admin/dashboard.html" data-i18n="navbar.adminPanel">จัดการระบบ</a>
+          </li>
+        </ul>
+        <div class="language-selector d-flex me-3">
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="th">ไทย</button>
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="en">English</button>
+          <button class="btn btn-sm btn-outline-light" data-lang="zh">中文</button>
+        </div>
+        <ul class="navbar-nav">
+          <li class="nav-item guest-menu">
+            <a class="nav-link" href="login.html" data-i18n="navbar.login">เข้าสู่ระบบ</a>
+          </li>
+          <li class="nav-item guest-menu">
+            <a class="nav-link" href="register.html" data-i18n="navbar.register">ลงทะเบียน</a>
+          </li>
+          <li class="nav-item user-menu" style="display: none;">
+            <a class="nav-link" href="#" id="logout" data-i18n="navbar.logout">ออกจากระบบ</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h2 class="card-title" data-i18n="home.welcome">ยินดีต้อนรับสู่ระบบขอเอกสารออนไลน์</h2>
+            <p class="card-text" data-i18n="home.description">
+              ระบบขอเอกสารออนไลน์สำหรับนักศึกษามหาวิทยาลัยนอร์ทกรุงเทพ ช่วยให้นักศึกษาสามารถขอเอกสารทางการศึกษาได้อย่างสะดวกรวดเร็ว
+              ไม่ต้องเดินทางมาที่มหาวิทยาลัย สามารถติดตามสถานะคำขอและรับเอกสารได้หลายช่องทาง
+            </p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+              <a href="login.html" class="btn btn-primary me-md-2 guest-menu" data-i18n="home.login">เข้าสู่ระบบ</a>
+              <a href="register.html" class="btn btn-outline-primary guest-menu" data-i18n="home.register">ลงทะเบียน</a>
+              <a href="request.html" class="btn btn-primary user-menu" style="display: none;" data-i18n="home.requestNow">ขอเอกสารตอนนี้</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h3 class="card-title" data-i18n="home.documents">เอกสารที่สามารถขอได้</h3>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item" data-i18n="documents.transcript">ใบแสดงผลการศึกษา</li>
+              <li class="list-group-item" data-i18n="documents.studentCertificate">หนังสือรับรองการเป็นนักศึกษา</li>
+              <li class="list-group-item" data-i18n="documents.expectedGraduationCertificate">หนังสือรับรองคาดว่าสำเร็จการศึกษา</li>
+              <li class="list-group-item" data-i18n="documents.graduationCertificate">หนังสือรับรองการสำเร็จการศึกษา</li>
+              <li class="list-group-item" data-i18n="documents.courseCertificate">หนังสือรับรองรายวิชา</li>
+              <li class="list-group-item" data-i18n="documents.degreeCertificate">สำเนาใบปริญญาบัตร</li>
+              <li class="list-group-item" data-i18n="documents.conductCertificate">หนังสือรับรองความประพฤติ</li>
+              <li class="list-group-item" data-i18n="documents.otherCertificates">หนังสือรับรองอื่น ๆ</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h3 class="card-title" data-i18n="home.howToRequest">วิธีการขอเอกสาร</h3>
+            <ol>
+              <li data-i18n="howTo.step1">ลงทะเบียนหรือเข้าสู่ระบบ</li>
+              <li data-i18n="howTo.step2">เลือกประเภทเอกสารที่ต้องการ</li>
+              <li data-i18n="howTo.step3">เลือกวิธีการรับเอกสาร (รับเองหรือจัดส่งทางไปรษณีย์)</li>
+              <li data-i18n="howTo.step4">ชำระเงินค่าบริการและอัปโหลดหลักฐานการชำระเงิน</li>
+              <li data-i18n="howTo.step5">ติดตามสถานะคำขอเอกสารในระบบ</li>
+              <li data-i18n="howTo.step6">รับเอกสารตามวิธีที่เลือกไว้</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h3 class="card-title" data-i18n="home.fees">ค่าบริการ</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th data-i18n="fees.service">บริการ</th>
+                  <th data-i18n="fees.price">ราคา</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-i18n="fees.normalDocument">เอกสารแบบธรรมดา (รับเอง)</td>
+                  <td>100 บาท</td>
+                </tr>
+                <tr>
+                  <td data-i18n="fees.urgentDocument">เอกสารแบบเร่งด่วน (รับเอง)</td>
+                  <td>150 บาท</td>
+                </tr>
+                <tr>
+                  <td data-i18n="fees.postalService">ค่าจัดส่งทางไปรษณีย์</td>
+                  <td>200 บาท</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer mt-5 py-3 bg-light">
+    <div class="container text-center">
+      <span class="text-muted" data-i18n="footer.copyright">
+        © 2025 ระบบขอเอกสารออนไลน์สำหรับนักศึกษามหาวิทยาลัยนอร์ทกรุงเทพ
+      </span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/language.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
