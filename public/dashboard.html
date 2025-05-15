@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="dashboard.title">แดชบอร์ด - ระบบขอเอกสารออนไลน์</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#" data-i18n="navbar.title">ระบบขอเอกสารออนไลน์</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html" data-i18n="navbar.home">หน้าหลัก</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="dashboard.html" data-i18n="navbar.dashboard">แดชบอร์ด</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="request.html" data-i18n="navbar.request">ขอเอกสาร</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="status.html" data-i18n="navbar.status">ตรวจสอบสถานะ</a>
+          </li>
+        </ul>
+        <div class="language-selector d-flex me-3">
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="th">ไทย</button>
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="en">English</button>
+          <button class="btn btn-sm btn-outline-light" data-lang="zh">中文</button>
+        </div>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="logout" data-i18n="navbar.logout">ออกจากระบบ</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 data-i18n="dashboard.header">แดชบอร์ด</h2>
+      <a href="request.html" class="btn btn-primary" data-i18n="dashboard.newRequest">ขอเอกสารใหม่</a>
+    </div>
+    
+    <div class="row mb-4">
+      <div class="col-md-6 col-lg-3 mb-4">
+        <div class="summary-card card-1">
+          <div class="number" id="total-requests">0</div>
+          <div class="label" data-i18n="dashboard.totalRequests">คำขอทั้งหมด</div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 mb-4">
+        <div class="summary-card card-2">
+          <div class="number" id="completed-requests">0</div>
+          <div class="label" data-i18n="dashboard.completedRequests">คำขอที่เสร็จสิ้น</div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 mb-4">
+        <div class="summary-card card-3">
+          <div class="number" id="processing-requests">0</div>
+          <div class="label" data-i18n="dashboard.processingRequests">คำขอที่กำลังดำเนินการ</div>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 mb-4">
+        <div class="summary-card card-4">
+          <div class="number" id="pending-requests">0</div>
+          <div class="label" data-i18n="dashboard.pendingRequests">คำขอที่รอดำเนินการ</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0" data-i18n="dashboard.recentRequests">คำขอล่าสุด</h5>
+        <a href="status.html" class="btn btn-sm btn-light" data-i18n="dashboard.viewAll">ดูทั้งหมด</a>
+      </div>
+      <div class="card-body">
+        <div id="alert-container"></div>
+        <div class="table-responsive">
+          <table class="table table-hover responsive-table">
+            <thead>
+              <tr>
+                <th data-i18n="dashboard.documentType">ประเภทเอกสาร</th>
+                <th data-i18n="dashboard.requestDate">วันที่ขอ</th>
+                <th data-i18n="dashboard.deliveryMethod">วิธีการรับ</th>
+                <th data-i18n="dashboard.status">สถานะ</th>
+                <th data-i18n="dashboard.price">ราคา</th>
+                <th data-i18n="dashboard.actions">การดำเนินการ</th>
+              </tr>
+            </thead>
+            <tbody id="recent-requests-table">
+              <!-- ข้อมูลจะถูกเพิ่มโดย JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0" data-i18n="dashboard.userProfile">ข้อมูลผู้ใช้</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <dl class="row">
+              <dt class="col-sm-4" data-i18n="dashboard.studentID">รหัสนักศึกษา:</dt>
+              <dd class="col-sm-8" id="user-student-id">-</dd>
+              
+              <dt class="col-sm-4" data-i18n="dashboard.fullName">ชื่อ-นามสกุล:</dt>
+              <dd class="col-sm-8" id="user-full-name">-</dd>
+              
+              <dt class="col-sm-4" data-i18n="dashboard.faculty">คณะ:</dt>
+              <dd class="col-sm-8" id="user-faculty">-</dd>
+            </dl>
+          </div>
+          <div class="col-md-6">
+            <dl class="row">
+              <dt class="col-sm-4" data-i18n="dashboard.email">อีเมล:</dt>
+              <dd class="col-sm-8" id="user-email">-</dd>
+              
+              <dt class="col-sm-4" data-i18n="dashboard.phone">เบอร์โทรศัพท์:</dt>
+              <dd class="col-sm-8" id="user-phone">-</dd>
+              
+              <dt class="col-sm-4" data-i18n="dashboard.joinDate">วันที่ลงทะเบียน:</dt>
+              <dd class="col-sm-8" id="user-join-date">-</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer mt-5 py-3 bg-light">
+    <div class="container text-center">
+      <span class="text-muted" data-i18n="footer.copyright">
+        © 2025 ระบบขอเอกสารออนไลน์สำหรับนักศึกษามหาวิทยาลัยนอร์ทกรุงเทพ
+      </span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/language.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
