@@ -1,5 +1,14 @@
 // ตรวจสอบว่าเป็นผู้ดูแลระบบหรือไม่
 document.addEventListener('DOMContentLoaded', () => {
+
+    // ตรวจสอบ token ก่อน
+  const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('userRole');
+  
+  console.log('Admin page - Token:', token ? 'Token exists' : 'No token');
+  console.log('Admin page - User role:', userRole);
+
+  
   checkAdmin();
   loadDashboardSummary();
   setupStatusUpdateModal();
