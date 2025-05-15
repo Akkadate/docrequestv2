@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="admin.users.title">จัดการผู้ใช้ - ระบบขอเอกสารออนไลน์</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#" data-i18n="navbar.title">ระบบขอเอกสารออนไลน์</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="../index.html" data-i18n="navbar.home">หน้าหลัก</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="dashboard.html" data-i18n="navbar.adminPanel">จัดการระบบ</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="requests.html" data-i18n="admin.dashboard.requestManagement">จัดการคำขอเอกสาร</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="users.html" data-i18n="admin.dashboard.userManagement">จัดการผู้ใช้</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="reports.html" data-i18n="admin.dashboard.reports">รายงาน</a>
+          </li>
+        </ul>
+        <div class="language-selector d-flex me-3">
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="th">ไทย</button>
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="en">English</button>
+          <button class="btn btn-sm btn-outline-light" data-lang="zh">中文</button>
+        </div>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="logout" data-i18n="navbar.logout">ออกจากระบบ</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 data-i18n="admin.users.header">จัดการผู้ใช้</h2>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAdminModal">
+        <i class="bi bi-plus-circle"></i> <span data-i18n="admin.users.addAdmin">เพิ่มผู้ดูแลระบบ</span>
+      </button>
+    </div>
+    
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <div class="input-group">
+              <input type="text" class="form-control" id="search-input" placeholder="ค้นหาผู้ใช้..." data-i18n-placeholder="admin.users.searchPlaceholder">
+              <button class="btn btn-outline-secondary" type="button" id="search-button">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div id="alert-container"></div>
+        
+        <div class="table-responsive">
+          <table class="table table-hover responsive-table">
+            <thead>
+              <tr>
+                <th data-i18n="admin.users.studentID">รหัสนักศึกษา</th>
+                <th data-i18n="admin.users.fullName">ชื่อ-นามสกุล</th>
+                <th data-i18n="admin.users.email">อีเมล</th>
+                <th data-i18n="admin.users.phone">เบอร์โทรศัพท์</th>
+                <th data-i18n="admin.users.faculty">คณะ</th>
+                <th data-i18n="admin.users.role">บทบาท</th>
+                <th data-i18n="admin.users.joinDate">วันที่ลงทะเบียน</th>
+                <th data-i18n="admin.users.actions">การดำเนินการ</th>
+              </tr>
+            </thead>
+            <tbody id="users-table">
+              <!-- ข้อมูลจะถูกเพิ่มโดย JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal เพิ่มผู้ดูแลระบบ -->
+  <div class="modal fade" id="addAdminModal" tabindex="-1" aria-labelledby="addAdminModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="addAdminModalLabel" data-i18n="admin.users.addAdmin">เพิ่มผู้ดูแลระบบ</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="add-admin-form">
+            <div class="mb-3">
+              <label for="admin-student-id" class="form-label required" data-i18n="admin.users.studentID">รหัสนักศึกษา</label>
+              <input type="text" class="form-control" id="admin-student-id" required>
+            </div>
+            <div class="mb-3">
+              <label for="admin-full-name" class="form-label required" data-i18n="admin.users.fullName">ชื่อ-นามสกุล</label>
+              <input type="text" class="form-control" id="admin-full-name" required>
+            </div>
+            <div class="mb-3">
+              <label for="admin-email" class="form-label required" data-i18n="admin.users.email">อีเมล</label>
+              <input type="email" class="form-control" id="admin-email" required>
+            </div>
+            <div class="mb-3">
+              <label for="admin-phone" class="form-label required" data-i18n="admin.users.phone">เบอร์โทรศัพท์</label>
+              <input type="tel" class="form-control" id="admin-phone" required>
+            </div>
+            <div class="mb-3">
+              <label for="admin-password" class="form-label required" data-i18n="register.password">รหัสผ่าน</label>
+              <input type="password" class="form-control" id="admin-password" required>
+            </div>
+            <div class="mb-3">
+              <label for="admin-confirm-password" class="form-label required" data-i18n="register.confirmPassword">ยืนยันรหัสผ่าน</label>
+              <input type="password" class="form-control" id="admin-confirm-password" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary" id="add-admin-button" data-i18n="admin.users.addAdmin">เพิ่มผู้ดูแลระบบ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer mt-5 py-3 bg-light">
+    <div class="container text-center">
+      <span class="text-muted" data-i18n="footer.copyright">
+        © 2025 ระบบขอเอกสารออนไลน์สำหรับนักศึกษามหาวิทยาลัยนอร์ทกรุงเทพ
+      </span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/language.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/admin.js"></script>
+  <script src="../js/users.js"></script>
+</body>
+</html>
