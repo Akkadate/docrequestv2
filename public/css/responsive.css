@@ -1,0 +1,117 @@
+/* Extra small devices (phones, less than 576px) */
+@media (max-width: 575.98px) {
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  
+  h1 {
+    font-size: 1.8rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  h3 {
+    font-size: 1.2rem;
+  }
+  
+  .navbar-brand {
+    font-size: 1.2rem;
+  }
+  
+  .language-selector {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    justify-content: center;
+  }
+  
+  .summary-card .number {
+    font-size: 2rem;
+  }
+  
+  .table {
+    font-size: 0.875rem;
+  }
+}
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.75rem;
+  }
+  
+  h3 {
+    font-size: 1.5rem;
+  }
+  
+  .language-selector {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  h1 {
+    font-size: 2.2rem;
+  }
+  
+  h2 {
+    font-size: 1.9rem;
+  }
+  
+  h3 {
+    font-size: 1.6rem;
+  }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  .navbar-expand-lg .navbar-nav {
+    align-items: center;
+  }
+}
+
+/* For all devices - responsive tables */
+@media (max-width: 767.98px) {
+  .responsive-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .responsive-table thead {
+    display: none;
+  }
+  
+  .responsive-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+  }
+  
+  .responsive-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    text-align: right;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .responsive-table tbody td:last-child {
+    border-bottom: none;
+  }
+  
+  .responsive-table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    text-align: left;
+    display: block;
+  }
+}
