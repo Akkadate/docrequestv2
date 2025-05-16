@@ -28,6 +28,9 @@ async function loadLanguageFiles() {
 
 // อัปเดตภาษาในหน้าเว็บ
 function updatePageLanguage() {
+  // กำหนดภาษาให้กับ HTML tag
+  document.documentElement.lang = currentLang;
+
   const elements = document.querySelectorAll('[data-i18n]');
   
   elements.forEach(element => {
@@ -104,6 +107,10 @@ function updatePageLanguage() {
 function changeLanguage(lang) {
   currentLang = lang;
   localStorage.setItem('language', lang);
+  
+  // กำหนดภาษาให้กับ HTML tag
+  document.documentElement.lang = lang;
+  
   updatePageLanguage();
 }
 
@@ -136,6 +143,9 @@ function setupLanguageSelector() {
 
 // โหลดภาษาเมื่อโหลดหน้าเว็บ
 document.addEventListener('DOMContentLoaded', async () => {
+  // กำหนดภาษาให้กับ HTML tag ก่อนโหลด
+  document.documentElement.lang = currentLang;
+  
   await loadLanguageFiles();
   setupLanguageSelector();
 });
