@@ -399,14 +399,22 @@ function generatePDF() {
     });
     
     // เพิ่มฟอนต์ไทย
-    // ตรวจสอบว่ามี THSarabunNew หรือไม่
-    if (typeof thsarabunnew !== 'undefined') {
+    if (typeof promptFont !== 'undefined') {
+      // ถ้ามีฟอนต์ Prompt จาก CDN
+      doc.addFileToVFS('Prompt-Regular.ttf', promptFont.regular);
+      doc.addFileToVFS('Prompt-Bold.ttf', promptFont.bold);
+      doc.addFont('Prompt-Regular.ttf', 'Prompt', 'normal');
+      doc.addFont('Prompt-Bold.ttf', 'Prompt', 'bold');
+      doc.setFont('Prompt');
+    } else if (typeof thsarabunnew !== 'undefined') {
+      // Fallback ไปใช้ THSarabunNew ถ้าไม่มี Prompt
       doc.addFileToVFS('THSarabunNew-normal.ttf', thsarabunnew.normal);
       doc.addFileToVFS('THSarabunNew-bold.ttf', thsarabunnew.bold);
       doc.addFont('THSarabunNew-normal.ttf', 'THSarabunNew', 'normal');
       doc.addFont('THSarabunNew-bold.ttf', 'THSarabunNew', 'bold');
       doc.setFont('THSarabunNew');
     }
+    
     
     // ข้อความหัวเรื่อง
     doc.setFontSize(18);
@@ -516,21 +524,23 @@ function generatePDF() {
       }
       
       // สร้างตารางใน PDF (ใช้ฟอนต์ไทย)
-      doc.autoTable({
-        head: [tableHeaders],
-        body: tableData,
-        startY: yPosition,
-        theme: 'grid',
-        styles: {
-          font: typeof thsarabunnew !== 'undefined' ? 'THSarabunNew' : undefined,
-          fontSize: 10
-        },
-        headStyles: {
-          fillColor: [41, 128, 185],
-          textColor: 255,
-          font: typeof thsarabunnew !== 'undefined' ? 'THSarabunNew' : undefined,
-          fontStyle: 'bold'
-        },
+       doc.autoTable({
+      head: [tableHeaders],
+      body: tableData,
+      startY: yPosition,
+      theme: 'grid',
+      styles: {
+        font: typeof promptFont !== 'undefined' ? 'Prompt' : 
+              (typeof thsarabunnew !== 'undefined' ? 'THSarabunNew' : undefined),
+        fontSize: 10
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        font: typeof promptFont !== 'undefined' ? 'Prompt' : 
+              (typeof thsarabunnew !== 'undefined' ? 'THSarabunNew' : undefined),
+        fontStyle: 'bold'
+      },
         footStyles: {
           fillColor: [220, 220, 220],
           fontStyle: 'bold',
