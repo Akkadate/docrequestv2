@@ -1,19 +1,30 @@
 // ตรวจสอบว่าเป็นผู้ดูแลระบบหรือไม่
 document.addEventListener('DOMContentLoaded', () => {
-
-   console.log('Admin page loaded');
-
-    // ตรวจสอบ token ก่อน
+  console.log('Admin page loaded');
+  
+  // ตรวจสอบว่ามีการเข้าสู่ระบบเป็นผู้ดูแลระบบหรือไม่
   const token = localStorage.getItem('token');
   const userRole = localStorage.getItem('userRole');
   
   console.log('Admin page - Token:', token ? 'Token exists' : 'No token');
   console.log('Admin page - User role:', userRole);
-
   
-  checkAdmin();
-  loadDashboardSummary();
-  setupStatusUpdateModal();
+  if (!token || userRole !== 'admin') {
+    window.location.href = '/login.html';
+    return false;
+  }
+  
+  // ตรวจสอบว่าเป็นหน้า dashboard หรือไม่
+  // โดยดูว่ามีองค์ประกอบ UI ของหน้า dashboard หรือไม่
+  const isDashboardPage = 
+    document.getElementById('total-requests') !== null || 
+    document.getElementById('recent-requests-table') !== null;
+  
+  if (isDashboardPage) {
+    console.log('Loading dashboard summary...');
+    loadDashboardSummary();
+    setupStatusUpdateModal();
+  }
 });
 
 // โหลดข้อมูลสรุปสำหรับแดชบอร์ด
@@ -40,17 +51,40 @@ async function loadDashboardSummary() {
     updateDashboardUI(data);
   } catch (error) {
     console.error('Error loading dashboard summary:', error);
-    showAlert('เกิดข้อผิดพลาดในการโหลดข้อมูลแดชบอร์ด', 'danger');
+    const alertContainer = document.getElementById('alert-container');
+    if (alertContainer) {
+      alertContainer.innerHTML = `
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          เกิดข้อผิดพลาดในการโหลดข้อมูลแดชบอร์ด
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      `;
+    }
   }
 }
 
 // อัปเดต UI ของแดชบอร์ด
 function updateDashboardUI(data) {
-  // อัปเดตจำนวนคำขอ
-  document.getElementById('total-requests').textContent = data.totalRequests;
-  document.getElementById('pending-requests').textContent = data.pendingRequests;
-  document.getElementById('processing-requests').textContent = data.processingRequests;
-  document.getElementById('completed-requests').textContent = data.completedRequests;
+  // ตรวจสอบว่าอิลิเมนต์มีอยู่จริงก่อนที่จะอัปเดต
+  const totalRequestsElement = document.getElementById('total-requests');
+  if (totalRequestsElement) {
+    totalRequestsElement.textContent = data.totalRequests;
+  }
+  
+  const pendingRequestsElement = document.getElementById('pending-requests');
+  if (pendingRequestsElement) {
+    pendingRequestsElement.textContent = data.pendingRequests;
+  }
+  
+  const processingRequestsElement = document.getElementById('processing-requests');
+  if (processingRequestsElement) {
+    processingRequestsElement.textContent = data.processingRequests;
+  }
+  
+  const completedRequestsElement = document.getElementById('completed-requests');
+  if (completedRequestsElement) {
+    completedRequestsElement.textContent = data.completedRequests;
+  }
   
   // แสดงคำขอล่าสุด
   displayRecentRequests(data.recentRequests);
@@ -60,16 +94,17 @@ function updateDashboardUI(data) {
 function displayRecentRequests(requests) {
   const recentRequestsTable = document.getElementById('recent-requests-table');
   
+  // ตรวจสอบว่าอิลิเมนต์มีอยู่จริง
   if (!recentRequestsTable) {
-    return;
+    return; // ออกจากฟังก์ชันหากไม่พบตาราง
   }
   
   recentRequestsTable.innerHTML = '';
   
-  if (requests.length === 0) {
+  if (!requests || requests.length === 0) {
     const emptyRow = document.createElement('tr');
     emptyRow.innerHTML = `
-      <td colspan="7" class="text-center" data-i18n="admin.requests.noRequests">ไม่พบคำขอเอกสาร</td>
+      <td colspan="7" class="text-center">ไม่พบคำขอเอกสาร</td>
     `;
     recentRequestsTable.appendChild(emptyRow);
     return;
@@ -79,19 +114,19 @@ function displayRecentRequests(requests) {
     const row = document.createElement('tr');
     
     row.innerHTML = `
-      <td data-label="${i18n[currentLang].admin.requests.requestID}">${request.id}</td>
-      <td data-label="${i18n[currentLang].admin.requests.studentName}">${request.full_name}</td>
-      <td data-label="${i18n[currentLang].admin.requests.studentID}">${request.student_id}</td>
-      <td data-label="${i18n[currentLang].admin.requests.documentType}">${request.document_name}</td>
-      <td data-label="${i18n[currentLang].admin.requests.requestDate}">${formatDate(request.created_at, currentLang)}</td>
-      <td data-label="${i18n[currentLang].admin.requests.status}">${createStatusBadge(request.status)}</td>
-      <td data-label="${i18n[currentLang].admin.requests.actions}">
+      <td data-label="รหัสคำขอ">${request.id}</td>
+      <td data-label="ชื่อนักศึกษา">${request.full_name}</td>
+      <td data-label="รหัสนักศึกษา">${request.student_id}</td>
+      <td data-label="ประเภทเอกสาร">${request.document_name}</td>
+      <td data-label="วันที่ขอ">${formatDate(request.created_at, 'th')}</td>
+      <td data-label="สถานะ">${createStatusBadge(request.status)}</td>
+      <td data-label="การดำเนินการ">
         <div class="btn-group">
-          <button class="btn btn-sm btn-primary view-details" data-id="${request.id}">
-            <i class="bi bi-eye"></i> <span data-i18n="admin.requests.viewDetails">ดูรายละเอียด</span>
-          </button>
+          <a href="request-detail.html?id=${request.id}" class="btn btn-sm btn-primary">
+            <i class="bi bi-eye"></i> ดูรายละเอียด
+          </a>
           <button class="btn btn-sm btn-success update-status" data-id="${request.id}" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
-            <i class="bi bi-pencil"></i> <span data-i18n="admin.requests.updateStatus">อัปเดตสถานะ</span>
+            <i class="bi bi-pencil"></i> อัปเดตสถานะ
           </button>
         </div>
       </td>
@@ -99,16 +134,16 @@ function displayRecentRequests(requests) {
     
     recentRequestsTable.appendChild(row);
     
-    // เพิ่มการฟังเหตุการณ์สำหรับปุ่มดูรายละเอียด
-    row.querySelector('.view-details').addEventListener('click', () => {
-      window.location.href = `request-detail.html?id=${request.id}`;
-    });
-    
     // เพิ่มการฟังเหตุการณ์สำหรับปุ่มอัปเดตสถานะ
-    row.querySelector('.update-status').addEventListener('click', () => {
-      document.getElementById('request-id').value = request.id;
-      document.getElementById('status').value = request.status;
-    });
+    const updateStatusButton = row.querySelector('.update-status');
+    if (updateStatusButton) {
+      updateStatusButton.addEventListener('click', () => {
+        const requestIdInput = document.getElementById('request-id');
+        if (requestIdInput) {
+          requestIdInput.value = request.id;
+        }
+      });
+    }
   });
 }
 
@@ -131,9 +166,18 @@ async function updateRequestStatus() {
       return;
     }
     
-    const requestId = document.getElementById('request-id').value;
-    const status = document.getElementById('status').value;
-    const note = document.getElementById('status-note').value;
+    const requestIdInput = document.getElementById('request-id');
+    const statusSelect = document.getElementById('status');
+    const statusNoteInput = document.getElementById('status-note');
+    
+    if (!requestIdInput || !statusSelect) {
+      console.error('Required form elements not found');
+      return;
+    }
+    
+    const requestId = requestIdInput.value;
+    const status = statusSelect.value;
+    const note = statusNoteInput ? statusNoteInput.value : '';
     
     const response = await fetch(`/api/admin/request/${requestId}/status`, {
       method: 'PUT',
@@ -147,272 +191,137 @@ async function updateRequestStatus() {
     const data = await response.json();
     
     if (response.ok) {
-      showAlert(i18n[currentLang].success.updateStatus, 'success');
-      
       // ปิด Modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('updateStatusModal'));
-      modal.hide();
+      if (modal) {
+        modal.hide();
+      }
+      
+      // แสดงข้อความแจ้งเตือน
+      const alertContainer = document.getElementById('alert-container');
+      if (alertContainer) {
+        alertContainer.innerHTML = `
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            อัปเดตสถานะคำขอเอกสารสำเร็จ
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        `;
+      }
       
       // โหลดข้อมูลใหม่
-      loadDashboardSummary();
+      const isDashboardPage = document.getElementById('total-requests') !== null;
+      if (isDashboardPage) {
+        loadDashboardSummary();
+      } else {
+        // ถ้าอยู่ในหน้าอื่น (เช่น requests.html) ให้รีโหลดหน้าเว็บ
+        // หรือเรียกฟังก์ชัน loadAllRequests() ถ้ามีฟังก์ชันนี้
+        if (typeof loadAllRequests === 'function') {
+          loadAllRequests();
+        }
+      }
     } else {
-      showAlert(data.message || i18n[currentLang].errors.updateStatusFailed, 'danger');
+      // แสดงข้อความแจ้งเตือน
+      const alertContainer = document.getElementById('alert-container');
+      if (alertContainer) {
+        alertContainer.innerHTML = `
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            ${data.message || 'เกิดข้อผิดพลาดในการอัปเดตสถานะคำขอเอกสาร'}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        `;
+      }
     }
   } catch (error) {
     console.error('Error updating request status:', error);
-    showAlert(i18n[currentLang].errors.serverError, 'danger');
-  }
-}
-
-// โหลดข้อมูลผู้ใช้ทั้งหมด (สำหรับหน้าจัดการผู้ใช้)
-async function loadUsers(searchQuery = '') {
-  try {
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      window.location.href = '/login.html';
-      return;
-    }
-    
-    let url = '/api/admin/users';
-    
-    // ถ้ามีการค้นหา
-    if (searchQuery) {
-      url += `?search=${encodeURIComponent(searchQuery)}`;
-    }
-    
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to load users');
-    }
-    
-    const users = await response.json();
-    displayUsers(users);
-  } catch (error) {
-    console.error('Error loading users:', error);
-    showAlert('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้', 'danger');
-  }
-}
-
-// แสดงข้อมูลผู้ใช้ (สำหรับหน้าจัดการผู้ใช้)
-function displayUsers(users) {
-  const usersTable = document.getElementById('users-table');
-  
-  if (!usersTable) {
-    return;
-  }
-  
-  usersTable.innerHTML = '';
-  
-  if (users.length === 0) {
-    const emptyRow = document.createElement('tr');
-    emptyRow.innerHTML = `
-      <td colspan="7" class="text-center" data-i18n="admin.users.noUsers">ไม่พบผู้ใช้ที่ตรงกับเงื่อนไข</td>
-    `;
-    usersTable.appendChild(emptyRow);
-    return;
-  }
-  
-  users.forEach(user => {
-    const row = document.createElement('tr');
-    
-    row.innerHTML = `
-      <td data-label="${i18n[currentLang].admin.users.studentID}">${user.student_id}</td>
-      <td data-label="${i18n[currentLang].admin.users.fullName}">${user.full_name}</td>
-      <td data-label="${i18n[currentLang].admin.users.email}">${user.email}</td>
-      <td data-label="${i18n[currentLang].admin.users.phone}">${user.phone}</td>
-      <td data-label="${i18n[currentLang].admin.users.faculty}">${user.faculty}</td>
-      <td data-label="${i18n[currentLang].admin.users.role}">
-        <span class="badge ${user.role === 'admin' ? 'bg-danger' : 'bg-primary'}">
-          ${user.role === 'admin' ? i18n[currentLang].admin.users.admin : i18n[currentLang].admin.users.student}
-        </span>
-      </td>
-      <td data-label="${i18n[currentLang].admin.users.joinDate}">${formatDate(user.created_at, currentLang)}</td>
-      <td data-label="${i18n[currentLang].admin.users.actions}">
-        <button class="btn btn-sm btn-primary view-user" data-id="${user.id}">
-          <i class="bi bi-eye"></i> <span data-i18n="admin.users.viewDetails">ดูรายละเอียด</span>
-        </button>
-      </td>
-    `;
-    
-    usersTable.appendChild(row);
-    
-    // เพิ่มการฟังเหตุการณ์สำหรับปุ่มดูรายละเอียด
-    row.querySelector('.view-user').addEventListener('click', () => {
-      window.location.href = `user-detail.html?id=${user.id}`;
-    });
-  });
-}
-
-// ฟังก์ชันสำหรับเพิ่มผู้ดูแลระบบใหม่
-async function addAdmin(event) {
-  event.preventDefault();
-  
-  try {
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      window.location.href = '/login.html';
-      return;
-    }
-    
-    const formData = {
-      student_id: document.getElementById('admin-student-id').value,
-      password: document.getElementById('admin-password').value,
-      confirm_password: document.getElementById('admin-confirm-password').value,
-      full_name: document.getElementById('admin-full-name').value,
-      email: document.getElementById('admin-email').value,
-      phone: document.getElementById('admin-phone').value
-    };
-    
-    // ตรวจสอบรหัสผ่าน
-    if (formData.password !== formData.confirm_password) {
-      showAlert(i18n[currentLang].errors.passwordMismatch, 'danger');
-      return;
-    }
-    
-    const response = await fetch('/api/admin/add-admin', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    });
-    
-    const data = await response.json();
-    
-    if (response.ok) {
-      showAlert(i18n[currentLang].success.addAdmin, 'success');
-      
-      // รีเซ็ตฟอร์ม
-      document.getElementById('add-admin-form').reset();
-      
-      // ปิด Modal (ถ้ามี)
-      const modal = document.getElementById('addAdminModal');
-      if (modal) {
-        const bsModal = bootstrap.Modal.getInstance(modal);
-        if (bsModal) {
-          bsModal.hide();
-        }
-      }
-      
-      // โหลดข้อมูลผู้ใช้ใหม่ (ถ้าอยู่ในหน้าจัดการผู้ใช้)
-      if (document.getElementById('users-table')) {
-        loadUsers();
-      }
-    } else {
-      showAlert(data.message || 'เกิดข้อผิดพลาดในการเพิ่มผู้ดูแลระบบ', 'danger');
-    }
-  } catch (error) {
-    console.error('Error adding admin:', error);
-    showAlert(i18n[currentLang].errors.serverError, 'danger');
-  }
-}
-
-// โหลดข้อมูลคำขอทั้งหมด (สำหรับหน้าจัดการคำขอเอกสาร)
-async function loadAllRequests(searchQuery = '', statusFilter = '') {
-  try {
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      window.location.href = '/login.html';
-      return;
-    }
-    
-    let url = `/api/admin/requests?lang=${currentLang}`;
-    
-    // ถ้ามีการกรองตามสถานะ
-    if (statusFilter) {
-      url += `&status=${statusFilter}`;
-    }
-    
-    // ถ้ามีการค้นหา
-    if (searchQuery) {
-      url += `&search=${encodeURIComponent(searchQuery)}`;
-    }
-    
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to load requests');
-    }
-    
-    const requests = await response.json();
-    displayAllRequests(requests);
-  } catch (error) {
-    console.error('Error loading all requests:', error);
-    showAlert('เกิดข้อผิดพลาดในการโหลดข้อมูลคำขอเอกสาร', 'danger');
-  }
-}
-
-// แสดงข้อมูลคำขอทั้งหมด (สำหรับหน้าจัดการคำขอเอกสาร)
-function displayAllRequests(requests) {
-  const requestsTable = document.getElementById('requests-table');
-  
-  if (!requestsTable) {
-    return;
-  }
-  
-  requestsTable.innerHTML = '';
-  
-  if (requests.length === 0) {
-    const emptyRow = document.createElement('tr');
-    emptyRow.innerHTML = `
-      <td colspan="7" class="text-center" data-i18n="admin.requests.noRequests">ไม่พบคำขอเอกสารที่ตรงกับเงื่อนไข</td>
-    `;
-    requestsTable.appendChild(emptyRow);
-    return;
-  }
-  
-  requests.forEach(request => {
-    const row = document.createElement('tr');
-    
-    row.innerHTML = `
-      <td data-label="${i18n[currentLang].admin.requests.requestID}">${request.id}</td>
-      <td data-label="${i18n[currentLang].admin.requests.studentName}">${request.full_name}</td>
-      <td data-label="${i18n[currentLang].admin.requests.studentID}">${request.student_id}</td>
-      <td data-label="${i18n[currentLang].admin.requests.documentType}">${request.document_name}</td>
-      <td data-label="${i18n[currentLang].admin.requests.requestDate}">${formatDate(request.created_at, currentLang)}</td>
-      <td data-label="${i18n[currentLang].admin.requests.deliveryMethod}">
-        ${request.delivery_method === 'pickup' ? 
-          `<span data-i18n="request.pickup">${i18n[currentLang].request.pickup}</span>` : 
-          `<span data-i18n="request.mail">${i18n[currentLang].request.mail}</span>`}
-        ${request.urgent ? `<span class="badge bg-warning text-dark ms-2" data-i18n="request.urgentLabel">${i18n[currentLang].request.urgentLabel}</span>` : ''}
-      </td>
-      <td data-label="${i18n[currentLang].admin.requests.status}">${createStatusBadge(request.status)}</td>
-      <td data-label="${i18n[currentLang].admin.requests.actions}">
-        <div class="btn-group">
-          <button class="btn btn-sm btn-primary view-details" data-id="${request.id}">
-            <i class="bi bi-eye"></i> <span data-i18n="admin.requests.viewDetails">ดูรายละเอียด</span>
-          </button>
-          <button class="btn btn-sm btn-success update-status" data-id="${request.id}" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
-            <i class="bi bi-pencil"></i> <span data-i18n="admin.requests.updateStatus">อัปเดตสถานะ</span>
-          </button>
+    const alertContainer = document.getElementById('alert-container');
+    if (alertContainer) {
+      alertContainer.innerHTML = `
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-      </td>
-    `;
-    
-    requestsTable.appendChild(row);
-    
-    // เพิ่มการฟังเหตุการณ์สำหรับปุ่มดูรายละเอียด
-    row.querySelector('.view-details').addEventListener('click', () => {
-      window.location.href = `request-detail.html?id=${request.id}`;
-    });
-    
-    // เพิ่มการฟังเหตุการณ์สำหรับปุ่มอัปเดตสถานะ
-    row.querySelector('.update-status').addEventListener('click', () => {
-      document.getElementById('request-id').value = request.id;
-      document.getElementById('status').value = request.status;
-    });
-  });
+      `;
+    }
+  }
+}
+
+// สร้าง badge แสดงสถานะ
+function createStatusBadge(status) {
+  const statusClass = `status-${status}`;
+  const statusText = translateStatus(status, 'th');
+  
+  return `<span class="status-badge ${statusClass}">${statusText}</span>`;
+}
+
+// แปลงสถานะเป็นข้อความภาษาไทย
+function translateStatus(status, lang = 'th') {
+  const statusTranslations = {
+    'pending': {
+      'th': 'รอดำเนินการ',
+      'en': 'Pending',
+      'zh': '待处理'
+    },
+    'processing': {
+      'th': 'กำลังดำเนินการ',
+      'en': 'Processing',
+      'zh': '处理中'
+    },
+    'ready': {
+      'th': 'พร้อมจัดส่ง/รับเอกสาร',
+      'en': 'Ready',
+      'zh': '准备好了'
+    },
+    'completed': {
+      'th': 'เสร็จสิ้น',
+      'en': 'Completed',
+      'zh': '已完成'
+    },
+    'rejected': {
+      'th': 'ถูกปฏิเสธ',
+      'en': 'Rejected',
+      'zh': '被拒绝'
+    }
+  };
+  
+  return statusTranslations[status]?.[lang] || status;
+}
+
+// แปลงวันที่เป็นรูปแบบที่อ่านง่าย
+function formatDate(dateString, lang = 'th') {
+  if (!dateString) return '-';
+  
+  const date = new Date(dateString);
+  
+  const options = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  };
+  
+  const locales = {
+    'th': 'th-TH',
+    'en': 'en-US',
+    'zh': 'zh-CN'
+  };
+  
+  try {
+    return date.toLocaleDateString(locales[lang] || 'th-TH', options);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return dateString;
+  }
+}
+
+// ฟังก์ชันตรวจสอบว่าเป็นผู้ดูแลระบบหรือไม่
+function checkAdmin() {
+  const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('userRole');
+  
+  if (!token || userRole !== 'admin') {
+    window.location.href = '/login.html';
+    return false;
+  }
+  return true;
 }
