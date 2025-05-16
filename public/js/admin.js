@@ -1,6 +1,8 @@
 // ตรวจสอบว่าเป็นผู้ดูแลระบบหรือไม่
 document.addEventListener('DOMContentLoaded', () => {
 
+   console.log('Admin page loaded');
+
     // ตรวจสอบ token ก่อน
   const token = localStorage.getItem('token');
   const userRole = localStorage.getItem('userRole');
