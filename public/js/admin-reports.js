@@ -366,10 +366,16 @@ function setupPrintAndDownload() {
     });
   }
   
-  // ปุ่มดาวน์โหลด
-  const downloadButton = document.getElementById('download-report');
-  if (downloadButton) {
-    downloadButton.addEventListener('click', generatePDF);
+  // ปุ่มดาวน์โหลด PDF
+  const downloadPdfButton = document.getElementById('download-pdf');
+  if (downloadPdfButton) {
+    downloadPdfButton.addEventListener('click', generatePDF);
+  }
+  
+  // ปุ่มดาวน์โหลด Excel
+  const downloadExcelButton = document.getElementById('download-excel');
+  if (downloadExcelButton) {
+    downloadExcelButton.addEventListener('click', generateExcel);
   }
 }
 
@@ -391,6 +397,16 @@ function generatePDF() {
       unit: 'mm',
       format: 'a4'
     });
+    
+    // เพิ่มฟอนต์ไทย
+    // ตรวจสอบว่ามี THSarabunNew หรือไม่
+    if (typeof thsarabunnew !== 'undefined') {
+      doc.addFileToVFS('THSarabunNew-normal.ttf', thsarabunnew.normal);
+      doc.addFileToVFS('THSarabunNew-bold.ttf', thsarabunnew.bold);
+      doc.addFont('THSarabunNew-normal.ttf', 'THSarabunNew', 'normal');
+      doc.addFont('THSarabunNew-bold.ttf', 'THSarabunNew', 'bold');
+      doc.setFont('THSarabunNew');
+    }
     
     // ข้อความหัวเรื่อง
     doc.setFontSize(18);
@@ -499,22 +515,26 @@ function generatePDF() {
         ]);
       }
       
-      // สร้างตารางใน PDF
+      // สร้างตารางใน PDF (ใช้ฟอนต์ไทย)
       doc.autoTable({
         head: [tableHeaders],
         body: tableData,
         startY: yPosition,
         theme: 'grid',
         styles: {
+          font: typeof thsarabunnew !== 'undefined' ? 'THSarabunNew' : undefined,
           fontSize: 10
         },
         headStyles: {
           fillColor: [41, 128, 185],
-          textColor: 255
+          textColor: 255,
+          font: typeof thsarabunnew !== 'undefined' ? 'THSarabunNew' : undefined,
+          fontStyle: 'bold'
         },
         footStyles: {
           fillColor: [220, 220, 220],
-          fontStyle: 'bold'
+          fontStyle: 'bold',
+          font: typeof thsarabunnew !== 'undefined' ? 'THSarabunNew' : undefined
         },
         alternateRowStyles: {
           fillColor: [240, 240, 240]
@@ -542,5 +562,191 @@ function generatePDF() {
   } catch (error) {
     console.error('Error generating PDF:', error);
     showAdminAlert('เกิดข้อผิดพลาดในการสร้างไฟล์ PDF', 'danger');
+  }
+}
+
+// สร้างไฟล์ Excel สำหรับดาวน์โหลด
+function generateExcel() {
+  console.log('Generating Excel report...');
+  
+  try {
+    // ตรวจสอบว่ามีไลบรารี xlsx หรือไม่
+    if (typeof XLSX === 'undefined') {
+      showAdminAlert('ไม่พบไลบรารี XLSX โปรดตรวจสอบว่าโหลดไลบรารีแล้ว', 'danger');
+      return;
+    }
+    
+    // สร้างข้อมูลสำหรับไฟล์ Excel
+    const workbook = XLSX.utils.book_new();
+    
+    // ข้อมูลหัวรายงาน
+    const startDate = document.getElementById('start-date')?.value || '';
+    const endDate = document.getElementById('end-date')?.value || '';
+    const reportTitle = `รายงานระบบขอเอกสารออนไลน์ (${startDate} ถึง ${endDate})`;
+    
+    // ข้อมูลสรุป
+    const totalRequests = document.getElementById('summary-total-requests')?.textContent || '0';
+    const totalRevenue = document.getElementById('summary-total-revenue')?.textContent || '0';
+    
+    const summaryData = [
+      ['รายงานระบบขอเอกสารออนไลน์'],
+      [`วันที่: ${startDate} ถึง ${endDate}`],
+      [''],
+      ['ข้อมูลสรุป'],
+      [`จำนวนคำขอทั้งหมด:`, totalRequests],
+      [`รายได้ทั้งหมด:`, totalRevenue],
+      ['']
+    ];
+    
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'สรุป');
+    
+   // ข้อมูลรายเดือน
+    const monthlyDataTable = document.getElementById('monthly-data-table');
+    if (monthlyDataTable) {
+      // สร้างข้อมูลสำหรับตาราง Excel
+      const monthlyData = [
+        ['เดือน', 'จำนวนคำขอ', 'รายได้']
+      ];
+      
+      // ดึงข้อมูลจากตาราง HTML
+      for (let i = 0; i < monthlyDataTable.rows.length; i++) {
+        const row = monthlyDataTable.rows[i];
+        monthlyData.push([
+          row.cells[0].textContent,
+          parseInt(row.cells[1].textContent) || 0,
+          row.cells[2].textContent.replace(/[^\d.-]/g, '') // ลบสัญลักษณ์สกุลเงินออก
+        ]);
+      }
+      
+      const monthlySheet = XLSX.utils.aoa_to_sheet(monthlyData);
+      XLSX.utils.book_append_sheet(workbook, monthlySheet, 'ข้อมูลรายเดือน');
+      
+      // จัดรูปแบบสำหรับตาราง
+      // กำหนดความกว้างคอลัมน์
+      const monthlySheetCols = [
+        { wch: 20 }, // เดือน
+        { wch: 15 }, // จำนวนคำขอ
+        { wch: 15 }  // รายได้
+      ];
+      monthlySheet['!cols'] = monthlySheetCols;
+    }
+    
+    // ข้อมูลประเภทเอกสาร
+    if (window.requestsByTypeChartInstance) {
+      const chartData = window.requestsByTypeChartInstance.data;
+      const documentTypeData = [
+        ['ประเภทเอกสาร', 'จำนวนคำขอ']
+      ];
+      
+      for (let i = 0; i < chartData.labels.length; i++) {
+        documentTypeData.push([
+          chartData.labels[i],
+          chartData.datasets[0].data[i]
+        ]);
+      }
+      
+      const documentTypeSheet = XLSX.utils.aoa_to_sheet(documentTypeData);
+      XLSX.utils.book_append_sheet(workbook, documentTypeSheet, 'ประเภทเอกสาร');
+      
+      // กำหนดความกว้างคอลัมน์
+      const documentTypeSheetCols = [
+        { wch: 30 }, // ประเภทเอกสาร
+        { wch: 15 }  // จำนวนคำขอ
+      ];
+      documentTypeSheet['!cols'] = documentTypeSheetCols;
+    }
+    
+    // ข้อมูลตามสถานะ
+    if (window.requestsByStatusChartInstance) {
+      const chartData = window.requestsByStatusChartInstance.data;
+      const statusData = [
+        ['สถานะ', 'จำนวนคำขอ']
+      ];
+      
+      for (let i = 0; i < chartData.labels.length; i++) {
+        statusData.push([
+          chartData.labels[i],
+          chartData.datasets[0].data[i]
+        ]);
+      }
+      
+      const statusSheet = XLSX.utils.aoa_to_sheet(statusData);
+      XLSX.utils.book_append_sheet(workbook, statusSheet, 'สถานะคำขอ');
+      
+      // กำหนดความกว้างคอลัมน์
+      const statusSheetCols = [
+        { wch: 25 }, // สถานะ
+        { wch: 15 }  // จำนวนคำขอ
+      ];
+      statusSheet['!cols'] = statusSheetCols;
+    }
+    
+    // ข้อมูลรายเดือน (แผนภูมิ)
+    if (window.monthlyRequestsChartInstance) {
+      const chartData = window.monthlyRequestsChartInstance.data;
+      const monthlyChartData = [
+        ['เดือน', 'จำนวนคำขอ', 'รายได้']
+      ];
+      
+      for (let i = 0; i < chartData.labels.length; i++) {
+        monthlyChartData.push([
+          chartData.labels[i],
+          chartData.datasets[0].data[i],
+          chartData.datasets[1].data[i]
+        ]);
+      }
+      
+      const monthlyChartSheet = XLSX.utils.aoa_to_sheet(monthlyChartData);
+      XLSX.utils.book_append_sheet(workbook, monthlyChartSheet, 'แผนภูมิรายเดือน');
+      
+      // กำหนดความกว้างคอลัมน์
+      const monthlyChartSheetCols = [
+        { wch: 15 }, // เดือน
+        { wch: 15 }, // จำนวนคำขอ
+        { wch: 15 }  // รายได้
+      ];
+      monthlyChartSheet['!cols'] = monthlyChartSheetCols;
+    }
+    
+    // ตั้งค่าสไตล์ของหัวตาราง (ทุกชีท)
+    Object.keys(workbook.Sheets).forEach(sheetName => {
+      const sheet = workbook.Sheets[sheetName];
+      if (sheet['A1']) {
+        // สร้างสไตล์สำหรับหัวตาราง
+        sheet['A1'].s = {
+          font: { bold: true },
+          fill: { fgColor: { rgb: "4F81BD" } },
+          alignment: { horizontal: "center" }
+        };
+      }
+    });
+    
+    // ชื่อไฟล์
+    const fileName = `รายงาน_${startDate}_ถึง_${endDate}.xlsx`;
+    
+    // แปลง workbook เป็น array buffer
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    
+    // สร้าง Blob และ URL
+    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    
+    // สร้างลิงก์สำหรับดาวน์โหลด
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    
+    // คืนทรัพยากร
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+    
+    console.log('Excel generated successfully');
+    showAdminAlert('สร้างไฟล์ Excel สำเร็จแล้ว', 'success');
+  } catch (error) {
+    console.error('Error generating Excel:', error);
+    showAdminAlert('เกิดข้อผิดพลาดในการสร้างไฟล์ Excel', 'danger');
   }
 }
