@@ -110,6 +110,7 @@ async function loadUserProfile() {
     document.getElementById('user-faculty').textContent = user.faculty;
     document.getElementById('user-email').textContent = user.email;
     document.getElementById('user-phone').textContent = user.phone;
+    document.getElementById('user-join-date').textContent = user.created_at;
     
     if (user.created_at) {
       document.getElementById('user-join-date').textContent = formatDate(user.created_at, currentLang);
