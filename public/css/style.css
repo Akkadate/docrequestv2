@@ -10,11 +10,48 @@
   --dark-color: #212529;
 }
 
+/* ระบบหลายภาษา */
+html[lang="th"] body {
+  font-family: 'Prompt', sans-serif;
+}
+
+html[lang="en"] body {
+  font-family: 'Prompt', sans-serif;
+}
+
+html[lang="zh"] body {
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+
+
+
 body {
   font-family: 'Prompt', sans-serif;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  font-weight: 300; /* ทำให้อ่านง่ายขึ้น */
+}
+
+h1, h2, h3, h4, h5, h6, 
+.navbar-brand, 
+.card-header,
+.btn {
+  font-weight: 500;
+}
+
+strong, b, th, 
+.fw-bold, 
+.badge,
+.nav-link.active {
+  font-weight: 600;
+}
+
+/* เพิ่มเติม: ทำให้ตัวอักษรดูมีมิติ */
+.display-1, .display-2, .display-3, .display-4,
+.navbar-brand, .summary-card .number {
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.05);
 }
 
 .navbar-brand {
@@ -45,10 +82,11 @@ body {
   border-radius: 0.5rem;
   box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
   transition: all 0.3s ease;
+  border: none;
 }
 
 .card:hover {
-  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+  box-shadow: 0 .3rem .6rem rgba(0,0,0,.1);
 }
 
 .card-header {
@@ -57,7 +95,11 @@ body {
 
 /* Buttons */
 .btn {
-  border-radius: 0.25rem;
+  border-radius: 0.4rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  letter-spacing: 0.01rem;
+  transition: all 0.2s ease;
 }
 
 .btn-primary {
@@ -67,8 +109,24 @@ body {
 
 .btn-primary:hover {
   background-color: #0a58ca;
-  border-color: #0a58ca;
+  border-color: #0a53be;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* ปรับปรุงตาราง */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+}
+
+
 
 /* Status badges */
 .status-badge {
