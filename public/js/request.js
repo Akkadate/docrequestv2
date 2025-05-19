@@ -3,9 +3,16 @@ let selectedDocuments = [];
 let documentTypes = [];
 
 // โหลดข้อมูลประเภทเอกสาร
+// ปรับปรุงฟังก์ชัน loadDocumentTypes เพื่อตรวจสอบข้อผิดพลาดให้ชัดเจนยิ่งขึ้น
 async function loadDocumentTypes() {
   try {
+    console.log('Loading document types...');
     const response = await fetch(`/api/documents/types?lang=${currentLang}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to load document types: ${response.status} ${response.statusText}`);
+    }
+    
     documentTypes = await response.json();
     console.log('Loaded document types:', documentTypes);
     
@@ -32,6 +39,10 @@ async function loadDocumentTypes() {
         option.dataset.price = type.price;
         modalDocumentTypeSelect.appendChild(option);
       });
+      
+      console.log('Document types added to select:', modalDocumentTypeSelect.options.length - 1);
+    } else {
+      console.error('Modal document type select element not found');
     }
   } catch (error) {
     console.error('Error loading document types:', error);
@@ -444,50 +455,78 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDocumentTypes();
   
   // ตั้งค่าปุ่มเพิ่มเอกสาร
+  // ตั้งค่าปุ่มเพิ่มเอกสาร
   const addDocumentButton = document.getElementById('add-document-button');
   if (addDocumentButton) {
     addDocumentButton.addEventListener('click', addDocumentToSelection);
+  } else {
+    console.warn('Element with id "add-document-button" not found');
   }
   
-  // เพิ่มการฟังเหตุการณ์เมื่อเลือกวิธีการรับเอกสาร
+   // เพิ่มการฟังเหตุการณ์เมื่อเลือกวิธีการรับเอกสาร
   const deliveryMethods = document.querySelectorAll('input[name="delivery_method"]');
-  deliveryMethods.forEach(method => {
-    method.addEventListener('change', () => {
-      const addressContainer = document.getElementById('address-container');
-      const urgentContainer = document.getElementById('urgent-container');
-      
-      if (method.value === 'mail') {
-        addressContainer.style.display = 'block';
-        document.getElementById('address').required = true;
-        urgentContainer.style.display = 'none';
-        document.getElementById('urgent').checked = false;
-      } else {
-        addressContainer.style.display = 'none';
-        document.getElementById('address').required = false;
-        urgentContainer.style.display = 'block';
-      }
-      
-      calculatePrice();
+  if (deliveryMethods.length > 0) {
+    deliveryMethods.forEach(method => {
+      method.addEventListener('change', () => {
+        const addressContainer = document.getElementById('address-container');
+        const urgentContainer = document.getElementById('urgent-container');
+        
+        if (addressContainer && urgentContainer) {
+          if (method.value === 'mail') {
+            addressContainer.style.display = 'block';
+            if (document.getElementById('address')) {
+              document.getElementById('address').required = true;
+            }
+            urgentContainer.style.display = 'none';
+            if (document.getElementById('urgent')) {
+              document.getElementById('urgent').checked = false;
+            }
+          } else {
+            addressContainer.style.display = 'none';
+            if (document.getElementById('address')) {
+              document.getElementById('address').required = false;
+            }
+            urgentContainer.style.display = 'block';
+          }
+        }
+        
+        calculatePrice();
+      });
     });
-  });
+  } else {
+    console.warn('No delivery method inputs found');
+  }
+  
   
   // เพิ่มการฟังเหตุการณ์เมื่อเลือกบริการเร่งด่วน
   const urgentCheckbox = document.getElementById('urgent');
   if (urgentCheckbox) {
     urgentCheckbox.addEventListener('change', calculatePrice);
+  } else {
+    console.warn('Element with id "urgent" not found');
   }
+
+  
   
   // เพิ่มการฟังเหตุการณ์เมื่อส่งฟอร์ม
   const documentRequestForm = document.getElementById('document-request-form');
   if (documentRequestForm) {
     documentRequestForm.addEventListener('submit', submitDocumentRequest);
+  } else {
+    console.warn('Element with id "document-request-form" not found');
   }
+
   
-  // โหลดข้อมูลบัญชีธนาคาร
-  document.getElementById('bank-name').textContent = 'ธนาคารกรุงไทย';
-  document.getElementById('account-number').textContent = '1234567890';
-  document.getElementById('account-name').textContent = 'มหาวิทยาลัยนอร์ทกรุงเทพ';
+// โหลดข้อมูลบัญชีธนาคาร
+  const bankNameElement = document.getElementById('bank-name');
+  const accountNumberElement = document.getElementById('account-number');
+  const accountNameElement = document.getElementById('account-name');
+  
+  if (bankNameElement) bankNameElement.textContent = 'ธนาคารกรุงไทย';
+  if (accountNumberElement) accountNumberElement.textContent = '1234567890';
+  if (accountNameElement) accountNameElement.textContent = 'มหาวิทยาลัยนอร์ทกรุงเทพ';
   
   // เริ่มแสดงตารางเอกสารที่ว่าง
   updateDocumentTable();
 });
+
