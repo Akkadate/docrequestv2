@@ -1,113 +1,19 @@
 // ตรวจสอบว่ามีการเข้าสู่ระบบหรือไม่
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('Student request detail page loaded');
+  // ตรวจสอบว่ามีการเข้าสู่ระบบหรือไม่
   checkLogin();
-  loadRequests();
-  
-  // เพิ่มการฟังเหตุการณ์สำหรับการกรองตามสถานะ
-  document.getElementById('status-filter').addEventListener('change', loadRequests);
-  
-  // เพิ่มการฟังเหตุการณ์สำหรับการค้นหา
-  document.getElementById('search-button').addEventListener('click', () => {
-    loadRequests(document.getElementById('search-input').value);
-  });
-  
-  // ฟังเหตุการณ์เมื่อกด Enter ในช่องค้นหา
-  document.getElementById('search-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      loadRequests(document.getElementById('search-input').value);
-    }
-  });
-  
+  // โหลดข้อมูลคำขอเอกสาร
+  loadRequestDetails();
   // เพิ่มการฟังเหตุการณ์สำหรับการอัปโหลดหลักฐานการชำระเงิน
-  document.getElementById('upload-payment-form').addEventListener('submit', uploadPaymentSlip);
+  const uploadForm = document.getElementById('upload-payment-form');
+  if (uploadForm) {
+    uploadForm.addEventListener('submit', uploadPaymentSlip);
+  }
 });
 
-// โหลดข้อมูลคำขอเอกสาร
-async function loadRequests(searchQuery = '') {
-  try {
-    const token = localStorage.getItem('token');
-    const statusFilter = document.getElementById('status-filter').value;
-    
-    if (!token) {
-      window.location.href = '/login.html';
-      return;
-    }
-    
-    let url = `/api/documents/my-requests?lang=${currentLang}`;
-    
-    // ถ้ามีการกรองตามสถานะ
-    if (statusFilter) {
-      url += `&status=${statusFilter}`;
-    }
-    
-    // ถ้ามีการค้นหา
-    if (searchQuery) {
-      url += `&search=${encodeURIComponent(searchQuery)}`;
-    }
-    
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to load requests');
-    }
-    
-    const requests = await response.json();
-    displayRequests(requests);
-  } catch (error) {
-    console.error('Error loading requests:', error);
-    showAlert(i18n[currentLang].errors.loadingRequestsFailed, 'danger');
-  }
-}
-
-// แสดงข้อมูลคำขอเอกสาร
-function displayRequests(requests) {
-  const requestsTable = document.getElementById('requests-table');
-  
-  requestsTable.innerHTML = '';
-  
-  if (requests.length === 0) {
-    const emptyRow = document.createElement('tr');
-    emptyRow.innerHTML = `
-      <td colspan="6" class="text-center" data-i18n="status.noRequests">ไม่พบคำขอเอกสารที่ตรงกับเงื่อนไข</td>
-    `;
-    requestsTable.appendChild(emptyRow);
-    return;
-  }
-  
-  requests.forEach(request => {
-    const row = document.createElement('tr');
-    
-    row.innerHTML = `
-      <td data-label="${i18n[currentLang].dashboard.documentType}">${request.document_name}</td>
-      <td data-label="${i18n[currentLang].dashboard.requestDate}">${formatDate(request.created_at, currentLang)}</td>
-      <td data-label="${i18n[currentLang].dashboard.deliveryMethod}">
-        ${request.delivery_method === 'pickup' ? 
-          `<span data-i18n="request.pickup">${i18n[currentLang].request.pickup}</span>` : 
-          `<span data-i18n="request.mail">${i18n[currentLang].request.mail}</span>`}
-        ${request.urgent ? `<span class="badge bg-warning text-dark ms-2" data-i18n="request.urgentLabel">${i18n[currentLang].request.urgentLabel}</span>` : ''}
-      </td>
-      <td data-label="${i18n[currentLang].dashboard.status}">${createStatusBadge(request.status)}</td>
-      <td data-label="${i18n[currentLang].dashboard.price}">${formatCurrency(request.total_price, currentLang)}</td>
-      <td data-label="${i18n[currentLang].dashboard.actions}">
-        <button class="btn btn-sm btn-primary view-details" data-id="${request.id}" data-bs-toggle="modal" data-bs-target="#requestDetailModal">
-          <i class="bi bi-eye"></i> <span data-i18n="dashboard.viewDetails">ดูรายละเอียด</span>
-        </button>
-      </td>
-    `;
-    
-    requestsTable.appendChild(row);
-    
- // เพิ่มการฟังเหตุการณ์สำหรับปุ่มดูรายละเอียด
-    row.querySelector('.view-details').addEventListener('click', () => loadRequestDetails(request.id));
-  });
-}
-
 // โหลดรายละเอียดคำขอเอกสาร
-async function loadRequestDetails(requestId) {
+async function loadRequestDetails() {
   try {
     const token = localStorage.getItem('token');
     
@@ -116,100 +22,234 @@ async function loadRequestDetails(requestId) {
       return;
     }
     
+    // รับ ID คำขอจาก URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestId = urlParams.get('id');
+    
+    console.log('Request ID:', requestId);
+    
+    if (!requestId) {
+      window.location.href = '/status.html';
+      return;
+    }
+    
+    // บันทึก ID คำขอไว้ในฟอร์ม
+    const paymentRequestIdInput = document.getElementById('payment-request-id');
+    if (paymentRequestIdInput) {
+      paymentRequestIdInput.value = requestId;
+    }
+    
+    console.log('Fetching request details...');
     const response = await fetch(`/api/documents/request/${requestId}?lang=${currentLang}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
     
+    console.log('Response status:', response.status);
+    
     if (!response.ok) {
       throw new Error('Failed to load request details');
     }
     
     const request = await response.json();
+    console.log('Request details:', request);
+    
     displayRequestDetails(request);
   } catch (error) {
     console.error('Error loading request details:', error);
-    showAlert(i18n[currentLang].errors.requestNotFound, 'danger');
+    showAlert(i18n[currentLang]?.errors?.requestNotFound || 'ไม่พบข้อมูลคำขอเอกสาร', 'danger');
   }
 }
 
 // แสดงรายละเอียดคำขอเอกสาร
 function displayRequestDetails(request) {
-  // ข้อมูลคำขอ
-  document.getElementById('detail-id').textContent = request.id;
-  document.getElementById('detail-document-name').textContent = request.document_name;
-  document.getElementById('detail-delivery-method').textContent = request.delivery_method === 'pickup' ? 
-    i18n[currentLang].request.pickup : i18n[currentLang].request.mail;
-  
-  if (request.urgent) {
-    document.getElementById('detail-delivery-method').innerHTML += ` <span class="badge bg-warning text-dark">${i18n[currentLang].request.urgentLabel}</span>`;
-  }
-  
-  document.getElementById('detail-created-at').textContent = formatDate(request.created_at, currentLang);
-  document.getElementById('detail-updated-at').textContent = formatDate(request.updated_at, currentLang);
-  document.getElementById('detail-status').innerHTML = createStatusBadge(request.status);
-  document.getElementById('detail-price').textContent = formatCurrency(request.total_price, currentLang);
-  
-  // ที่อยู่จัดส่ง (ถ้ามี)
-  if (request.delivery_method === 'mail' && request.address) {
-    document.getElementById('detail-address-container').style.display = 'block';
-    document.getElementById('detail-address').textContent = request.address;
-  } else {
-    document.getElementById('detail-address-container').style.display = 'none';
-  }
-  
-  // หลักฐานการชำระเงิน
-  if (request.payment_slip_url) {
-    const fileExtension = request.payment_slip_url.split('.').pop().toLowerCase();
+  try {
+    console.log('Displaying request details:', request);
     
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
-      document.getElementById('detail-payment-slip').innerHTML = `
-        <img src="${request.payment_slip_url}" alt="Payment Slip" class="img-fluid" style="max-height: 300px;">
-      `;
-    } else {
-      document.getElementById('detail-payment-slip').innerHTML = `
-        <p><i class="bi bi-file-earmark-pdf"></i> <a href="${request.payment_slip_url}" target="_blank">ดูหลักฐานการชำระเงิน</a></p>
-      `;
+    // ข้อมูลคำขอ
+    const detailId = document.getElementById('detail-id');
+    if (detailId) detailId.textContent = request.id;
+    
+    // แสดงข้อมูลเอกสาร
+    const detailDocName = document.getElementById('detail-document-name');
+    if (detailDocName) {
+      if (request.has_multiple_items && request.document_items && request.document_items.length > 0) {
+        // กรณีมีหลายรายการ
+        const documentItemsHTML = `
+          <div class="table-responsive mt-2">
+            <table class="table table-sm table-bordered">
+              <thead>
+                <tr>
+                  <th>ประเภทเอกสาร</th>
+                  <th>จำนวน</th>
+                  <th>ราคาต่อชิ้น</th>
+                  <th>รวม</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${request.document_items.map(item => `
+                  <tr>
+                    <td>${item.document_name}</td>
+                    <td class="text-center">${item.quantity}</td>
+                    <td class="text-end">${formatCurrency(item.price_per_unit, currentLang)}</td>
+                    <td class="text-end">${formatCurrency(item.subtotal, currentLang)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        
+        detailDocName.innerHTML = `หลายรายการ (${request.document_items.length} รายการ) ${documentItemsHTML}`;
+      } else {
+        // กรณีมีเอกสารเดียว
+        detailDocName.textContent = request.document_name;
+      }
     }
     
-    document.getElementById('upload-payment-container').style.display = 'none';
-  } else {
-    document.getElementById('detail-payment-slip').innerHTML = `
-      <p class="text-muted">ยังไม่มีหลักฐานการชำระเงิน</p>
-    `;
+    const detailDeliveryMethod = document.getElementById('detail-delivery-method');
+    if (detailDeliveryMethod) {
+      detailDeliveryMethod.textContent = request.delivery_method === 'pickup' ? 
+        (i18n[currentLang]?.request?.pickup || 'รับด้วยตนเอง') : 
+        (i18n[currentLang]?.request?.mail || 'รับทางไปรษณีย์');
     
-    // แสดงฟอร์มอัปโหลดหลักฐานการชำระเงินสำหรับคำขอที่อยู่ในสถานะ pending
-    if (request.status === 'pending') {
-      document.getElementById('upload-payment-container').style.display = 'block';
-      document.getElementById('payment-request-id').value = request.id;
-    } else {
-      document.getElementById('upload-payment-container').style.display = 'none';
+      if (request.urgent) {
+        detailDeliveryMethod.innerHTML += ` <span class="badge bg-warning text-dark">${i18n[currentLang]?.request?.urgentLabel || 'เร่งด่วน'}</span>`;
+      }
     }
-  }
-  
-  // ประวัติสถานะ
-  const statusHistoryTable = document.getElementById('status-history-table');
-  statusHistoryTable.innerHTML = '';
-  
-  // สถานะปัจจุบัน
-  const statusRow = document.createElement('tr');
-  statusRow.innerHTML = `
-    <td>${formatDate(request.updated_at, currentLang)}</td>
-    <td>${createStatusBadge(request.status)}</td>
-    <td></td>
-  `;
-  statusHistoryTable.appendChild(statusRow);
-  
-  // สถานะรอดำเนินการ (เริ่มต้น)
-  if (request.status !== 'pending') {
-    const pendingRow = document.createElement('tr');
-    pendingRow.innerHTML = `
-      <td>${formatDate(request.created_at, currentLang)}</td>
-      <td>${createStatusBadge('pending')}</td>
-      <td></td>
-    `;
-    statusHistoryTable.appendChild(pendingRow);
+    
+    const detailCreatedAt = document.getElementById('detail-created-at');
+    if (detailCreatedAt) detailCreatedAt.textContent = formatDate(request.created_at, currentLang);
+    
+    const detailUpdatedAt = document.getElementById('detail-updated-at');
+    if (detailUpdatedAt) detailUpdatedAt.textContent = formatDate(request.updated_at, currentLang);
+    
+    const detailStatus = document.getElementById('detail-status');
+    if (detailStatus) detailStatus.innerHTML = createStatusBadge(request.status);
+    
+    const detailPrice = document.getElementById('detail-price');
+    if (detailPrice) detailPrice.textContent = formatCurrency(request.total_price, currentLang);
+    
+    // ที่อยู่จัดส่ง (ถ้ามี)
+    const detailAddressContainer = document.getElementById('detail-address-container');
+    const detailAddress = document.getElementById('detail-address');
+    
+    if (detailAddressContainer && detailAddress) {
+      if (request.delivery_method === 'mail' && request.address) {
+        detailAddressContainer.style.display = 'block';
+        detailAddress.textContent = request.address;
+      } else {
+        detailAddressContainer.style.display = 'none';
+      }
+    }
+    
+    // หลักฐานการชำระเงิน
+    const detailPaymentSlip = document.getElementById('detail-payment-slip');
+    const uploadPaymentContainer = document.getElementById('upload-payment-container');
+    
+    if (detailPaymentSlip) {
+      if (request.payment_slip_url) {
+        const fileExtension = request.payment_slip_url.split('.').pop().toLowerCase();
+        
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+          detailPaymentSlip.innerHTML = `
+            <img src="${request.payment_slip_url}" alt="Payment Slip" class="img-fluid" style="max-height: 300px;">
+          `;
+        } else {
+          detailPaymentSlip.innerHTML = `
+            <p><i class="bi bi-file-earmark-pdf"></i> <a href="${request.payment_slip_url}" target="_blank">ดูหลักฐานการชำระเงิน</a></p>
+          `;
+        }
+        
+        if (uploadPaymentContainer) {
+          uploadPaymentContainer.style.display = 'none';
+        }
+      } else {
+        detailPaymentSlip.innerHTML = `
+          <p class="text-muted">ยังไม่มีหลักฐานการชำระเงิน</p>
+        `;
+        
+        // แสดงฟอร์มอัปโหลดหลักฐานการชำระเงินสำหรับคำขอที่อยู่ในสถานะ pending
+        if (uploadPaymentContainer && request.status === 'pending') {
+          uploadPaymentContainer.style.display = 'block';
+        } else if (uploadPaymentContainer) {
+          uploadPaymentContainer.style.display = 'none';
+        }
+      }
+    }
+    
+    // ประวัติสถานะ
+    const statusHistoryTable = document.getElementById('status-history-table');
+    if (statusHistoryTable) {
+      statusHistoryTable.innerHTML = '';
+      
+      // สถานะปัจจุบัน
+      const statusRow = document.createElement('tr');
+      statusRow.innerHTML = `
+        <td>${formatDate(request.updated_at, currentLang)}</td>
+        <td>${createStatusBadge(request.status)}</td>
+      `;
+      statusHistoryTable.appendChild(statusRow);
+      
+      // สถานะรอดำเนินการ (เริ่มต้น)
+      if (request.status !== 'pending') {
+        const pendingRow = document.createElement('tr');
+        pendingRow.innerHTML = `
+          <td>${formatDate(request.created_at, currentLang)}</td>
+          <td>${createStatusBadge('pending')}</td>
+        `;
+        statusHistoryTable.appendChild(pendingRow);
+      }
+    }
+    
+    // แสดงข้อความตามสถานะ
+    const statusInfoContainer = document.getElementById('status-info-container');
+    const statusInfoText = document.getElementById('status-info-text');
+    
+    if (statusInfoContainer && statusInfoText) {
+      let infoText = '';
+      
+      switch (request.status) {
+        case 'pending':
+          infoText = 'คำขอของคุณอยู่ระหว่างรอการดำเนินการ โปรดรอการตรวจสอบจากเจ้าหน้าที่';
+          if (!request.payment_slip_url) {
+            infoText += ' กรุณาอัปโหลดหลักฐานการชำระเงินเพื่อดำเนินการต่อ';
+          }
+          break;
+        case 'processing':
+          infoText = 'คำขอของคุณกำลังอยู่ระหว่างการดำเนินการ เจ้าหน้าที่กำลังจัดเตรียมเอกสารให้คุณ';
+          break;
+        case 'ready':
+          if (request.delivery_method === 'pickup') {
+            infoText = 'เอกสารของคุณพร้อมให้รับแล้ว กรุณาติดต่อรับเอกสารได้ที่สำนักทะเบียนและประมวลผล ชั้น 1 อาคารอำนวยการ';
+          } else {
+            infoText = 'เอกสารของคุณพร้อมสำหรับจัดส่งแล้ว และจะถูกจัดส่งไปยังที่อยู่ที่คุณระบุไว้ในไม่ช้า';
+          }
+          break;
+        case 'completed':
+          if (request.delivery_method === 'pickup') {
+            infoText = 'คำขอของคุณเสร็จสิ้นแล้ว คุณได้รับเอกสารเรียบร้อยแล้ว';
+          } else {
+            infoText = 'คำขอของคุณเสร็จสิ้นแล้ว เอกสารถูกจัดส่งไปยังที่อยู่ที่คุณระบุไว้เรียบร้อยแล้ว';
+          }
+          break;
+        case 'rejected':
+          infoText = 'คำขอของคุณถูกปฏิเสธ โปรดติดต่อเจ้าหน้าที่เพื่อขอข้อมูลเพิ่มเติม';
+          break;
+        default:
+          infoText = '';
+      }
+      
+      if (infoText) {
+        statusInfoText.textContent = infoText;
+        statusInfoContainer.style.display = 'block';
+      } else {
+        statusInfoContainer.style.display = 'none';
+      }
+    }
+  } catch (error) {
+    console.error('Error in displayRequestDetails:', error);
   }
 }
 
@@ -229,7 +269,7 @@ async function uploadPaymentSlip(event) {
     const paymentSlip = document.getElementById('payment-slip').files[0];
     
     if (!paymentSlip) {
-      showAlert(i18n[currentLang].errors.uploadPaymentSlip, 'danger');
+      showAlert(i18n[currentLang]?.errors?.uploadPaymentSlip || 'กรุณาอัปโหลดหลักฐานการชำระเงิน', 'danger');
       return;
     }
     
@@ -247,19 +287,17 @@ async function uploadPaymentSlip(event) {
     const data = await response.json();
     
     if (response.ok) {
-      showAlert(i18n[currentLang].success.uploadPaymentSlip, 'success');
-      
-      // ปิด Modal
-      const modal = bootstrap.Modal.getInstance(document.getElementById('requestDetailModal'));
-      modal.hide();
+      showAlert(i18n[currentLang]?.success?.uploadPaymentSlip || 'อัปโหลดหลักฐานการชำระเงินสำเร็จ', 'success');
       
       // โหลดข้อมูลใหม่
-      loadRequests();
+      setTimeout(() => {
+        loadRequestDetails();
+      }, 1000);
     } else {
-      showAlert(data.message || i18n[currentLang].errors.uploadFailed, 'danger');
+      showAlert(data.message || i18n[currentLang]?.errors?.uploadFailed || 'อัปโหลดไม่สำเร็จ', 'danger');
     }
   } catch (error) {
     console.error('Error uploading payment slip:', error);
-    showAlert(i18n[currentLang].errors.serverError, 'danger');
+    showAlert(i18n[currentLang]?.errors?.serverError || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์', 'danger');
   }
 }
