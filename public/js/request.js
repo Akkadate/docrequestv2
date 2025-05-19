@@ -7,6 +7,7 @@ async function loadDocumentTypes() {
   try {
     const response = await fetch(`/api/documents/types?lang=${currentLang}`);
     documentTypes = await response.json();
+    console.log('Loaded document types:', documentTypes);
     
     // เพิ่มรายการประเภทเอกสารในหน้าต่าง Modal
     const modalDocumentTypeSelect = document.getElementById('modal-document-type');
@@ -20,7 +21,7 @@ async function loadDocumentTypes() {
       defaultOption.value = '';
       defaultOption.disabled = true;
       defaultOption.selected = true;
-      defaultOption.textContent = i18n[currentLang].request.selectDocumentType;
+      defaultOption.textContent = i18n[currentLang]?.request?.selectDocumentType || 'เลือกประเภทเอกสาร';
       modalDocumentTypeSelect.appendChild(defaultOption);
       
       // เพิ่มรายการประเภทเอกสาร
@@ -42,10 +43,26 @@ async function loadDocumentTypes() {
 function addDocumentToSelection() {
   // รับข้อมูลจาก Modal
   const documentTypeSelect = document.getElementById('modal-document-type');
-  const quantity = parseInt(document.getElementById('modal-document-quantity').value);
+  const quantityInput = document.getElementById('modal-document-quantity');
+  
+  if (!documentTypeSelect || !quantityInput) {
+    console.error('Form elements not found');
+    return;
+  }
+  
+  const quantity = parseInt(quantityInput.value);
   
   if (!documentTypeSelect.value || isNaN(quantity) || quantity < 1) {
-    showAlert(i18n[currentLang].errors.selectDocumentType, 'danger');
+    // แสดงข้อความแจ้งเตือนใน Modal
+    const modalAlertContainer = document.getElementById('modal-alert-container');
+    if (modalAlertContainer) {
+      modalAlertContainer.innerHTML = `
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          ${i18n[currentLang]?.errors?.selectDocumentType || 'กรุณาเลือกประเภทเอกสารและระบุจำนวน'}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      `;
+    }
     return;
   }
   
@@ -74,10 +91,15 @@ function addDocumentToSelection() {
   
   // ปิด Modal
   const modal = bootstrap.Modal.getInstance(document.getElementById('addDocumentModal'));
-  modal.hide();
+  if (modal) {
+    modal.hide();
+  }
   
   // รีเซ็ตฟอร์มใน Modal
-  document.getElementById('add-document-form').reset();
+  const addDocumentForm = document.getElementById('add-document-form');
+  if (addDocumentForm) {
+    addDocumentForm.reset();
+  }
   
   // อัปเดตตารางและราคา
   updateDocumentTable();
