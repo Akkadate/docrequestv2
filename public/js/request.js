@@ -110,6 +110,11 @@ function addDocumentToSelection() {
 function updateDocumentTable() {
   const tableBody = document.getElementById('selected-documents');
   
+  if (!tableBody) {
+    console.error('Selected documents table not found');
+    return;
+  }
+  
   // ล้างตารางเดิม
   tableBody.innerHTML = '';
   
@@ -117,7 +122,7 @@ function updateDocumentTable() {
     // ถ้าไม่มีเอกสารที่เลือก
     const emptyRow = document.createElement('tr');
     emptyRow.innerHTML = `
-      <td colspan="5" class="text-center" data-i18n="request.noDocumentsSelected">ยังไม่ได้เลือกเอกสาร</td>
+      <td colspan="5" class="text-center">${i18n[currentLang]?.request?.noDocumentsSelected || 'ยังไม่ได้เลือกเอกสาร'}</td>
     `;
     tableBody.appendChild(emptyRow);
     return;
@@ -154,48 +159,68 @@ function updateDocumentTable() {
     const removeBtn = row.querySelector('.remove-document');
     
     // ลดจำนวน
-    decreaseBtn.addEventListener('click', () => {
-      if (doc.quantity > 1) {
-        doc.quantity--;
-        doc.subtotal = doc.quantity * doc.price;
-        updateDocumentTable();
-        calculatePrice();
-      }
-    });
+    if (decreaseBtn) {
+      decreaseBtn.addEventListener('click', () => {
+        if (doc.quantity > 1) {
+          doc.quantity--;
+          doc.subtotal = doc.quantity * doc.price;
+          updateDocumentTable();
+          calculatePrice();
+        }
+      });
+    }
     
     // เพิ่มจำนวน
-    increaseBtn.addEventListener('click', () => {
-      doc.quantity++;
-      doc.subtotal = doc.quantity * doc.price;
-      updateDocumentTable();
-      calculatePrice();
-    });
-    
-    // เปลี่ยนจำนวนโดยตรง
-    quantityInput.addEventListener('change', () => {
-      const newQuantity = parseInt(quantityInput.value);
-      if (!isNaN(newQuantity) && newQuantity > 0) {
-        doc.quantity = newQuantity;
+    if (increaseBtn) {
+      increaseBtn.addEventListener('click', () => {
+        doc.quantity++;
         doc.subtotal = doc.quantity * doc.price;
         updateDocumentTable();
         calculatePrice();
-      } else {
-        // ถ้าค่าไม่ถูกต้อง ให้กลับไปใช้ค่าเดิม
-        quantityInput.value = doc.quantity;
-      }
-    });
+      });
+    }
+    
+    // เปลี่ยนจำนวนโดยตรง
+    if (quantityInput) {
+      quantityInput.addEventListener('change', () => {
+        const newQuantity = parseInt(quantityInput.value);
+        if (!isNaN(newQuantity) && newQuantity > 0) {
+          doc.quantity = newQuantity;
+          doc.subtotal = doc.quantity * doc.price;
+          updateDocumentTable();
+          calculatePrice();
+        } else {
+          // ถ้าค่าไม่ถูกต้อง ให้กลับไปใช้ค่าเดิม
+          quantityInput.value = doc.quantity;
+        }
+      });
+    }
     
     // ลบเอกสาร
-    removeBtn.addEventListener('click', () => {
-      selectedDocuments.splice(index, 1);
-      updateDocumentTable();
-      calculatePrice();
-    });
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        selectedDocuments.splice(index, 1);
+        updateDocumentTable();
+        calculatePrice();
+      });
+    }
   });
 }
 
 // คำนวณราคาทั้งหมด
 function calculatePrice() {
+  const documentsSubtotalElement = document.getElementById('documents-subtotal');
+  const shippingFeeElement = document.getElementById('shipping-fee');
+  const urgentFeeElement = document.getElementById('urgent-fee');
+  const totalPriceElement = document.getElementById('total-price');
+  const shippingFeeContainer = document.getElementById('shipping-fee-container');
+  const urgentFeeContainer = document.getElementById('urgent-fee-container');
+  
+  if (!documentsSubtotalElement || !totalPriceElement) {
+    console.error('Price display elements not found');
+    return;
+  }
+  
   let documentSubtotal = 0;
   let shippingFee = 0;
   let urgentFee = 0;
@@ -205,34 +230,56 @@ function calculatePrice() {
   documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
   
   // ตรวจสอบวิธีการรับเอกสาร
-  const deliveryMethod = document.querySelector('input[name="delivery_method"]:checked').value;
+  const deliveryMethodElement = document.querySelector('input[name="delivery_method"]:checked');
+  if (!deliveryMethodElement) {
+    return;
+  }
+  
+  const deliveryMethod = deliveryMethodElement.value;
   
   // ค่าจัดส่งทางไปรษณีย์
   if (deliveryMethod === 'mail') {
     shippingFee = 200; // ค่าจัดส่ง 200 บาท
-    document.getElementById('shipping-fee-container').style.display = 'flex';
+    if (shippingFeeContainer) {
+      shippingFeeContainer.style.display = 'flex';
+    }
   } else {
-    document.getElementById('shipping-fee-container').style.display = 'none';
+    if (shippingFeeContainer) {
+      shippingFeeContainer.style.display = 'none';
+    }
   }
   
   // ตรวจสอบบริการเร่งด่วน
-  const isUrgent = document.getElementById('urgent').checked;
+  const urgentCheckbox = document.getElementById('urgent');
+  if (!urgentCheckbox) {
+    return;
+  }
+  
+  const isUrgent = urgentCheckbox.checked;
   
   if (isUrgent && deliveryMethod === 'pickup') {
     urgentFee = 50; // ค่าบริการเร่งด่วนเพิ่ม 50 บาท
-    document.getElementById('urgent-fee-container').style.display = 'flex';
+    if (urgentFeeContainer) {
+      urgentFeeContainer.style.display = 'flex';
+    }
   } else {
-    document.getElementById('urgent-fee-container').style.display = 'none';
+    if (urgentFeeContainer) {
+      urgentFeeContainer.style.display = 'none';
+    }
   }
   
   // คำนวณราคารวมทั้งหมด
   totalPrice = documentSubtotal + shippingFee + urgentFee;
   
   // อัปเดตการแสดงผล
-  document.getElementById('documents-subtotal').textContent = formatCurrency(documentSubtotal, currentLang);
-  document.getElementById('shipping-fee').textContent = formatCurrency(shippingFee, currentLang);
-  document.getElementById('urgent-fee').textContent = formatCurrency(urgentFee, currentLang);
-  document.getElementById('total-price').textContent = formatCurrency(totalPrice, currentLang);
+  documentsSubtotalElement.textContent = formatCurrency(documentSubtotal, currentLang);
+  if (shippingFeeElement) {
+    shippingFeeElement.textContent = formatCurrency(shippingFee, currentLang);
+  }
+  if (urgentFeeElement) {
+    urgentFeeElement.textContent = formatCurrency(urgentFee, currentLang);
+  }
+  totalPriceElement.textContent = formatCurrency(totalPrice, currentLang);
   
   // อัปเดตสรุปรายการ
   updateSummary(deliveryMethod, isUrgent);
