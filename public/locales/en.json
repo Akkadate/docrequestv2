@@ -82,6 +82,7 @@
     "title": "Request Document - Document Request System",
     "header": "Request Document",
     "documentType": "Document Type",
+    "documentName": "Document Name",
     "selectDocumentType": "Select document type",
     "deliveryMethod": "Delivery Method",
     "pickup": "Pickup",
