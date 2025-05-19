@@ -37,7 +37,7 @@ module.exports = (pool, upload) => {
     }
   });
   
-  // สร้างคำขอเอกสาร
+  // สร้างคำขอเอกสาร (เดิม - สำหรับความเข้ากันได้กับระบบเก่า)
   router.post('/request', authenticateJWT, upload.single('payment_slip'), async (req, res) => {
     try {
       const { document_type_id, delivery_method, address, urgent } = req.body;
@@ -90,6 +90,79 @@ module.exports = (pool, upload) => {
     }
   });
   
+  // สร้างคำขอเอกสารหลายรายการ (ใหม่)
+  router.post('/request-multiple', authenticateJWT, upload.single('payment_slip'), async (req, res) => {
+    try {
+      const { delivery_method, address, urgent, total_price } = req.body;
+      const user_id = req.user.id;
+      
+      // รับข้อมูลเอกสารที่เลือกทั้งหมด
+      const documents = JSON.parse(req.body.documents);
+      
+      if (!documents || documents.length === 0) {
+        return res.status(400).json({ message: 'กรุณาเลือกเอกสารอย่างน้อย 1 รายการ' });
+      }
+      
+      // บันทึกหลักฐานการชำระเงิน (ถ้ามี)
+      let payment_slip_url = null;
+      if (req.file) {
+        payment_slip_url = `/uploads/${req.file.filename}`;
+      }
+      
+      // เริ่มรายการ transaction
+      const client = await pool.connect();
+      
+      try {
+        await client.query('BEGIN');
+        
+        // สร้างคำขอเอกสารหลักสำหรับอ้างอิง
+        const mainRequest = await client.query(
+          'INSERT INTO document_requests (user_id, document_type_id, delivery_method, address, urgent, total_price, payment_slip_url, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+          [user_id, documents[0].id, delivery_method, address, urgent === 'true', total_price, payment_slip_url, 'pending']
+        );
+        
+        const mainRequestId = mainRequest.rows[0].id;
+        
+        // สร้างตารางใหม่สำหรับเก็บรายละเอียดคำขอเอกสารหลายรายการ
+        // ถ้ายังไม่มีตาราง document_request_items ให้สร้างก่อน
+        await client.query(`
+          CREATE TABLE IF NOT EXISTS document_request_items (
+            id SERIAL PRIMARY KEY,
+            request_id INTEGER REFERENCES document_requests(id),
+            document_type_id INTEGER REFERENCES document_types(id),
+            quantity INTEGER NOT NULL DEFAULT 1,
+            price_per_unit DECIMAL(10, 2) NOT NULL,
+            subtotal DECIMAL(10, 2) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // บันทึกรายการเอกสารย่อยทั้งหมด
+        for (const doc of documents) {
+          await client.query(
+            'INSERT INTO document_request_items (request_id, document_type_id, quantity, price_per_unit, subtotal) VALUES ($1, $2, $3, $4, $5)',
+            [mainRequestId, doc.id, doc.quantity, doc.price, doc.subtotal]
+          );
+        }
+        
+        await client.query('COMMIT');
+        
+        res.status(201).json({
+          message: 'สร้างคำขอเอกสารสำเร็จ',
+          request_id: mainRequestId
+        });
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการสร้างคำขอเอกสาร' });
+    }
+  });
+  
   // อัปโหลดหลักฐานการชำระเงิน
   router.post('/upload-payment/:request_id', authenticateJWT, upload.single('payment_slip'), async (req, res) => {
     try {
@@ -129,17 +202,67 @@ module.exports = (pool, upload) => {
     try {
       const lang = req.query.lang || 'th';
       const column = `name_${lang}`;
+      const status = req.query.status || '';
+      const search = req.query.search || '';
       
-      const requests = await pool.query(
-        `SELECT dr.*, dt.${column} as document_name
+      let query = `
+        SELECT dr.*, dt.${column} as document_name
         FROM document_requests dr
         JOIN document_types dt ON dr.document_type_id = dt.id
         WHERE dr.user_id = $1
-        ORDER BY dr.created_at DESC`,
-        [req.user.id]
-      );
+      `;
       
-      res.status(200).json(requests.rows);
+      const queryParams = [req.user.id];
+      let paramIndex = 2;
+      
+      // เพิ่มการกรองตามสถานะ (ถ้ามี)
+      if (status) {
+        query += ` AND dr.status = $${paramIndex}`;
+        queryParams.push(status);
+        paramIndex++;
+      }
+      
+      // เพิ่มการค้นหา (ถ้ามี)
+      if (search) {
+        query += ` AND (dt.${column} ILIKE $${paramIndex} OR CAST(dr.id AS TEXT) LIKE $${paramIndex})`;
+        queryParams.push(`%${search}%`);
+        paramIndex++;
+      }
+      
+      query += ' ORDER BY dr.created_at DESC';
+      
+      const requests = await pool.query(query, queryParams);
+      
+      // สำหรับคำขอที่มีหลายรายการ เพิ่มข้อมูลเพิ่มเติม
+      const enhancedRequests = await Promise.all(requests.rows.map(async (request) => {
+        try {
+          // ตรวจสอบว่ามีรายการย่อยหรือไม่
+          const itemsQuery = `
+            SELECT dri.*, dt.${column} as document_name
+            FROM document_request_items dri
+            JOIN document_types dt ON dri.document_type_id = dt.id
+            WHERE dri.request_id = $1
+          `;
+          
+          const itemsResult = await pool.query(itemsQuery, [request.id]);
+          
+          if (itemsResult.rows.length > 0) {
+            // ถ้ามีรายการย่อย
+            request.has_multiple_items = true;
+            request.document_items = itemsResult.rows;
+            request.item_count = itemsResult.rows.length;
+          } else {
+            request.has_multiple_items = false;
+          }
+          
+          return request;
+        } catch (error) {
+          console.error(`Error fetching items for request ${request.id}:`, error);
+          return request;
+        }
+      }));
+      
+      res.status(200).json(enhancedRequests);
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลคำขอเอกสาร' });
@@ -180,7 +303,27 @@ module.exports = (pool, upload) => {
         return res.status(404).json({ message: 'ไม่พบคำขอเอกสาร' });
       }
       
-      res.status(200).json(request.rows[0]);
+      // ดึงรายการย่อย (ถ้ามี)
+      const itemsQuery = `
+        SELECT dri.*, dt.${column} as document_name
+        FROM document_request_items dri
+        JOIN document_types dt ON dri.document_type_id = dt.id
+        WHERE dri.request_id = $1
+      `;
+      
+      const itemsResult = await pool.query(itemsQuery, [id]);
+      
+      // ประกอบข้อมูลรายการย่อยเข้ากับคำขอหลัก
+      const result = request.rows[0];
+      if (itemsResult.rows.length > 0) {
+        result.has_multiple_items = true;
+        result.document_items = itemsResult.rows;
+        result.item_count = itemsResult.rows.length;
+      } else {
+        result.has_multiple_items = false;
+      }
+      
+      res.status(200).json(result);
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลคำขอเอกสาร' });
