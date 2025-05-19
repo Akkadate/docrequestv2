@@ -71,8 +71,42 @@ function displayRequestDetails(request) {
     const detailId = document.getElementById('detail-id');
     if (detailId) detailId.textContent = request.id;
     
+    // แสดงข้อมูลเอกสาร
     const detailDocName = document.getElementById('detail-document-name');
-    if (detailDocName) detailDocName.textContent = request.document_name;
+    if (detailDocName) {
+      if (request.has_multiple_items && request.document_items && request.document_items.length > 0) {
+        // กรณีมีหลายรายการ
+        const documentItemsHTML = `
+          <div class="table-responsive mt-2">
+            <table class="table table-sm table-bordered">
+              <thead>
+                <tr>
+                  <th>ประเภทเอกสาร</th>
+                  <th>จำนวน</th>
+                  <th>ราคาต่อชิ้น</th>
+                  <th>รวม</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${request.document_items.map(item => `
+                  <tr>
+                    <td>${item.document_name}</td>
+                    <td class="text-center">${item.quantity}</td>
+                    <td class="text-end">${formatCurrency(item.price_per_unit, currentLang)}</td>
+                    <td class="text-end">${formatCurrency(item.subtotal, currentLang)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        
+        detailDocName.innerHTML = `หลายรายการ (${request.document_items.length} รายการ) ${documentItemsHTML}`;
+      } else {
+        // กรณีมีเอกสารเดียว
+        detailDocName.textContent = request.document_name;
+      }
+    }
     
     const detailDeliveryMethod = document.getElementById('detail-delivery-method');
     if (detailDeliveryMethod) {
@@ -266,131 +300,4 @@ async function uploadPaymentSlip(event) {
     console.error('Error uploading payment slip:', error);
     showAlert(i18n[currentLang]?.errors?.serverError || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์', 'danger');
   }
-}
-
-// สร้าง badge แสดงสถานะ
-function createStatusBadge(status) {
-  const statusClass = `status-${status}`;
-  const statusText = translateStatus(status, currentLang);
-  
-  return `<span class="status-badge ${statusClass}">${statusText}</span>`;
-}
-
-// แปลงสถานะเป็นข้อความภาษาไทย
-function translateStatus(status, lang = 'th') {
-  const statusTranslations = {
-    'pending': {
-      'th': 'รอดำเนินการ',
-      'en': 'Pending',
-      'zh': '待处理'
-    },
-    'processing': {
-      'th': 'กำลังดำเนินการ',
-      'en': 'Processing',
-      'zh': '处理中'
-    },
-    'ready': {
-      'th': 'พร้อมจัดส่ง/รับเอกสาร',
-      'en': 'Ready',
-      'zh': '准备好了'
-    },
-    'completed': {
-      'th': 'เสร็จสิ้น',
-      'en': 'Completed',
-      'zh': '已完成'
-    },
-    'rejected': {
-      'th': 'ถูกปฏิเสธ',
-      'en': 'Rejected',
-      'zh': '被拒绝'
-    }
-  };
-  
-  return statusTranslations[status]?.[lang] || status;
-}
-
-// แปลงวันที่เป็นรูปแบบที่อ่านง่าย
-function formatDate(dateString, lang = 'th') {
-  if (!dateString) return '-';
-  
-  const date = new Date(dateString);
-  
-  const options = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  };
-  
-  try {
-    return date.toLocaleDateString(getLocale(lang), options);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return dateString;
-  }
-}
-
-// รับ locale ตามภาษา
-function getLocale(lang) {
-  const locales = {
-    'th': 'th-TH',
-    'en': 'en-US',
-    'zh': 'zh-CN'
-  };
-  
-  return locales[lang] || 'th-TH';
-}
-
-// แปลงตัวเลขเป็นรูปแบบเงิน
-function formatCurrency(amount, lang = 'th') {
-  if (amount === undefined || amount === null) return '-';
-  
-  const currencies = {
-    'th': 'THB',
-    'en': 'THB',
-    'zh': 'THB'
-  };
-  
-  try {
-    const formatter = new Intl.NumberFormat(getLocale(lang), {
-      style: 'currency',
-      currency: currencies[lang],
-      minimumFractionDigits: 2
-    });
-    
-    return formatter.format(amount);
-  } catch (error) {
-    console.error('Error formatting currency:', error);
-    return `${amount} บาท`;
-  }
-}
-
-// แสดงข้อความแจ้งเตือน
-function showAlert(message, type = 'success') {
-  const alertContainer = document.getElementById('alert-container');
-  
-  if (!alertContainer) {
-    console.error('Alert container not found');
-    return;
-  }
-  
-  const alert = document.createElement('div');
-  alert.className = `alert alert-${type} alert-dismissible fade show`;
-  alert.role = 'alert';
-  alert.innerHTML = `
-    ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  `;
-  
-  alertContainer.innerHTML = '';
-  alertContainer.appendChild(alert);
-  
-  // ซ่อนข้อความแจ้งเตือนหลังจาก 5 วินาที
-  setTimeout(() => {
-    const alertElement = document.querySelector('.alert');
-    if (alertElement) {
-      alertElement.remove();
-    }
-  }, 5000);
 }
