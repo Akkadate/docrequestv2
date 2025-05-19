@@ -82,6 +82,7 @@
     "title": "申请文件 - 在线文件申请系统",
     "header": "申请文件",
     "documentType": "文件类型",
+    "documentName": "文件名称",
     "selectDocumentType": "选择文件类型",
     "deliveryMethod": "接收方式",
     "pickup": "自取",
