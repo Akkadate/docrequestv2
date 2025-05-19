@@ -10,8 +10,8 @@
   <!-- เพิ่มฟอนต์ Noto Sans SC สำหรับภาษาจีน -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
   
-
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/responsive.css">
 </head>
@@ -60,11 +60,28 @@
           <div class="card-body">
             <div id="alert-container"></div>
             <form id="document-request-form">
-              <div class="mb-3">
-                <label for="document_type" class="form-label required" data-i18n="request.documentType">ประเภทเอกสาร</label>
-                <select class="form-select" id="document_type" required>
-                  <option value="" selected disabled data-i18n="request.selectDocumentType">เลือกประเภทเอกสาร</option>
-                </select>
+              <!-- Document Selection Table -->
+              <div class="mb-4">
+                <label class="form-label required" data-i18n="request.documentType">ประเภทเอกสาร</label>
+                <div class="table-responsive">
+                  <table class="table table-hover" id="document-selection-table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="request.documentName">ชื่อเอกสาร</th>
+                        <th data-i18n="request.unitPrice">ราคาต่อชิ้น</th>
+                        <th data-i18n="request.quantity">จำนวน</th>
+                        <th data-i18n="request.subtotal">รวม</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="selected-documents">
+                      <!-- Selected documents will be added here -->
+                    </tbody>
+                  </table>
+                </div>
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
+                  <i class="bi bi-plus-circle"></i> <span data-i18n="request.addDocument">เพิ่มเอกสาร</span>
+                </button>
               </div>
               
               <div class="mb-3">
@@ -116,6 +133,18 @@
             </div>
             <hr>
             <div class="d-flex justify-content-between">
+              <strong data-i18n="request.documentSubtotal">ราคาเอกสารรวม:</strong>
+              <span id="documents-subtotal">0.00 บาท</span>
+            </div>
+            <div id="shipping-fee-container" class="d-flex justify-content-between mt-2" style="display: none;">
+              <strong data-i18n="request.shippingFee">ค่าจัดส่ง:</strong>
+              <span id="shipping-fee">0.00 บาท</span>
+            </div>
+            <div id="urgent-fee-container" class="d-flex justify-content-between mt-2" style="display: none;">
+              <strong data-i18n="request.urgentService">บริการเร่งด่วน:</strong>
+              <span id="urgent-fee">0.00 บาท</span>
+            </div>
+            <div class="d-flex justify-content-between mt-3 pt-2 border-top fw-bold">
               <strong data-i18n="request.totalPrice">ราคารวม:</strong>
               <span id="total-price">0.00 บาท</span>
             </div>
@@ -142,6 +171,36 @@
               </p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal เพิ่มเอกสาร -->
+  <div class="modal fade" id="addDocumentModal" tabindex="-1" aria-labelledby="addDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="addDocumentModalLabel" data-i18n="request.addDocument">เพิ่มเอกสาร</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="add-document-form">
+            <div class="mb-3">
+              <label for="modal-document-type" class="form-label required" data-i18n="request.documentType">ประเภทเอกสาร</label>
+              <select class="form-select" id="modal-document-type" required>
+                <option value="" selected disabled data-i18n="request.selectDocumentType">เลือกประเภทเอกสาร</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="modal-document-quantity" class="form-label required" data-i18n="request.quantity">จำนวน</label>
+              <input type="number" class="form-control" id="modal-document-quantity" min="1" value="1" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="request.cancel">ยกเลิก</button>
+          <button type="button" class="btn btn-primary" id="add-document-button" data-i18n="request.addDocument">เพิ่มเอกสาร</button>
         </div>
       </div>
     </div>
