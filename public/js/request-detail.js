@@ -50,7 +50,41 @@ async function loadRequestDetails() {
 function displayRequestDetails(request) {
   // ข้อมูลคำขอ
   document.getElementById('detail-id').textContent = request.id;
-  document.getElementById('detail-document-name').textContent = request.document_name;
+  
+  // แสดงข้อมูลเอกสาร
+  if (request.has_multiple_items && request.document_items && request.document_items.length > 0) {
+    // กรณีมีหลายรายการ
+    const documentItemsHTML = `
+      <div class="table-responsive mt-2">
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr>
+              <th>ประเภทเอกสาร</th>
+              <th>จำนวน</th>
+              <th>ราคาต่อชิ้น</th>
+              <th>รวม</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${request.document_items.map(item => `
+              <tr>
+                <td>${item.document_name}</td>
+                <td class="text-center">${item.quantity}</td>
+                <td class="text-end">${formatCurrency(item.price_per_unit, currentLang)}</td>
+                <td class="text-end">${formatCurrency(item.subtotal, currentLang)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    
+    document.getElementById('detail-document-name').innerHTML = `หลายรายการ (${request.document_items.length} รายการ) ${documentItemsHTML}`;
+  } else {
+    // กรณีมีเอกสารเดียว
+    document.getElementById('detail-document-name').textContent = request.document_name;
+  }
+  
   document.getElementById('detail-delivery-method').textContent = request.delivery_method === 'pickup' ? 
     i18n[currentLang].request.pickup : i18n[currentLang].request.mail;
   
