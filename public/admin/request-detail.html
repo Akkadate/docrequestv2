@@ -10,11 +10,10 @@
   <!-- เพิ่มฟอนต์ Noto Sans SC สำหรับภาษาจีน -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
   
-
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -26,16 +25,16 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
           <li class="nav-item">
-            <a class="nav-link" href="index.html" data-i18n="navbar.home">หน้าหลัก</a>
+            <a class="nav-link" href="dashboard.html" data-i18n="navbar.adminPanel">หน้าหลัก</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="dashboard.html" data-i18n="navbar.dashboard">แดชบอร์ด</a>
+            <a class="nav-link" href="requests.html" data-i18n="admin.dashboard.requestManagement">จัดการคำขอเอกสาร</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="requests.html" data-i18n="navbar.requests">คำขอเอกสาร</a>
+            <a class="nav-link" href="users.html" data-i18n="admin.dashboard.userManagement">จัดการผู้ใช้</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="users.html" data-i18n="navbar.users">จัดการผู้ใช้</a>
+            <a class="nav-link" href="reports.html" data-i18n="admin.dashboard.reports">รายงาน</a>
           </li>
         </ul>
         <div class="language-selector d-flex me-3">
@@ -56,7 +55,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 data-i18n="requestDetail.header">รายละเอียดคำขอเอกสาร</h2>
       <div>
-        <div id="print-receipt-container" style="display: none; display: inline-block;">
+        <div id="print-receipt-container" style="display: inline-block;">
           <button class="btn btn-outline-primary me-2" onclick="printReceipt()">
             <i class="bi bi-printer"></i> <span data-i18n="requestDetail.printReceipt">พิมพ์ใบรับคำขอ</span>
           </button>
@@ -77,7 +76,7 @@
           </div>
           <div class="card-body">
             <div class="row">
-              <div class="col-md-6">
+              <div class="col-lg-6">
                 <p><strong data-i18n="requestDetail.requestID">รหัสคำขอ:</strong> <span id="detail-id"></span></p>
                 <p><strong data-i18n="requestDetail.documentType">ประเภทเอกสาร:</strong> <span id="detail-document-name"></span></p>
                 <p><strong data-i18n="requestDetail.deliveryMethod">วิธีการรับเอกสาร:</strong> <span id="detail-delivery-method"></span></p>
@@ -86,7 +85,7 @@
                 <p><strong data-i18n="requestDetail.status">สถานะ:</strong> <span id="detail-status"></span></p>
                 <p><strong data-i18n="requestDetail.price">ราคา:</strong> <span id="detail-price"></span></p>
               </div>
-              <div class="col-md-6">
+              <div class="col-lg-6">
                 <p><strong data-i18n="requestDetail.studentName">ชื่อนักศึกษา:</strong> <span id="detail-student-name"></span></p>
                 <p><strong data-i18n="requestDetail.studentID">รหัสนักศึกษา:</strong> <span id="detail-student-id"></span></p>
                 <p><strong data-i18n="requestDetail.email">อีเมล:</strong> <span id="detail-student-email"></span></p>
