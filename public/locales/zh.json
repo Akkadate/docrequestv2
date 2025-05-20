@@ -94,7 +94,7 @@
     "mail": "邮寄",
     "address": "邮寄地址",
     "addressPlaceholder": "输入您的邮寄地址",
-    "urgent": "加急服务（加收50泰铢）",
+    "urgent": "加急服务（每份加收50泰铢）",
     "urgentLabel": "加急",
     "paymentSlip": "支付凭证",
     "paymentSlipInfo": "上传支付凭证（图片或PDF文件）",
