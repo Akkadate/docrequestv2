@@ -230,172 +230,228 @@ function updateDocumentTable() {
   });
 }
 
-// คำนวณราคาทั้งหมด
+
+// แก้ไขฟังก์ชัน calculatePrice ใหม่ทั้งหมด
 function calculatePrice() {
-  const documentsSubtotalElement = document.getElementById('documents-subtotal');
-  const shippingFeeElement = document.getElementById('shipping-fee');
-  const urgentFeeElement = document.getElementById('urgent-fee');
-  const totalPriceElement = document.getElementById('total-price');
-  const shippingFeeContainer = document.getElementById('shipping-fee-container');
-  const urgentFeeContainer = document.getElementById('urgent-fee-container');
-  
-  if (!documentsSubtotalElement || !totalPriceElement) {
-    console.error('Price display elements not found');
-    return;
-  }
-  
-  let documentSubtotal = 0;
-  let shippingFee = 0;
-  let urgentFee = 0;
-  let totalPrice = 0;
-  
-  // คำนวณราคาเอกสารรวม
-  documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
-  
-  // ตรวจสอบวิธีการรับเอกสาร
-  const deliveryMethodElement = document.querySelector('input[name="delivery_method"]:checked');
-  if (!deliveryMethodElement) {
-    return;
-  }
-  
-  const deliveryMethod = deliveryMethodElement.value;
-  
-  // ค่าจัดส่งทางไปรษณีย์
-  if (deliveryMethod === 'mail') {
-    shippingFee = 200; // ค่าจัดส่ง 200 บาท
-    if (shippingFeeContainer) {
-      shippingFeeContainer.style.display = 'flex';
-    }
-  } else {
-    if (shippingFeeContainer) {
-      shippingFeeContainer.style.display = 'none';
-    }
-  }
-  
-  // ตรวจสอบบริการเร่งด่วน
-  const urgentCheckbox = document.getElementById('urgent');
-  if (!urgentCheckbox) {
-    console.error('Urgent checkbox not found');
-    return;
-  }
-  
-  const isUrgent = urgentCheckbox.checked;
-  console.log('Urgent checkbox status:', isUrgent);
-  
-  // นับจำนวนเอกสารทั้งหมด
-  const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-  console.log('Total documents:', totalDocuments);
-  
-  if (isUrgent && deliveryMethod === 'pickup') {
-    // คำนวณค่าบริการเร่งด่วนเป็น 50 บาทต่อฉบับ
-    urgentFee = 50 * totalDocuments;
+  try {
+    console.clear(); // ล้าง console เพื่อดูข้อมูลเฉพาะการคำนวณครั้งล่าสุด
+    console.log('==== CALCULATE PRICE FUNCTION CALLED ====');
     
-    console.log('Urgent fee calculation:', totalDocuments, 'documents x 50 baht =', urgentFee, 'baht');
+    // รับอิลิเมนต์แสดงราคาต่างๆ
+    const documentsSubtotalElement = document.getElementById('documents-subtotal');
+    const shippingFeeElement = document.getElementById('shipping-fee');
+    const urgentFeeElement = document.getElementById('urgent-fee');
+    const totalPriceElement = document.getElementById('total-price');
+    const shippingFeeContainer = document.getElementById('shipping-fee-container');
+    const urgentFeeContainer = document.getElementById('urgent-fee-container');
     
-    if (urgentFeeContainer) {
-      urgentFeeContainer.style.display = 'flex';
-      if (urgentFeeElement) {
-        urgentFeeElement.textContent = formatCurrency(urgentFee, currentLang);
-        console.log('Updated urgent fee display to:', urgentFeeElement.textContent);
+    if (!documentsSubtotalElement || !totalPriceElement) {
+      console.error('Error: Price display elements not found');
+      return;
+    }
+    
+    // ตัวแปรเก็บราคา
+    let documentSubtotal = 0;
+    let shippingFee = 0;
+    let urgentFee = 0;
+    let totalPrice = 0;
+    
+    // คำนวณราคาเอกสารรวม
+    documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
+    console.log('Document subtotal:', documentSubtotal);
+    
+    // ตรวจสอบวิธีการรับเอกสาร
+    const deliveryMethodElement = document.querySelector('input[name="delivery_method"]:checked');
+    if (!deliveryMethodElement) {
+      console.error('Error: No delivery method selected');
+      return;
+    }
+    
+    const deliveryMethod = deliveryMethodElement.value;
+    console.log('Delivery method:', deliveryMethod);
+    
+    // ค่าจัดส่งทางไปรษณีย์
+    if (deliveryMethod === 'mail') {
+      shippingFee = 200; // ค่าจัดส่ง 200 บาท
+      console.log('Shipping fee (mail):', shippingFee);
+      
+      if (shippingFeeContainer) {
+        shippingFeeContainer.style.display = 'flex';
+        console.log('Displayed shipping fee container');
+      }
+    } else {
+      shippingFee = 0;
+      if (shippingFeeContainer) {
+        shippingFeeContainer.style.display = 'none';
+        console.log('Hidden shipping fee container');
       }
     }
-  } else {
-    urgentFee = 0;
-    if (urgentFeeContainer) {
-      urgentFeeContainer.style.display = 'none';
+    
+    // ตรวจสอบบริการเร่งด่วน
+    const urgentCheckbox = document.getElementById('urgent');
+    if (!urgentCheckbox) {
+      console.error('Error: Urgent checkbox not found');
+      return;
     }
+    
+    const isUrgent = urgentCheckbox.checked;
+    console.log('Is urgent service selected:', isUrgent);
+    
+    // นับจำนวนเอกสารทั้งหมด
+    const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+    console.log('Total document quantity:', totalDocuments);
+    
+    if (isUrgent && deliveryMethod === 'pickup') {
+      // คำนวณค่าบริการเร่งด่วนเป็น 50 บาทต่อฉบับ
+      urgentFee = 50 * totalDocuments;
+      console.log(`🔴 Urgent fee calculation: ${totalDocuments} documents x 50 baht = ${urgentFee} baht`);
+      
+      if (urgentFeeContainer) {
+        urgentFeeContainer.style.display = 'flex';
+        console.log('Displayed urgent fee container');
+        
+        if (urgentFeeElement) {
+          // แสดงค่าบริการเร่งด่วน
+          urgentFeeElement.textContent = formatCurrency(urgentFee, currentLang);
+          console.log('Updated urgent fee element text to:', urgentFeeElement.textContent);
+        } else {
+          console.error('Error: Urgent fee element not found');
+        }
+      } else {
+        console.error('Error: Urgent fee container not found');
+      }
+    } else {
+      urgentFee = 0;
+      console.log('Urgent fee is 0 (service not selected or mail delivery)');
+      
+      if (urgentFeeContainer) {
+        urgentFeeContainer.style.display = 'none';
+        console.log('Hidden urgent fee container');
+      }
+    }
+    
+    // คำนวณราคารวมทั้งหมด
+    totalPrice = documentSubtotal + shippingFee + urgentFee;
+    console.log('Total price calculation:', documentSubtotal, '+', shippingFee, '+', urgentFee, '=', totalPrice);
+    
+    // อัปเดตการแสดงผล
+    documentsSubtotalElement.textContent = formatCurrency(documentSubtotal, currentLang);
+    console.log('Updated documents subtotal display:', documentsSubtotalElement.textContent);
+    
+    if (shippingFeeElement) {
+      shippingFeeElement.textContent = formatCurrency(shippingFee, currentLang);
+      console.log('Updated shipping fee display:', shippingFeeElement.textContent);
+    }
+    
+    if (urgentFeeElement) {
+      urgentFeeElement.textContent = formatCurrency(urgentFee, currentLang);
+      console.log('Updated urgent fee display:', urgentFeeElement.textContent);
+    }
+    
+    totalPriceElement.textContent = formatCurrency(totalPrice, currentLang);
+    console.log('Updated total price display:', totalPriceElement.textContent);
+    
+    // อัปเดตสรุปรายการ
+    updateSummary(deliveryMethod, isUrgent, totalDocuments);
+    console.log('Summary updated');
+    
+    // แสดง debug info เพิ่มเติม
+    console.log('==== CALCULATION COMPLETE ====');
+    console.log('Selected documents:', selectedDocuments);
+    console.log('Total document count:', totalDocuments);
+    console.log('Price breakdown:', {
+      documentSubtotal,
+      shippingFee,
+      urgentFee,
+      totalPrice
+    });
+    
+    return {
+      documentSubtotal,
+      shippingFee,
+      urgentFee,
+      totalPrice,
+      totalDocuments
+    };
+  } catch (error) {
+    console.error('Error in calculatePrice function:', error);
   }
-  
-  // คำนวณราคารวมทั้งหมด
-  totalPrice = documentSubtotal + shippingFee + urgentFee;
-  console.log('Price components:', { documentSubtotal, shippingFee, urgentFee, totalPrice });
-  
-  // อัปเดตการแสดงผล
-  documentsSubtotalElement.textContent = formatCurrency(documentSubtotal, currentLang);
-  if (shippingFeeElement) {
-    shippingFeeElement.textContent = formatCurrency(shippingFee, currentLang);
-  }
-  if (urgentFeeElement) {
-    urgentFeeElement.textContent = formatCurrency(urgentFee, currentLang);
-  }
-  totalPriceElement.textContent = formatCurrency(totalPrice, currentLang);
-  
-  // อัปเดตสรุปรายการ
-  updateSummary(deliveryMethod, isUrgent, totalDocuments);
 }
 
-// อัปเดตสรุปรายการ
-function updateSummary(deliveryMethod, isUrgent, totalDocuments) {
-  const summaryContainer = document.getElementById('summary-container');
-  
-  if (!summaryContainer) {
-    console.error('Summary container not found');
-    return;
-  }
-  
-  if (selectedDocuments.length === 0) {
-    // ใช้คำแปลตามภาษาปัจจุบัน
-    summaryContainer.innerHTML = `<p>${i18n[currentLang]?.request?.emptySelection || 'กรุณาเลือกประเภทเอกสารและวิธีการรับเอกสาร'}</p>`;
-    return;
-  }
-  
-  // หากไม่มีการส่ง totalDocuments มา ให้คำนวณใหม่
-  if (typeof totalDocuments === 'undefined') {
-    totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-  }
-  
-  console.log('Updating summary with totalDocuments:', totalDocuments);
-  
-  // สร้างข้อความสรุปรายการ
-  let summaryHTML = `
-    <div class="mb-3">
-      <strong>${i18n[currentLang]?.request?.documentType || 'ประเภทเอกสาร'}:</strong>
-      <ul class="mb-0">
-  `;
-  
-  // เพิ่มรายการเอกสารแต่ละรายการ
-  selectedDocuments.forEach(doc => {
-    summaryHTML += `<li>${doc.name} (${doc.quantity} ฉบับ) - ${formatCurrency(doc.subtotal, currentLang)}</li>`;
-  });
-  
-  summaryHTML += `
-      </ul>
-    </div>
-  `;
-  
-  // วิธีการรับเอกสาร
-  summaryHTML += `
-    <div class="mb-3">
-      <strong>${i18n[currentLang]?.request?.deliveryMethod || 'วิธีการรับเอกสาร'}:</strong>
-      <div>${deliveryMethod === 'pickup' ? 
-        (i18n[currentLang]?.request?.pickup || 'รับด้วยตนเอง') : 
-        (i18n[currentLang]?.request?.mail || 'รับทางไปรษณีย์')}</div>
-  `;
-  
-  // ค่าจัดส่ง (ถ้ามี)
-  if (deliveryMethod === 'mail') {
-    summaryHTML += `<div>${i18n[currentLang]?.request?.shippingFee || 'ค่าจัดส่ง'}: ${formatCurrency(200, currentLang)}</div>`;
-  }
-  
-  summaryHTML += `</div>`;
-  
-  // บริการเร่งด่วน (ถ้ามี)
-  if (isUrgent && deliveryMethod === 'pickup') {
-    const urgentFee = 50 * totalDocuments; // 50 บาท x จำนวนเอกสารทั้งหมด
-    console.log('Urgent fee in summary:', urgentFee);
+// แก้ไขฟังก์ชัน updateSummary ด้วย
+function updateSummary(deliveryMethod, isUrgent) {
+  try {
+    console.log('updateSummary called with:', { deliveryMethod, isUrgent });
+    
+    const summaryContainer = document.getElementById('summary-container');
+    
+    if (!summaryContainer) {
+      console.error('Summary container not found');
+      return;
+    }
+    
+    if (selectedDocuments.length === 0) {
+      // ใช้คำแปลตามภาษาปัจจุบัน
+      summaryContainer.innerHTML = `<p>${i18n[currentLang]?.request?.emptySelection || 'กรุณาเลือกประเภทเอกสารและวิธีการรับเอกสาร'}</p>`;
+      return;
+    }
+    
+    // นับจำนวนเอกสารทั้งหมด
+    const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+    console.log('Total documents in updateSummary:', totalDocuments);
+    
+    // สร้างข้อความสรุปรายการ
+    let summaryHTML = `
+      <div class="mb-3">
+        <strong>${i18n[currentLang]?.request?.documentType || 'ประเภทเอกสาร'}:</strong>
+        <ul class="mb-0">
+    `;
+    
+    // เพิ่มรายการเอกสารแต่ละรายการ
+    selectedDocuments.forEach(doc => {
+      summaryHTML += `<li>${doc.name} (${doc.quantity} ฉบับ) - ${formatCurrency(doc.subtotal, currentLang)}</li>`;
+    });
     
     summaryHTML += `
-      <div class="mb-3">
-        <strong>${i18n[currentLang]?.request?.urgentService || 'บริการเร่งด่วน'}:</strong>
-        <div>${formatCurrency(urgentFee, currentLang)} (${totalDocuments} ฉบับ x 50 บาท)</div>
+        </ul>
       </div>
     `;
+    
+    // วิธีการรับเอกสาร
+    summaryHTML += `
+      <div class="mb-3">
+        <strong>${i18n[currentLang]?.request?.deliveryMethod || 'วิธีการรับเอกสาร'}:</strong>
+        <div>${deliveryMethod === 'pickup' ? 
+          (i18n[currentLang]?.request?.pickup || 'รับด้วยตนเอง') : 
+          (i18n[currentLang]?.request?.mail || 'รับทางไปรษณีย์')}</div>
+    `;
+    
+    // ค่าจัดส่ง (ถ้ามี)
+    if (deliveryMethod === 'mail') {
+      summaryHTML += `<div>${i18n[currentLang]?.request?.shippingFee || 'ค่าจัดส่ง'}: ${formatCurrency(200, currentLang)}</div>`;
+    }
+    
+    summaryHTML += `</div>`;
+    
+    // บริการเร่งด่วน (ถ้ามี)
+    if (isUrgent && deliveryMethod === 'pickup') {
+      const urgentFee = 50 * totalDocuments; // 50 บาท x จำนวนเอกสารทั้งหมด
+      console.log('🔴 Urgent fee in summary:', urgentFee, '(', totalDocuments, 'x 50)');
+      
+      summaryHTML += `
+        <div class="mb-3">
+          <strong>${i18n[currentLang]?.request?.urgentService || 'บริการเร่งด่วน'}:</strong>
+          <div>${formatCurrency(urgentFee, currentLang)} (${totalDocuments} ฉบับ x 50 บาท)</div>
+        </div>
+      `;
+    }
+    
+    summaryContainer.innerHTML = summaryHTML;
+    console.log('Summary updated successfully');
+  } catch (error) {
+    console.error('Error in updateSummary function:', error);
   }
-  
-  summaryContainer.innerHTML = summaryHTML;
 }
-
-
 
 // ส่งคำขอเอกสาร
 async function submitDocumentRequest(event) {
