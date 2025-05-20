@@ -59,10 +59,10 @@ function displayRequestDetails(request) {
         <table class="table table-sm table-bordered">
           <thead>
             <tr>
-              <th>ประเภทเอกสาร</th>
-              <th>จำนวน</th>
-              <th>ราคาต่อชิ้น</th>
-              <th>รวม</th>
+              <th>${i18n[currentLang]?.requestDetail?.documentType || 'ประเภทเอกสาร'}</th>
+              <th class="text-center">${i18n[currentLang]?.requestDetail?.quantity || 'จำนวน'}</th>
+              <th class="text-end">${i18n[currentLang]?.requestDetail?.unitPrice || 'ราคาต่อชิ้น'}</th>
+              <th class="text-end">${i18n[currentLang]?.requestDetail?.subtotal || 'รวม'}</th>
             </tr>
           </thead>
           <tbody>
@@ -75,21 +75,47 @@ function displayRequestDetails(request) {
               </tr>
             `).join('')}
           </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.documentSubtotal || 'รวมค่าเอกสาร'}:</th>
+              <th class="text-end">${formatCurrency(request.document_items.reduce((total, item) => total + parseFloat(item.subtotal), 0), currentLang)}</th>
+            </tr>
+            ${request.delivery_method === 'mail' ? `
+              <tr>
+                <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.shippingFee || 'ค่าจัดส่ง'}:</th>
+                <th class="text-end">${formatCurrency(200, currentLang)}</th>
+              </tr>
+            ` : ''}
+            ${request.urgent ? `
+              <tr>
+                <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.urgentFee || 'ค่าบริการเร่งด่วน'}:</th>
+                <th class="text-end">${formatCurrency(50 * request.document_items.reduce((count, item) => count + parseInt(item.quantity), 0), currentLang)}</th>
+              </tr>
+            ` : ''}
+            <tr>
+              <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.totalPrice || 'ราคารวมทั้งหมด'}:</th>
+              <th class="text-end">${formatCurrency(request.total_price, currentLang)}</th>
+            </tr>
+          </tfoot>
         </table>
       </div>
     `;
     
-    document.getElementById('detail-document-name').innerHTML = `หลายรายการ (${request.document_items.length} รายการ) ${documentItemsHTML}`;
+    document.getElementById('detail-document-name').innerHTML = `
+      <span class="fw-bold">${i18n[currentLang]?.requestDetail?.multipleItems || 'หลายรายการ'} (${request.document_items.length} ${i18n[currentLang]?.requestDetail?.items || 'รายการ'})</span>
+      ${documentItemsHTML}
+    `;
   } else {
     // กรณีมีเอกสารเดียว
     document.getElementById('detail-document-name').textContent = request.document_name;
   }
   
   document.getElementById('detail-delivery-method').textContent = request.delivery_method === 'pickup' ? 
-    i18n[currentLang].request.pickup : i18n[currentLang].request.mail;
+    i18n[currentLang]?.request?.pickup || 'รับด้วยตนเอง' : 
+    i18n[currentLang]?.request?.mail || 'รับทางไปรษณีย์';
   
   if (request.urgent) {
-    document.getElementById('detail-delivery-method').innerHTML += ` <span class="badge bg-warning text-dark">${i18n[currentLang].request.urgentLabel}</span>`;
+    document.getElementById('detail-delivery-method').innerHTML += ` <span class="badge bg-warning text-dark">${i18n[currentLang]?.request?.urgentLabel || 'เร่งด่วน'}</span>`;
   }
   
   document.getElementById('detail-created-at').textContent = formatDate(request.created_at, currentLang);
@@ -122,17 +148,23 @@ function displayRequestDetails(request) {
       `;
     } else {
       document.getElementById('detail-payment-slip').innerHTML = `
-        <p><i class="bi bi-file-earmark-pdf"></i> <a href="${request.payment_slip_url}" target="_blank">ดูหลักฐานการชำระเงิน</a></p>
+        <p><i class="bi bi-file-earmark-pdf"></i> <a href="${request.payment_slip_url}" target="_blank">${i18n[currentLang]?.requestDetail?.viewPaymentSlip || 'ดูหลักฐานการชำระเงิน'}</a></p>
       `;
     }
   } else {
     document.getElementById('detail-payment-slip').innerHTML = `
-      <p class="text-muted">ยังไม่มีหลักฐานการชำระเงิน</p>
+      <p class="text-muted">${i18n[currentLang]?.requestDetail?.noPaymentSlip || 'ยังไม่มีหลักฐานการชำระเงิน'}</p>
     `;
   }
   
   // ตั้งค่าสถานะปัจจุบันในฟอร์ม
   document.getElementById('status').value = request.status;
+  
+  // แสดงส่วนพิมพ์ใบรับคำขอ
+  const printContainer = document.getElementById('print-receipt-container');
+  if (printContainer) {
+    printContainer.style.display = 'block';
+  }
 }
 
 // ตั้งค่าการอัปเดตสถานะ
@@ -170,17 +202,211 @@ async function updateRequestStatus() {
     const data = await response.json();
     
     if (response.ok) {
-      showAlert(i18n[currentLang].success.updateStatus, 'success');
+      showAlert(i18n[currentLang]?.success?.updateStatus || 'อัปเดตสถานะสำเร็จ', 'success');
       
       // โหลดข้อมูลใหม่
       setTimeout(() => {
         loadRequestDetails();
       }, 1000);
     } else {
-      showAlert(data.message || i18n[currentLang].errors.updateStatusFailed, 'danger');
+      showAlert(data.message || i18n[currentLang]?.errors?.updateStatusFailed || 'เกิดข้อผิดพลาดในการอัปเดตสถานะ', 'danger');
     }
   } catch (error) {
     console.error('Error updating request status:', error);
-    showAlert(i18n[currentLang].errors.serverError, 'danger');
+    showAlert(i18n[currentLang]?.errors?.serverError || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์', 'danger');
   }
+}
+
+// พิมพ์ใบรับคำขอ
+function printReceipt() {
+  // สร้างหน้าต่างใหม่สำหรับพิมพ์
+  const printWindow = window.open('', '_blank', 'width=800,height=600');
+  const requestId = document.getElementById('detail-id').textContent;
+  const studentName = document.getElementById('detail-student-name').textContent;
+  const studentId = document.getElementById('detail-student-id').textContent;
+  const createdAt = document.getElementById('detail-created-at').textContent;
+  const documentName = document.getElementById('detail-document-name').innerHTML;
+  const deliveryMethod = document.getElementById('detail-delivery-method').textContent;
+  const totalPrice = document.getElementById('detail-price').textContent;
+  
+  // สร้าง HTML สำหรับพิมพ์
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>ใบรับคำขอเอกสาร #${requestId}</title>
+      <style>
+        body {
+          font-family: 'Prompt', sans-serif;
+          font-size: 14px;
+          line-height: 1.5;
+          margin: 0;
+          padding: 20px;
+        }
+        .receipt {
+          border: 1px solid #ddd;
+          padding: 20px;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 20px;
+          border-bottom: 2px solid #0d6efd;
+          padding-bottom: 15px;
+        }
+        .logo {
+          max-width: 150px;
+          height: auto;
+          margin-bottom: 10px;
+        }
+        h1 {
+          font-size: 22px;
+          margin: 0;
+          color: #0d6efd;
+        }
+        h2 {
+          font-size: 16px;
+          margin: 0 0 5px 0;
+          color: #333;
+        }
+        p {
+          margin: 0 0 5px 0;
+        }
+        .info {
+          margin-bottom: 20px;
+        }
+        .info-group {
+          margin-bottom: 15px;
+        }
+        .contact {
+          border-top: 1px solid #ddd;
+          padding-top: 15px;
+          margin-top: 20px;
+          font-size: 12px;
+          text-align: center;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 15px;
+        }
+        th, td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: left;
+        }
+        th {
+          background-color: #f2f2f2;
+        }
+        .total {
+          text-align: right;
+          font-weight: bold;
+        }
+        .footer {
+          margin-top: 30px;
+          display: flex;
+          justify-content: space-between;
+        }
+        .signature {
+          width: 45%;
+          text-align: center;
+        }
+        .signature-line {
+          border-top: 1px solid #000;
+          margin-top: 50px;
+          display: inline-block;
+          width: 80%;
+        }
+        .document-items {
+          width: 100%;
+          margin-bottom: 15px;
+        }
+        .document-items th {
+          text-align: center;
+        }
+        .document-items td.quantity, .document-items td.price, .document-items td.subtotal {
+          text-align: right;
+        }
+        @media print {
+          body {
+            padding: 0;
+          }
+          .no-print {
+            display: none;
+          }
+          .receipt {
+            border: none;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="receipt">
+        <div class="header">
+          <img src="/img/logo.png" alt="Logo" class="logo">
+          <h1>ใบรับคำขอเอกสาร</h1>
+          <h2>สำนักทะเบียนและประมวลผล มหาวิทยาลัยนอร์ทกรุงเทพ</h2>
+        </div>
+        
+        <div class="info">
+          <div class="info-group">
+            <p><strong>เลขที่คำขอ:</strong> ${requestId}</p>
+            <p><strong>วันที่ขอ:</strong> ${createdAt}</p>
+          </div>
+          
+          <div class="info-group">
+            <p><strong>ชื่อนักศึกษา:</strong> ${studentName}</p>
+            <p><strong>รหัสนักศึกษา:</strong> ${studentId}</p>
+          </div>
+          
+          <div class="info-group">
+            <p><strong>ประเภทเอกสาร:</strong></p>
+            ${documentName}
+          </div>
+          
+          <div class="info-group">
+            <p><strong>วิธีการรับเอกสาร:</strong> ${deliveryMethod}</p>
+            <p><strong>ราคารวม:</strong> ${totalPrice}</p>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <div class="signature">
+            <div class="signature-line"></div>
+            <p>ลายมือชื่อนักศึกษา</p>
+          </div>
+          
+          <div class="signature">
+            <div class="signature-line"></div>
+            <p>ลายมือชื่อเจ้าหน้าที่</p>
+          </div>
+        </div>
+        
+        <div class="contact">
+          <p>มหาวิทยาลัยนอร์ทกรุงเทพ สำนักทะเบียนและประมวลผล</p>
+          <p>โทร. 02-972-7200 ต่อ 1234-1235 | อีเมล: registrar@northbkk.ac.th</p>
+        </div>
+      </div>
+      
+      <div class="no-print" style="text-align: center; margin-top: 20px;">
+        <button onclick="window.print();" style="padding: 10px 20px; background-color: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer;">พิมพ์ใบรับคำขอ</button>
+        <button onclick="window.close();" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">ปิด</button>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  // เขียน HTML ลงในหน้าต่างใหม่
+  printWindow.document.open();
+  printWindow.document.write(printContent);
+  printWindow.document.close();
+  
+  // รอให้เนื้อหาโหลดเสร็จก่อนแสดงหน้าต่างพิมพ์
+  printWindow.onload = function() {
+    setTimeout(function() {
+      printWindow.focus();
+    }, 500);
+  };
 }
