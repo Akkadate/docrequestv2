@@ -82,6 +82,7 @@
     "title": "申请文件 - 在线文件申请系统",
     "header": "申请文件",
     "documentType": "文件类型",
+    "addDocument": "添加文件",
     "documentName": "文件名称",
     "unitPrice": "单价",
     "quantity": "数量",
