@@ -153,6 +153,7 @@
     "title": "申请详情 - 在线文件申请系统",
     "header": "文件申请详情",
     "backToList": "返回申请列表",
+    "quantity": "数量",
     "requestInfo": "申请信息",
     "requestID": "申请ID",
     "documentType": "文件类型",
