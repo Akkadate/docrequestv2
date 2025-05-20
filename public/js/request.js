@@ -275,23 +275,32 @@ function calculatePrice() {
   // ตรวจสอบบริการเร่งด่วน
   const urgentCheckbox = document.getElementById('urgent');
   if (!urgentCheckbox) {
+    console.error('Urgent checkbox not found');
     return;
   }
   
   const isUrgent = urgentCheckbox.checked;
+  console.log('Urgent checkbox status:', isUrgent);
+  
+  // นับจำนวนเอกสารทั้งหมด
+  const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+  console.log('Total documents:', totalDocuments);
   
   if (isUrgent && deliveryMethod === 'pickup') {
-    // นับจำนวนเอกสารทั้งหมด
-    const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
     // คำนวณค่าบริการเร่งด่วนเป็น 50 บาทต่อฉบับ
     urgentFee = 50 * totalDocuments;
     
-    console.log(`คำนวณค่าบริการเร่งด่วน: ${totalDocuments} ฉบับ x 50 บาท = ${urgentFee} บาท`);
+    console.log('Urgent fee calculation:', totalDocuments, 'documents x 50 baht =', urgentFee, 'baht');
     
     if (urgentFeeContainer) {
       urgentFeeContainer.style.display = 'flex';
+      if (urgentFeeElement) {
+        urgentFeeElement.textContent = formatCurrency(urgentFee, currentLang);
+        console.log('Updated urgent fee display to:', urgentFeeElement.textContent);
+      }
     }
   } else {
+    urgentFee = 0;
     if (urgentFeeContainer) {
       urgentFeeContainer.style.display = 'none';
     }
@@ -299,6 +308,7 @@ function calculatePrice() {
   
   // คำนวณราคารวมทั้งหมด
   totalPrice = documentSubtotal + shippingFee + urgentFee;
+  console.log('Price components:', { documentSubtotal, shippingFee, urgentFee, totalPrice });
   
   // อัปเดตการแสดงผล
   documentsSubtotalElement.textContent = formatCurrency(documentSubtotal, currentLang);
@@ -311,11 +321,11 @@ function calculatePrice() {
   totalPriceElement.textContent = formatCurrency(totalPrice, currentLang);
   
   // อัปเดตสรุปรายการ
-  updateSummary(deliveryMethod, isUrgent);
+  updateSummary(deliveryMethod, isUrgent, totalDocuments);
 }
 
 // อัปเดตสรุปรายการ
-function updateSummary(deliveryMethod, isUrgent) {
+function updateSummary(deliveryMethod, isUrgent, totalDocuments) {
   const summaryContainer = document.getElementById('summary-container');
   
   if (!summaryContainer) {
@@ -329,8 +339,12 @@ function updateSummary(deliveryMethod, isUrgent) {
     return;
   }
   
-  // นับจำนวนเอกสารทั้งหมด
-  const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+  // หากไม่มีการส่ง totalDocuments มา ให้คำนวณใหม่
+  if (typeof totalDocuments === 'undefined') {
+    totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+  }
+  
+  console.log('Updating summary with totalDocuments:', totalDocuments);
   
   // สร้างข้อความสรุปรายการ
   let summaryHTML = `
@@ -368,6 +382,8 @@ function updateSummary(deliveryMethod, isUrgent) {
   // บริการเร่งด่วน (ถ้ามี)
   if (isUrgent && deliveryMethod === 'pickup') {
     const urgentFee = 50 * totalDocuments; // 50 บาท x จำนวนเอกสารทั้งหมด
+    console.log('Urgent fee in summary:', urgentFee);
+    
     summaryHTML += `
       <div class="mb-3">
         <strong>${i18n[currentLang]?.request?.urgentService || 'บริการเร่งด่วน'}:</strong>
@@ -378,6 +394,8 @@ function updateSummary(deliveryMethod, isUrgent) {
   
   summaryContainer.innerHTML = summaryHTML;
 }
+
+
 
 // ส่งคำขอเอกสาร
 async function submitDocumentRequest(event) {
@@ -423,6 +441,15 @@ async function submitDocumentRequest(event) {
   // คำนวณค่าบริการเร่งด่วน (ถ้ามี)
   const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
   const urgentFee = (urgent && deliveryMethod === 'pickup') ? 50 * totalDocuments : 0;
+  
+  console.log('Submitting request with prices:', { 
+    documentsSubtotal, 
+    shippingFee, 
+    urgentFee, 
+    totalDocuments, 
+    urgent, 
+    deliveryMethod 
+  });
   
   // คำนวณราคารวมทั้งหมด
   const totalPrice = documentsSubtotal + shippingFee + urgentFee;
@@ -488,6 +515,8 @@ async function submitDocumentRequest(event) {
 
 // เพิ่มการฟังเหตุการณ์เมื่อโหลดหน้าเว็บ
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('Page loaded, initializing...');
+  
   // ตรวจสอบว่ามีการเข้าสู่ระบบหรือไม่
   checkLogin();
   
@@ -495,19 +524,21 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDocumentTypes();
   
   // ตั้งค่าปุ่มเพิ่มเอกสาร
-  // ตั้งค่าปุ่มเพิ่มเอกสาร
   const addDocumentButton = document.getElementById('add-document-button');
   if (addDocumentButton) {
     addDocumentButton.addEventListener('click', addDocumentToSelection);
+    console.log('Add document button listener added');
   } else {
     console.warn('Element with id "add-document-button" not found');
   }
   
-   // เพิ่มการฟังเหตุการณ์เมื่อเลือกวิธีการรับเอกสาร
+  // เพิ่มการฟังเหตุการณ์เมื่อเลือกวิธีการรับเอกสาร
   const deliveryMethods = document.querySelectorAll('input[name="delivery_method"]');
   if (deliveryMethods && deliveryMethods.length > 0) {
     deliveryMethods.forEach(method => {
       method.addEventListener('change', () => {
+        console.log('Delivery method changed to:', method.value);
+        
         const addressContainer = document.getElementById('address-container');
         const urgentContainer = document.getElementById('urgent-container');
         
@@ -533,14 +564,19 @@ document.addEventListener('DOMContentLoaded', () => {
         calculatePrice();
       });
     });
+    console.log('Delivery method listeners added');
   } else {
     console.warn('No delivery method inputs found');
   }
   
-// เพิ่มการฟังเหตุการณ์เมื่อเลือกบริการเร่งด่วน
+  // เพิ่มการฟังเหตุการณ์เมื่อเลือกบริการเร่งด่วน
   const urgentCheckbox = document.getElementById('urgent');
   if (urgentCheckbox) {
-    urgentCheckbox.addEventListener('change', calculatePrice);
+    urgentCheckbox.addEventListener('change', () => {
+      console.log('Urgent checkbox changed. New state:', urgentCheckbox.checked);
+      calculatePrice();
+    });
+    console.log('Urgent checkbox listener added');
   } else {
     console.warn('Element with id "urgent" not found');
   }
@@ -549,12 +585,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const documentRequestForm = document.getElementById('document-request-form');
   if (documentRequestForm) {
     documentRequestForm.addEventListener('submit', submitDocumentRequest);
+    console.log('Document request form listener added');
   } else {
     console.warn('Element with id "document-request-form" not found');
   }
-
   
- // โหลดข้อมูลบัญชีธนาคาร
+  // โหลดข้อมูลบัญชีธนาคาร
   const bankNameElement = document.getElementById('bank-name');
   const accountNumberElement = document.getElementById('account-number');
   const accountNameElement = document.getElementById('account-name');
@@ -565,5 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // เริ่มแสดงตารางเอกสารที่ว่าง
   updateDocumentTable();
+  
+  console.log('Initialization complete');
 });
 
