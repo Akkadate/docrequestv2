@@ -230,13 +230,9 @@ function updateDocumentTable() {
   });
 }
 
-
-// แก้ไขฟังก์ชัน calculatePrice ใหม่ทั้งหมด
+// คำนวณราคาทั้งหมด - แก้ไขใหม่
 function calculatePrice() {
   try {
-    console.clear(); // ล้าง console เพื่อดูข้อมูลเฉพาะการคำนวณครั้งล่าสุด
-    console.log('==== CALCULATE PRICE FUNCTION CALLED ====');
-    
     // รับอิลิเมนต์แสดงราคาต่างๆ
     const documentsSubtotalElement = document.getElementById('documents-subtotal');
     const shippingFeeElement = document.getElementById('shipping-fee');
@@ -257,8 +253,9 @@ function calculatePrice() {
     let totalPrice = 0;
     
     // คำนวณราคาเอกสารรวม
-    documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
-    console.log('Document subtotal:', documentSubtotal);
+    if (selectedDocuments && selectedDocuments.length > 0) {
+      documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
+    }
     
     // ตรวจสอบวิธีการรับเอกสาร
     const deliveryMethodElement = document.querySelector('input[name="delivery_method"]:checked');
@@ -268,22 +265,18 @@ function calculatePrice() {
     }
     
     const deliveryMethod = deliveryMethodElement.value;
-    console.log('Delivery method:', deliveryMethod);
     
     // ค่าจัดส่งทางไปรษณีย์
     if (deliveryMethod === 'mail') {
       shippingFee = 200; // ค่าจัดส่ง 200 บาท
-      console.log('Shipping fee (mail):', shippingFee);
       
       if (shippingFeeContainer) {
         shippingFeeContainer.style.display = 'flex';
-        console.log('Displayed shipping fee container');
       }
     } else {
       shippingFee = 0;
       if (shippingFeeContainer) {
         shippingFeeContainer.style.display = 'none';
-        console.log('Hidden shipping fee container');
       }
     }
     
@@ -295,94 +288,53 @@ function calculatePrice() {
     }
     
     const isUrgent = urgentCheckbox.checked;
-    console.log('Is urgent service selected:', isUrgent);
     
     // นับจำนวนเอกสารทั้งหมด
-    const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-    console.log('Total document quantity:', totalDocuments);
+    let totalDocuments = 0;
+    if (selectedDocuments && selectedDocuments.length > 0) {
+      totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+    }
     
     if (isUrgent && deliveryMethod === 'pickup') {
       // คำนวณค่าบริการเร่งด่วนเป็น 50 บาทต่อฉบับ
       urgentFee = 50 * totalDocuments;
-      console.log(`🔴 Urgent fee calculation: ${totalDocuments} documents x 50 baht = ${urgentFee} baht`);
       
       if (urgentFeeContainer) {
         urgentFeeContainer.style.display = 'flex';
-        console.log('Displayed urgent fee container');
-        
-        if (urgentFeeElement) {
-          // แสดงค่าบริการเร่งด่วน
-          urgentFeeElement.textContent = formatCurrency(urgentFee, currentLang);
-          console.log('Updated urgent fee element text to:', urgentFeeElement.textContent);
-        } else {
-          console.error('Error: Urgent fee element not found');
-        }
-      } else {
-        console.error('Error: Urgent fee container not found');
       }
     } else {
       urgentFee = 0;
-      console.log('Urgent fee is 0 (service not selected or mail delivery)');
-      
       if (urgentFeeContainer) {
         urgentFeeContainer.style.display = 'none';
-        console.log('Hidden urgent fee container');
       }
     }
     
     // คำนวณราคารวมทั้งหมด
     totalPrice = documentSubtotal + shippingFee + urgentFee;
-    console.log('Total price calculation:', documentSubtotal, '+', shippingFee, '+', urgentFee, '=', totalPrice);
     
     // อัปเดตการแสดงผล
     documentsSubtotalElement.textContent = formatCurrency(documentSubtotal, currentLang);
-    console.log('Updated documents subtotal display:', documentsSubtotalElement.textContent);
     
     if (shippingFeeElement) {
       shippingFeeElement.textContent = formatCurrency(shippingFee, currentLang);
-      console.log('Updated shipping fee display:', shippingFeeElement.textContent);
     }
     
     if (urgentFeeElement) {
       urgentFeeElement.textContent = formatCurrency(urgentFee, currentLang);
-      console.log('Updated urgent fee display:', urgentFeeElement.textContent);
     }
     
     totalPriceElement.textContent = formatCurrency(totalPrice, currentLang);
-    console.log('Updated total price display:', totalPriceElement.textContent);
     
     // อัปเดตสรุปรายการ
-    updateSummary(deliveryMethod, isUrgent, totalDocuments);
-    console.log('Summary updated');
-    
-    // แสดง debug info เพิ่มเติม
-    console.log('==== CALCULATION COMPLETE ====');
-    console.log('Selected documents:', selectedDocuments);
-    console.log('Total document count:', totalDocuments);
-    console.log('Price breakdown:', {
-      documentSubtotal,
-      shippingFee,
-      urgentFee,
-      totalPrice
-    });
-    
-    return {
-      documentSubtotal,
-      shippingFee,
-      urgentFee,
-      totalPrice,
-      totalDocuments
-    };
+    updateSummary(deliveryMethod, isUrgent);
   } catch (error) {
     console.error('Error in calculatePrice function:', error);
   }
 }
 
-// แก้ไขฟังก์ชัน updateSummary ด้วย
+// อัปเดตสรุปรายการ - แก้ไขใหม่
 function updateSummary(deliveryMethod, isUrgent) {
   try {
-    console.log('updateSummary called with:', { deliveryMethod, isUrgent });
-    
     const summaryContainer = document.getElementById('summary-container');
     
     if (!summaryContainer) {
@@ -390,7 +342,7 @@ function updateSummary(deliveryMethod, isUrgent) {
       return;
     }
     
-    if (selectedDocuments.length === 0) {
+    if (!selectedDocuments || selectedDocuments.length === 0) {
       // ใช้คำแปลตามภาษาปัจจุบัน
       summaryContainer.innerHTML = `<p>${i18n[currentLang]?.request?.emptySelection || 'กรุณาเลือกประเภทเอกสารและวิธีการรับเอกสาร'}</p>`;
       return;
@@ -398,7 +350,6 @@ function updateSummary(deliveryMethod, isUrgent) {
     
     // นับจำนวนเอกสารทั้งหมด
     const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-    console.log('Total documents in updateSummary:', totalDocuments);
     
     // สร้างข้อความสรุปรายการ
     let summaryHTML = `
@@ -436,7 +387,6 @@ function updateSummary(deliveryMethod, isUrgent) {
     // บริการเร่งด่วน (ถ้ามี)
     if (isUrgent && deliveryMethod === 'pickup') {
       const urgentFee = 50 * totalDocuments; // 50 บาท x จำนวนเอกสารทั้งหมด
-      console.log('🔴 Urgent fee in summary:', urgentFee, '(', totalDocuments, 'x 50)');
       
       summaryHTML += `
         <div class="mb-3">
@@ -447,13 +397,12 @@ function updateSummary(deliveryMethod, isUrgent) {
     }
     
     summaryContainer.innerHTML = summaryHTML;
-    console.log('Summary updated successfully');
   } catch (error) {
     console.error('Error in updateSummary function:', error);
   }
 }
 
-// ส่งคำขอเอกสาร
+// ส่งคำขอเอกสาร - แก้ไขเล็กน้อย
 async function submitDocumentRequest(event) {
   event.preventDefault();
   
@@ -465,7 +414,7 @@ async function submitDocumentRequest(event) {
   }
   
   // ตรวจสอบว่ามีการเลือกเอกสารหรือไม่
-  if (selectedDocuments.length === 0) {
+  if (!selectedDocuments || selectedDocuments.length === 0) {
     showAlert(i18n[currentLang]?.errors?.selectDocumentType || 'กรุณาเลือกประเภทเอกสารและระบุจำนวน', 'danger');
     return;
   }
@@ -497,15 +446,6 @@ async function submitDocumentRequest(event) {
   // คำนวณค่าบริการเร่งด่วน (ถ้ามี)
   const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
   const urgentFee = (urgent && deliveryMethod === 'pickup') ? 50 * totalDocuments : 0;
-  
-  console.log('Submitting request with prices:', { 
-    documentsSubtotal, 
-    shippingFee, 
-    urgentFee, 
-    totalDocuments, 
-    urgent, 
-    deliveryMethod 
-  });
   
   // คำนวณราคารวมทั้งหมด
   const totalPrice = documentsSubtotal + shippingFee + urgentFee;
@@ -659,5 +599,12 @@ document.addEventListener('DOMContentLoaded', () => {
   updateDocumentTable();
   
   console.log('Initialization complete');
+  
+  // ยกเลิกใช้สคริปต์ฉุกเฉินใน HTML โดยทำให้ตัวแปรเป็น global
+  window.selectedDocuments = selectedDocuments;
+  window.calculatePrice = calculatePrice;
+  window.updateDocumentTable = updateDocumentTable;
+  window.updateSummary = updateSummary;
+  window.formatCurrency = formatCurrency;
+  window.currentLang = currentLang;
 });
-
