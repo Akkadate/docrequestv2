@@ -43,6 +43,35 @@ CREATE TABLE document_requests (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- document_request_items.sql
+-- สร้างตารางสำหรับเก็บรายละเอียดรายการเอกสารในคำขอ
+
+CREATE TABLE IF NOT EXISTS document_request_items (
+  id SERIAL PRIMARY KEY,
+  request_id INTEGER REFERENCES document_requests(id) ON DELETE CASCADE,
+  document_type_id INTEGER REFERENCES document_types(id),
+  quantity INTEGER NOT NULL DEFAULT 1,
+  price_per_unit DECIMAL(10, 2) NOT NULL,
+  subtotal DECIMAL(10, 2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- สร้าง index เพื่อความเร็วในการค้นหา
+CREATE INDEX IF NOT EXISTS idx_document_request_items_request_id ON document_request_items(request_id);
+CREATE INDEX IF NOT EXISTS idx_document_request_items_document_type_id ON document_request_items(document_type_id);
+
+-- อัพเดทสถานะคำขอเอกสาร
+ALTER TABLE document_requests ADD COLUMN IF NOT EXISTS has_multiple_items BOOLEAN DEFAULT FALSE;
+
+-- สร้าง comment เพื่ออธิบายการทำงานของตาราง
+COMMENT ON TABLE document_request_items IS 'เก็บรายละเอียดรายการเอกสารในคำขอแต่ละรายการ';
+COMMENT ON COLUMN document_request_items.request_id IS 'รหัสอ้างอิงคำขอหลัก';
+COMMENT ON COLUMN document_request_items.document_type_id IS 'รหัสประเภทเอกสาร';
+COMMENT ON COLUMN document_request_items.quantity IS 'จำนวนเอกสาร';
+COMMENT ON COLUMN document_request_items.price_per_unit IS 'ราคาต่อฉบับ';
+COMMENT ON COLUMN document_request_items.subtotal IS 'ราคารวมของรายการนี้';
+
+
 -- เพิ่มข้อมูลคณะ
 INSERT INTO faculties (name_th, name_en, name_zh) VALUES
     ('คณะบริหารธุรกิจ', 'Faculty of Business Administration', '工商管理学院'),
