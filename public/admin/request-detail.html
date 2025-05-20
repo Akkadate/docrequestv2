@@ -13,8 +13,8 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -25,20 +25,17 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
-    <!--      <li class="nav-item">
-            <a class="nav-link" href="../index.html" data-i18n="navbar.home">หน้าหลัก</a>
-          </li> -->
           <li class="nav-item">
-            <a class="nav-link" href="dashboard.html" data-i18n="navbar.adminPanel">หน้าหลัก</a>
+            <a class="nav-link" href="index.html" data-i18n="navbar.home">หน้าหลัก</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="requests.html" data-i18n="admin.dashboard.requestManagement">จัดการคำขอเอกสาร</a>
+            <a class="nav-link" href="dashboard.html" data-i18n="navbar.dashboard">แดชบอร์ด</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="users.html" data-i18n="admin.dashboard.userManagement">จัดการผู้ใช้</a>
+            <a class="nav-link" href="requests.html" data-i18n="navbar.requests">คำขอเอกสาร</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="reports.html" data-i18n="admin.dashboard.reports">รายงาน</a>
+            <a class="nav-link" href="users.html" data-i18n="navbar.users">จัดการผู้ใช้</a>
           </li>
         </ul>
         <div class="language-selector d-flex me-3">
@@ -58,9 +55,16 @@
   <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 data-i18n="requestDetail.header">รายละเอียดคำขอเอกสาร</h2>
-      <a href="requests.html" class="btn btn-outline-primary">
-        <i class="bi bi-arrow-left"></i> <span data-i18n="requestDetail.backToList">กลับไปยังรายการคำขอ</span>
-      </a>
+      <div>
+        <div id="print-receipt-container" style="display: none; display: inline-block;">
+          <button class="btn btn-outline-primary me-2" onclick="printReceipt()">
+            <i class="bi bi-printer"></i> <span data-i18n="requestDetail.printReceipt">พิมพ์ใบรับคำขอ</span>
+          </button>
+        </div>
+        <a href="requests.html" class="btn btn-outline-primary">
+          <i class="bi bi-arrow-left"></i> <span data-i18n="requestDetail.backToList">กลับไปยังรายการคำขอ</span>
+        </a>
+      </div>
     </div>
     
     <div id="alert-container"></div>
@@ -77,12 +81,17 @@
                 <p><strong data-i18n="requestDetail.requestID">รหัสคำขอ:</strong> <span id="detail-id"></span></p>
                 <p><strong data-i18n="requestDetail.documentType">ประเภทเอกสาร:</strong> <span id="detail-document-name"></span></p>
                 <p><strong data-i18n="requestDetail.deliveryMethod">วิธีการรับเอกสาร:</strong> <span id="detail-delivery-method"></span></p>
-              </div>
-              <div class="col-md-6">
                 <p><strong data-i18n="requestDetail.requestDate">วันที่ขอ:</strong> <span id="detail-created-at"></span></p>
                 <p><strong data-i18n="requestDetail.lastUpdated">อัปเดตล่าสุด:</strong> <span id="detail-updated-at"></span></p>
                 <p><strong data-i18n="requestDetail.status">สถานะ:</strong> <span id="detail-status"></span></p>
                 <p><strong data-i18n="requestDetail.price">ราคา:</strong> <span id="detail-price"></span></p>
+              </div>
+              <div class="col-md-6">
+                <p><strong data-i18n="requestDetail.studentName">ชื่อนักศึกษา:</strong> <span id="detail-student-name"></span></p>
+                <p><strong data-i18n="requestDetail.studentID">รหัสนักศึกษา:</strong> <span id="detail-student-id"></span></p>
+                <p><strong data-i18n="requestDetail.email">อีเมล:</strong> <span id="detail-student-email"></span></p>
+                <p><strong data-i18n="requestDetail.phone">เบอร์โทรศัพท์:</strong> <span id="detail-student-phone"></span></p>
+                <p><strong data-i18n="requestDetail.faculty">คณะ:</strong> <span id="detail-student-faculty"></span></p>
               </div>
             </div>
             <div id="detail-address-container" style="display: none;">
@@ -90,31 +99,35 @@
               <p><strong data-i18n="requestDetail.shippingAddress">ที่อยู่จัดส่ง:</strong></p>
               <p id="detail-address"></p>
             </div>
-            <!-- เพิ่มส่วนพิมพ์ใบรับคำขอ -->
-            <div id="print-receipt-container" class="mt-3 text-end" style="display: none;">
-              <button type="button" class="btn btn-outline-primary" onclick="printReceipt()">
-                <i class="bi bi-printer"></i> พิมพ์ใบรับคำขอ
-              </button>
-            </div>
           </div>
         </div>
         
+        <!-- เพิ่มปุ่มอัปเดตสถานะและแสดงฟอร์ม -->
         <div class="card mb-4">
           <div class="card-header bg-primary text-white">
-            <h5 class="mb-0" data-i18n="admin.requests.studentInfo">ข้อมูลนักศึกษา</h5>
+            <h5 class="mb-0" data-i18n="requestDetail.updateStatus">อัปเดตสถานะคำขอ</h5>
           </div>
           <div class="card-body">
-            <div class="row">
-              <div class="col-md-6">
-                <p><strong data-i18n="admin.requests.studentName">ชื่อนักศึกษา:</strong> <span id="detail-student-name"></span></p>
-                <p><strong data-i18n="admin.requests.studentID">รหัสนักศึกษา:</strong> <span id="detail-student-id"></span></p>
+            <form id="update-status-form">
+              <input type="hidden" id="request-id">
+              <div class="mb-3">
+                <label for="status" class="form-label" data-i18n="requestDetail.selectStatus">เลือกสถานะ:</label>
+                <select class="form-select" id="status">
+                  <option value="pending" data-i18n="requestDetail.statusPending">รอดำเนินการ</option>
+                  <option value="processing" data-i18n="requestDetail.statusProcessing">กำลังดำเนินการ</option>
+                  <option value="ready" data-i18n="requestDetail.statusReady">พร้อมจัดส่ง/รับเอกสาร</option>
+                  <option value="completed" data-i18n="requestDetail.statusCompleted">เสร็จสิ้น</option>
+                  <option value="rejected" data-i18n="requestDetail.statusRejected">ถูกปฏิเสธ</option>
+                </select>
               </div>
-              <div class="col-md-6">
-                <p><strong data-i18n="dashboard.email">อีเมล:</strong> <span id="detail-student-email"></span></p>
-                <p><strong data-i18n="dashboard.phone">เบอร์โทรศัพท์:</strong> <span id="detail-student-phone"></span></p>
-                <p><strong data-i18n="dashboard.faculty">คณะ:</strong> <span id="detail-student-faculty"></span></p>
+              <div class="mb-3">
+                <label for="status-note" class="form-label" data-i18n="requestDetail.statusNote">หมายเหตุ:</label>
+                <textarea class="form-control" id="status-note" rows="2"></textarea>
               </div>
-            </div>
+              <button type="button" id="update-status-button" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> <span data-i18n="requestDetail.updateButton">อัปเดตสถานะ</span>
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -134,48 +147,64 @@
           </div>
         </div>
         
-        <div class="card mb-4">
+        <div class="card">
           <div class="card-header bg-primary text-white">
-            <h5 class="mb-0" data-i18n="admin.requests.updateStatus">อัปเดตสถานะ</h5>
+            <h5 class="mb-0" data-i18n="requestDetail.statusHistory">ประวัติสถานะ</h5>
           </div>
           <div class="card-body">
-            <form id="update-status-form">
-              <input type="hidden" id="request-id">
-              <div class="mb-3">
-                <label for="status" class="form-label" data-i18n="admin.requests.status">สถานะ</label>
-                <select class="form-select" id="status" required>
-                  <option value="pending" data-i18n="status.pending">รอดำเนินการ</option>
-                  <option value="processing" data-i18n="status.processing">กำลังดำเนินการ</option>
-                  <option value="ready" data-i18n="status.ready">พร้อมจัดส่ง/รับเอกสาร</option>
-                  <option value="completed" data-i18n="status.completed">เสร็จสิ้น</option>
-                  <option value="rejected" data-i18n="status.rejected">ถูกปฏิเสธ</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="status-note" class="form-label" data-i18n="admin.requests.statusNote">หมายเหตุ (ถ้ามี)</label>
-               <textarea class="form-control" id="status-note" rows="3"></textarea>
-             </div>
-             <div class="d-grid">
-               <button type="button" class="btn btn-primary" id="update-status-button" data-i18n="admin.requests.updateButton">อัปเดตสถานะ</button>
-             </div>
-           </form>
-         </div>
-       </div>
-     </div>
-   </div>
- </div>
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th data-i18n="requestDetail.date">วันที่</th>
+                    <th data-i18n="requestDetail.statusValue">สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody id="status-history-table">
+                  <!-- ข้อมูลจะถูกเพิ่มโดย JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            <div id="status-info-container" class="mt-3 p-3 bg-light rounded" style="display: none;">
+              <p class="mb-0" id="status-info-text"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
- <footer class="footer mt-5 py-3 bg-light">
-   <div class="container text-center">
-     <span class="text-muted" data-i18n="footer.copyright">
-       © 2025 ระบบขอเอกสารออนไลน์สำหรับนักศึกษามหาวิทยาลัยนอร์ทกรุงเทพ
-     </span>
-   </div>
- </footer>
+  <!-- Modal สำหรับดูรูปภาพ -->
+  <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="imageModalLabel" data-i18n="requestDetail.paymentSlip">หลักฐานการชำระเงิน</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center">
+          <img id="modalImage" src="" class="img-fluid" alt="Payment Slip">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="general.close">ปิด</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
- <script src="../js/language.js"></script>
- <script src="../js/main.js"></script>
- <script src="../js/request-detail.js"></script>
+  <footer class="footer mt-5 py-3 bg-light">
+    <div class="container text-center">
+      <span class="text-muted" data-i18n="footer.copyright">
+        © 2025 ระบบขอเอกสารออนไลน์สำหรับนักศึกษามหาวิทยาลัยนอร์ทกรุงเทพ
+      </span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/language.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/request-detail.js"></script>
+
 </body>
 </html>
