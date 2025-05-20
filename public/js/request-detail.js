@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
   checkAdmin();
   loadRequestDetails();
   setupStatusUpdate();
-  debugRequestDetails(); // เพิ่มบรรทัดนี้
 });
 
 // โหลดรายละเอียดคำขอเอกสาร
@@ -127,12 +126,21 @@ function displayRequestDetails(request) {
   document.getElementById('detail-status').innerHTML = createStatusBadge(request.status);
   document.getElementById('detail-price').textContent = formatCurrency(request.total_price, currentLang);
   
-  // ข้อมูลนักศึกษา
-  document.getElementById('detail-student-name').textContent = request.full_name || '';
-  document.getElementById('detail-student-id').textContent = request.student_id || '';
-  document.getElementById('detail-student-email').textContent = request.email || '';
-  document.getElementById('detail-student-phone').textContent = request.phone || '';
-  document.getElementById('detail-student-faculty').textContent = request.faculty || '';
+  // ข้อมูลนักศึกษา - ตรวจสอบว่า element มีอยู่จริงก่อนที่จะอัปเดต
+  const studentInfoElements = {
+    'detail-student-name': request.full_name || '',
+    'detail-student-id': request.student_id || '',
+    'detail-student-email': request.email || '',
+    'detail-student-phone': request.phone || '',
+    'detail-student-faculty': request.faculty || ''
+  };
+  
+  Object.keys(studentInfoElements).forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.textContent = studentInfoElements[id];
+    }
+  });
   
   // ที่อยู่จัดส่ง (ถ้ามี)
   if (request.delivery_method === 'mail' && request.address) {
@@ -221,14 +229,18 @@ async function updateRequestStatus() {
   }
 }
 
-
 // พิมพ์ใบรับคำขอ
 function printReceipt() {
   try {
     // ดึงข้อมูลจาก DOM
     const requestId = document.getElementById('detail-id').textContent;
-    const studentName = document.getElementById('detail-student-name').textContent;
-    const studentId = document.getElementById('detail-student-id').textContent;
+    
+    // ดึงข้อมูลนักศึกษา - ตรวจสอบว่า element มีอยู่จริงก่อน
+    const studentNameElement = document.getElementById('detail-student-name');
+    const studentIdElement = document.getElementById('detail-student-id');
+    
+    const studentName = studentNameElement ? studentNameElement.textContent : '';
+    const studentId = studentIdElement ? studentIdElement.textContent : '';
     const createdAt = document.getElementById('detail-created-at').textContent;
     const totalPrice = document.getElementById('detail-price').textContent;
     
@@ -503,34 +515,5 @@ function printReceipt() {
   } catch (error) {
     console.error('Error generating print receipt:', error);
     alert('เกิดข้อผิดพลาดในการสร้างใบรับคำขอ กรุณาลองใหม่อีกครั้ง');
-  }
-}
-
-// เพิ่มฟังก์ชันนี้ไว้ในไฟล์ request-detail.js
-function debugRequestDetails() {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const requestId = urlParams.get('id');
-    if (!requestId) return;
-    
-    fetch(`/api/admin/request/${requestId}?lang=${currentLang}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Raw request data:', data);
-      console.log('Has document_items:', !!data.document_items);
-      if (data.document_items) {
-        console.log('document_items length:', data.document_items.length);
-      }
-    })
-    .catch(error => console.error('Debug error:', error));
-  } catch (error) {
-    console.error('Debug function error:', error);
   }
 }
