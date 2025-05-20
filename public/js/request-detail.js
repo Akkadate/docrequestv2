@@ -48,11 +48,14 @@ async function loadRequestDetails() {
 
 // แสดงรายละเอียดคำขอเอกสาร
 function displayRequestDetails(request) {
+  console.log('Request details:', request); // เพิ่มเพื่อตรวจสอบข้อมูลที่ได้รับจาก API
+  
   // ข้อมูลคำขอ
   document.getElementById('detail-id').textContent = request.id;
   
   // แสดงข้อมูลเอกสาร
   if (request.has_multiple_items && request.document_items && request.document_items.length > 0) {
+    console.log('Document has multiple items:', request.document_items);
     // กรณีมีหลายรายการ
     const documentItemsHTML = `
       <div class="table-responsive mt-2">
@@ -107,7 +110,7 @@ function displayRequestDetails(request) {
     `;
   } else {
     // กรณีมีเอกสารเดียว
-    document.getElementById('detail-document-name').textContent = request.document_name;
+    document.getElementById('detail-document-name').textContent = request.document_name || 'ไม่ระบุ';
   }
   
   document.getElementById('detail-delivery-method').textContent = request.delivery_method === 'pickup' ? 
@@ -124,11 +127,11 @@ function displayRequestDetails(request) {
   document.getElementById('detail-price').textContent = formatCurrency(request.total_price, currentLang);
   
   // ข้อมูลนักศึกษา
-  document.getElementById('detail-student-name').textContent = request.full_name;
-  document.getElementById('detail-student-id').textContent = request.student_id;
-  document.getElementById('detail-student-email').textContent = request.email;
-  document.getElementById('detail-student-phone').textContent = request.phone;
-  document.getElementById('detail-student-faculty').textContent = request.faculty;
+  document.getElementById('detail-student-name').textContent = request.full_name || '';
+  document.getElementById('detail-student-id').textContent = request.student_id || '';
+  document.getElementById('detail-student-email').textContent = request.email || '';
+  document.getElementById('detail-student-phone').textContent = request.phone || '';
+  document.getElementById('detail-student-faculty').textContent = request.faculty || '';
   
   // ที่อยู่จัดส่ง (ถ้ามี)
   if (request.delivery_method === 'mail' && request.address) {
