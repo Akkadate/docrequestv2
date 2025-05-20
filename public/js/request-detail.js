@@ -11,7 +11,7 @@ async function loadRequestDetails() {
     const token = localStorage.getItem('token');
     
     if (!token) {
-      window.location.href = '/login.html';
+      window.location.href = '../login.html';
       return;
     }
     
@@ -39,6 +39,7 @@ async function loadRequestDetails() {
     }
     
     const request = await response.json();
+    console.log('Request data loaded:', request);
     displayRequestDetails(request);
   } catch (error) {
     console.error('Error loading request details:', error);
@@ -48,15 +49,14 @@ async function loadRequestDetails() {
 
 // แสดงรายละเอียดคำขอเอกสาร
 function displayRequestDetails(request) {
-  console.log('Request details:', request); // เพิ่มเพื่อตรวจสอบข้อมูลที่ได้รับจาก API
-  
-  // ข้อมูลคำขอ
+  // ข้อมูลคำขอพื้นฐาน
   document.getElementById('detail-id').textContent = request.id;
   
-  // แสดงข้อมูลเอกสาร
+  // แสดงข้อมูลเอกสาร - ตรวจสอบว่ามีหลายรายการหรือไม่
   if (request.has_multiple_items && request.document_items && request.document_items.length > 0) {
     console.log('Document has multiple items:', request.document_items);
-    // กรณีมีหลายรายการ
+    
+    // กรณีมีหลายรายการ - สร้างตารางแสดงรายการ
     const documentItemsHTML = `
       <div class="table-responsive mt-2">
         <table class="table table-sm table-bordered">
@@ -73,31 +73,31 @@ function displayRequestDetails(request) {
               <tr>
                 <td>${item.document_name}</td>
                 <td class="text-center">${item.quantity}</td>
-                <td class="text-end">${formatCurrency(item.price_per_unit, currentLang)}</td>
-                <td class="text-end">${formatCurrency(item.subtotal, currentLang)}</td>
+                <td class="text-end">${formatCurrency(item.price_per_unit)}</td>
+                <td class="text-end">${formatCurrency(item.subtotal)}</td>
               </tr>
             `).join('')}
           </tbody>
           <tfoot>
             <tr>
               <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.documentSubtotal || 'รวมค่าเอกสาร'}:</th>
-              <th class="text-end">${formatCurrency(request.document_items.reduce((total, item) => total + parseFloat(item.subtotal), 0), currentLang)}</th>
+              <th class="text-end">${formatCurrency(request.document_items.reduce((total, item) => total + parseFloat(item.subtotal), 0))}</th>
             </tr>
             ${request.delivery_method === 'mail' ? `
               <tr>
                 <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.shippingFee || 'ค่าจัดส่ง'}:</th>
-                <th class="text-end">${formatCurrency(200, currentLang)}</th>
+                <th class="text-end">${formatCurrency(200)}</th>
               </tr>
             ` : ''}
             ${request.urgent ? `
               <tr>
                 <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.urgentFee || 'ค่าบริการเร่งด่วน'}:</th>
-                <th class="text-end">${formatCurrency(50 * request.document_items.reduce((count, item) => count + parseInt(item.quantity), 0), currentLang)}</th>
+                <th class="text-end">${formatCurrency(50 * request.document_items.reduce((count, item) => count + parseInt(item.quantity), 0))}</th>
               </tr>
             ` : ''}
             <tr>
               <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.totalPrice || 'ราคารวมทั้งหมด'}:</th>
-              <th class="text-end">${formatCurrency(request.total_price, currentLang)}</th>
+              <th class="text-end">${formatCurrency(request.total_price)}</th>
             </tr>
           </tfoot>
         </table>
@@ -113,20 +113,28 @@ function displayRequestDetails(request) {
     document.getElementById('detail-document-name').textContent = request.document_name || 'ไม่ระบุ';
   }
   
-  document.getElementById('detail-delivery-method').textContent = request.delivery_method === 'pickup' ? 
-    i18n[currentLang]?.request?.pickup || 'รับด้วยตนเอง' : 
-    i18n[currentLang]?.request?.mail || 'รับทางไปรษณีย์';
+  // ข้อมูลวิธีรับเอกสาร
+  let deliveryMethodText = request.delivery_method === 'pickup' ? 
+    (i18n[currentLang]?.request?.pickup || 'รับด้วยตนเอง') : 
+    (i18n[currentLang]?.request?.mail || 'รับทางไปรษณีย์');
   
+  document.getElementById('detail-delivery-method').textContent = deliveryMethodText;
+  
+  // เพิ่มแสดงป้ายเร่งด่วน (ถ้ามี)
   if (request.urgent) {
-    document.getElementById('detail-delivery-method').innerHTML += ` <span class="badge bg-warning text-dark">${i18n[currentLang]?.request?.urgentLabel || 'เร่งด่วน'}</span>`;
+    document.getElementById('detail-delivery-method').innerHTML = deliveryMethodText + 
+      ` <span class="badge bg-warning text-dark">${i18n[currentLang]?.request?.urgentLabel || 'เร่งด่วน'}</span>`;
   }
   
-  document.getElementById('detail-created-at').textContent = formatDate(request.created_at, currentLang);
-  document.getElementById('detail-updated-at').textContent = formatDate(request.updated_at, currentLang);
-  document.getElementById('detail-status').innerHTML = createStatusBadge(request.status);
-  document.getElementById('detail-price').textContent = formatCurrency(request.total_price, currentLang);
+  // วันที่ขอและวันที่อัปเดตล่าสุด
+  document.getElementById('detail-created-at').textContent = formatDate(request.created_at);
+  document.getElementById('detail-updated-at').textContent = formatDate(request.updated_at);
   
-  // ข้อมูลนักศึกษา - ตรวจสอบว่า element มีอยู่จริงก่อนที่จะอัปเดต
+  // สถานะคำขอและราคารวม
+  document.getElementById('detail-status').innerHTML = createStatusBadge(request.status);
+  document.getElementById('detail-price').textContent = formatCurrency(request.total_price);
+  
+  // ข้อมูลนักศึกษา
   const studentInfoElements = {
     'detail-student-name': request.full_name || '',
     'detail-student-id': request.student_id || '',
@@ -156,7 +164,8 @@ function displayRequestDetails(request) {
     
     if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
       document.getElementById('detail-payment-slip').innerHTML = `
-        <img src="${request.payment_slip_url}" alt="Payment Slip" class="img-fluid" style="max-height: 300px;">
+        <img src="${request.payment_slip_url}" alt="Payment Slip" class="img-fluid" style="max-height: 300px; cursor: pointer" 
+        onclick="showImageModal('${request.payment_slip_url}')">
       `;
     } else {
       document.getElementById('detail-payment-slip').innerHTML = `
@@ -172,10 +181,17 @@ function displayRequestDetails(request) {
   // ตั้งค่าสถานะปัจจุบันในฟอร์ม
   document.getElementById('status').value = request.status;
   
-  // แสดงส่วนพิมพ์ใบรับคำขอ
-  const printContainer = document.getElementById('print-receipt-container');
-  if (printContainer) {
-    printContainer.style.display = 'block';
+  // แสดงประวัติสถานะ (ถ้ามี)
+  // หมายเหตุ: ต้องมีการพัฒนาระบบเก็บประวัติสถานะเพิ่มเติม
+  const statusHistoryTable = document.getElementById('status-history-table');
+  if (statusHistoryTable) {
+    // ในกรณีที่ยังไม่มีระบบเก็บประวัติสถานะ ให้แสดงสถานะปัจจุบันอย่างเดียว
+    statusHistoryTable.innerHTML = `
+      <tr>
+        <td>${formatDate(request.updated_at)}</td>
+        <td>${createStatusBadge(request.status)}</td>
+      </tr>
+    `;
   }
 }
 
@@ -194,7 +210,7 @@ async function updateRequestStatus() {
     const token = localStorage.getItem('token');
     
     if (!token) {
-      window.location.href = '/login.html';
+      window.location.href = '../login.html';
       return;
     }
     
@@ -229,13 +245,25 @@ async function updateRequestStatus() {
   }
 }
 
+// แสดงรูปภาพในโมดัล
+function showImageModal(imageUrl) {
+  const modalImage = document.getElementById('modalImage');
+  if (modalImage) {
+    modalImage.src = imageUrl;
+    
+    // เปิดโมดัล
+    const imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+    imageModal.show();
+  }
+}
+
 // พิมพ์ใบรับคำขอ
 function printReceipt() {
   try {
     // ดึงข้อมูลจาก DOM
     const requestId = document.getElementById('detail-id').textContent;
     
-    // ดึงข้อมูลนักศึกษา - ตรวจสอบว่า element มีอยู่จริงก่อน
+    // ดึงข้อมูลนักศึกษา
     const studentNameElement = document.getElementById('detail-student-name');
     const studentIdElement = document.getElementById('detail-student-id');
     
@@ -294,11 +322,11 @@ function printReceipt() {
         
         footerRows.forEach(row => {
           const cells = row.querySelectorAll('th');
-          if (cells.length >= 4) {
+          if (cells.length >= 2) {
             documentListHTML += `
               <tr>
                 <th colspan="3" style="text-align: right;">${cells[0].textContent}</th>
-                <th style="text-align: right;">${cells[3].textContent}</th>
+                <th style="text-align: right;">${cells[1].textContent}</th>
               </tr>
             `;
           }
@@ -448,7 +476,7 @@ function printReceipt() {
       <body>
         <div class="receipt">
           <div class="header">
-            <img src="/img/logo.png" alt="Logo" class="logo">
+            <img src="../img/logo.png" alt="Logo" class="logo">
             <h1>ใบรับคำขอเอกสาร</h1>
             <h2>สำนักทะเบียนและประมวลผล มหาวิทยาลัยนอร์ทกรุงเทพ</h2>
           </div>
