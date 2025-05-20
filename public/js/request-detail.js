@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   checkAdmin();
   loadRequestDetails();
   setupStatusUpdate();
+  debugRequestDetails(); // เพิ่มบรรทัดนี้
 });
 
 // โหลดรายละเอียดคำขอเอกสาร
@@ -219,6 +220,7 @@ async function updateRequestStatus() {
     showAlert(i18n[currentLang]?.errors?.serverError || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์', 'danger');
   }
 }
+
 
 // พิมพ์ใบรับคำขอ
 function printReceipt() {
@@ -501,5 +503,34 @@ function printReceipt() {
   } catch (error) {
     console.error('Error generating print receipt:', error);
     alert('เกิดข้อผิดพลาดในการสร้างใบรับคำขอ กรุณาลองใหม่อีกครั้ง');
+  }
+}
+
+// เพิ่มฟังก์ชันนี้ไว้ในไฟล์ request-detail.js
+function debugRequestDetails() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestId = urlParams.get('id');
+    if (!requestId) return;
+    
+    fetch(`/api/admin/request/${requestId}?lang=${currentLang}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Raw request data:', data);
+      console.log('Has document_items:', !!data.document_items);
+      if (data.document_items) {
+        console.log('document_items length:', data.document_items.length);
+      }
+    })
+    .catch(error => console.error('Debug error:', error));
+  } catch (error) {
+    console.error('Debug function error:', error);
   }
 }
