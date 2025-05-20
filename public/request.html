@@ -207,222 +207,44 @@
     </div>
   </div>
 
- 
-<!-- แก้ไขปุ่มทดสอบให้แสดงทุกครั้ง -->
+<!-- เปลี่ยนเป็น -->
 <button id="test-calculation" style="position: fixed; bottom: 10px; right: 10px; z-index: 9999; background: #f00; color: white; padding: 5px 10px;">ทดสอบการคำนวณ</button>
 
 <script>
-  // เพิ่มโค้ดสำหรับทดสอบการคำนวณ
+  // สคริปต์ทดสอบการคำนวณแบบใหม่
   document.addEventListener('DOMContentLoaded', () => {
     const testButton = document.getElementById('test-calculation');
     if (testButton) {
       testButton.addEventListener('click', () => {
         console.log('Test button clicked');
+        
         // สร้างเอกสารทดสอบ
-        window.selectedDocuments = [
+        selectedDocuments = [
           { id: '1', name: 'ใบแสดงผลการศึกษา', price: 100, quantity: 2, subtotal: 200 },
           { id: '2', name: 'หนังสือรับรองการเป็นนักศึกษา', price: 100, quantity: 1, subtotal: 100 }
         ];
         
-        console.log('Created test documents:', window.selectedDocuments);
+        console.log('Created test documents:', selectedDocuments);
         
-        // อัปเดตตาราง
-        window.updateDocumentTable();
+        // อัปเดตตารางและราคา
+        updateDocumentTable();
         
-        // เลือกรับด้วยตนเอง
-        const pickupRadio = document.getElementById('pickup');
-        if (pickupRadio) {
-          pickupRadio.checked = true;
-          console.log('Set pickup radio to checked');
-          
-          // เลือกบริการเร่งด่วน
-          const urgentCheckbox = document.getElementById('urgent');
-          if (urgentCheckbox) {
-            urgentCheckbox.checked = true;
-            console.log('Set urgent checkbox to checked');
-            
-            // ทดสอบคำนวณราคา
-            window.calculatePrice();
-            
-            // แสดงผลการคำนวณในคอนโซล
-            console.log('Test calculation completed');
-            console.log('Selected documents:', window.selectedDocuments);
-            console.log('Total documents:', window.selectedDocuments.reduce((count, doc) => count + doc.quantity, 0));
-            console.log('Urgent checkbox checked:', urgentCheckbox.checked);
-            console.log('Delivery method:', pickupRadio.value);
-            
-            const urgentFeeElement = document.getElementById('urgent-fee');
-            console.log('Urgent fee displayed:', urgentFeeElement ? urgentFeeElement.textContent : 'Element not found');
-            
-            // อัพเดท DOM โดยตรง (แก้ไขฉุกเฉิน)
-            if (urgentFeeElement) {
-              const totalDocuments = window.selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-              const urgentFee = 50 * totalDocuments;
-              urgentFeeElement.textContent = window.formatCurrency(urgentFee, window.currentLang || 'th');
-              console.log('Manually updated urgent fee to:', urgentFeeElement.textContent);
-              
-              // อัพเดทราคารวมด้วย
-              const totalPriceElement = document.getElementById('total-price');
-              if (totalPriceElement) {
-                const docSubtotal = window.selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
-                const totalPrice = docSubtotal + urgentFee;
-                totalPriceElement.textContent = window.formatCurrency(totalPrice, window.currentLang || 'th');
-                console.log('Manually updated total price to:', totalPriceElement.textContent);
-              }
-            }
-          }
-        }
+        // ตั้งค่าการรับเอกสารและบริการเร่งด่วน
+        document.getElementById('pickup').checked = true;
+        document.getElementById('urgent').checked = true;
+        
+        // คำนวณราคาใหม่
+        calculatePrice();
+        
+        // แสดงข้อมูลสำหรับตรวจสอบ
+        console.log('Test summary:');
+        console.log('- เอกสารที่เลือก:', selectedDocuments);
+        console.log('- จำนวนเอกสารทั้งหมด:', selectedDocuments.reduce((count, doc) => count + doc.quantity, 0), 'ฉบับ');
+        console.log('- ราคาเอกสารรวม:', selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0), 'บาท');
+        console.log('- บริการเร่งด่วน:', '50 x', selectedDocuments.reduce((count, doc) => count + doc.quantity, 0), '=', 50 * selectedDocuments.reduce((count, doc) => count + doc.quantity, 0), 'บาท');
+        console.log('- ราคารวมทั้งหมด:', selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0) + (50 * selectedDocuments.reduce((count, doc) => count + doc.quantity, 0)), 'บาท');
       });
     }
-  });
-</script>
-  <script>
-  // สคริปต์ซ่อมแซมฉุกเฉิน - ตรวจสอบการคำนวณค่าบริการเร่งด่วน
-  document.addEventListener('DOMContentLoaded', function() {
-    // รอให้โหลดหน้าเว็บทั้งหมดก่อน
-    setTimeout(function() {
-      console.log('🔥 EMERGENCY FIX SCRIPT RUNNING');
-      
-      // แทนที่ฟังก์ชัน calculatePrice ด้วยเวอร์ชันใหม่
-      if (typeof window.calculatePrice === 'function') {
-        const originalCalculatePrice = window.calculatePrice;
-        
-        window.calculatePrice = function() {
-          console.log('🔥 Using fixed calculatePrice function');
-          
-          // รับอิลิเมนต์แสดงราคาต่างๆ
-          const documentsSubtotalElement = document.getElementById('documents-subtotal');
-          const shippingFeeElement = document.getElementById('shipping-fee');
-          const urgentFeeElement = document.getElementById('urgent-fee');
-          const totalPriceElement = document.getElementById('total-price');
-          const shippingFeeContainer = document.getElementById('shipping-fee-container');
-          const urgentFeeContainer = document.getElementById('urgent-fee-container');
-          
-          // คำนวณราคาตามปกติ
-          const result = originalCalculatePrice();
-          
-          // แต่คำนวณค่าบริการเร่งด่วนใหม่
-          const totalDocuments = window.selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-          const deliveryMethod = document.querySelector('input[name="delivery_method"]:checked').value;
-          const isUrgent = document.getElementById('urgent').checked;
-          
-          if (isUrgent && deliveryMethod === 'pickup') {
-            const urgentFee = 50 * totalDocuments;
-            console.log('🔥 Fixed urgent fee:', urgentFee, '(', totalDocuments, 'x 50)');
-            
-            // อัพเดท DOM
-            if (urgentFeeElement) {
-              urgentFeeElement.textContent = window.formatCurrency ? window.formatCurrency(urgentFee, window.currentLang || 'th') : (urgentFee + '.00 บาท');
-            }
-            
-            // คำนวณราคารวมอีกครั้ง
-            const documentSubtotal = window.selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
-            const shippingFee = deliveryMethod === 'mail' ? 200 : 0;
-            const totalPrice = documentSubtotal + shippingFee + urgentFee;
-            
-            // อัพเดทราคารวม
-            if (totalPriceElement) {
-              totalPriceElement.textContent = window.formatCurrency ? window.formatCurrency(totalPrice, window.currentLang || 'th') : (totalPrice + '.00 บาท');
-            }
-          }
-          
-          return result;
-        };
-        
-        console.log('🔥 Fixed calculatePrice function installed');
-        
-        // แทนที่ฟังก์ชัน updateSummary ด้วยเวอร์ชันใหม่
-        if (typeof window.updateSummary === 'function') {
-          const originalUpdateSummary = window.updateSummary;
-          
-          window.updateSummary = function(deliveryMethod, isUrgent) {
-            console.log('🔥 Using fixed updateSummary function');
-            
-            // ทำงานตามปกติก่อน
-            originalUpdateSummary(deliveryMethod, isUrgent);
-            
-            // แต่ปรับแก้ค่าบริการเร่งด่วนในสรุปรายการ
-            if (isUrgent && deliveryMethod === 'pickup') {
-              const summaryContainer = document.getElementById('summary-container');
-              if (summaryContainer) {
-                const totalDocuments = window.selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-                const urgentFee = 50 * totalDocuments;
-                
-                // ค้นหาส่วนแสดงบริการเร่งด่วนในสรุปรายการ
-                const urgentServiceElement = summaryContainer.querySelector('[data-urgent-service]');
-                if (urgentServiceElement) {
-                  urgentServiceElement.innerHTML = `${window.formatCurrency ? window.formatCurrency(urgentFee, window.currentLang || 'th') : (urgentFee + '.00 บาท')} (${totalDocuments} ฉบับ x 50 บาท)`;
-                } else {
-                  // ถ้าไม่มีส่วนแสดงบริการเร่งด่วน ให้เพิ่มใหม่
-                  const urgentServiceHTML = `
-                    <div class="mb-3" data-urgent-service="true">
-                      <strong>${i18n && i18n[window.currentLang] ? i18n[window.currentLang].request.urgentService : 'บริการเร่งด่วน'}:</strong>
-                      <div>${window.formatCurrency ? window.formatCurrency(urgentFee, window.currentLang || 'th') : (urgentFee + '.00 บาท')} (${totalDocuments} ฉบับ x 50 บาท)</div>
-                    </div>
-                  `;
-                  
-                  // แทรกหลังจากส่วนวิธีการรับเอกสาร
-                  const deliveryMethodElement = summaryContainer.querySelector('[data-delivery-method]');
-                  if (deliveryMethodElement) {
-                    deliveryMethodElement.insertAdjacentHTML('afterend', urgentServiceHTML);
-                  } else {
-                    // ถ้าไม่พบส่วนวิธีการรับเอกสาร ให้แทรกต่อจากเนื้อหาเดิม
-                    summaryContainer.innerHTML += urgentServiceHTML;
-                  }
-                }
-              }
-            }
-          };
-          
-          console.log('🔥 Fixed updateSummary function installed');
-        }
-      }
-      
-      // เพิ่มการตรวจสอบเมื่อมีการคลิกช่องเร่งด่วน
-      const urgentCheckbox = document.getElementById('urgent');
-      if (urgentCheckbox) {
-        urgentCheckbox.addEventListener('change', function() {
-          console.log('🔥 Urgent checkbox changed to:', this.checked);
-          if (this.checked) {
-            // รอให้ calculatePrice ทำงานเสร็จก่อน แล้วค่อยตรวจสอบการคำนวณ
-            setTimeout(function() {
-              const totalDocuments = window.selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-              const expectedUrgentFee = 50 * totalDocuments;
-              
-              const urgentFeeElement = document.getElementById('urgent-fee');
-              if (urgentFeeElement) {
-                const displayedFee = urgentFeeElement.textContent;
-                console.log('🔥 Checking urgent fee calculation:', {
-                  expected: expectedUrgentFee,
-                  displayed: displayedFee
-                });
-                
-                // ถ้าการคำนวณไม่ถูกต้อง ให้แก้ไขด้วยตัวเอง
-                if (!displayedFee.includes(expectedUrgentFee.toString())) {
-                  console.log('🔥 Urgent fee calculation is incorrect, fixing...');
-                  urgentFeeElement.textContent = window.formatCurrency ? window.formatCurrency(expectedUrgentFee, window.currentLang || 'th') : (expectedUrgentFee + '.00 บาท');
-                  console.log('🔥 Fixed urgent fee display to:', urgentFeeElement.textContent);
-                  
-                  // แก้ไขราคารวมด้วย
-                  const totalPriceElement = document.getElementById('total-price');
-                  if (totalPriceElement) {
-                    const documentSubtotal = window.selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
-                    const deliveryMethod = document.querySelector('input[name="delivery_method"]:checked').value;
-                    const shippingFee = deliveryMethod === 'mail' ? 200 : 0;
-                    const totalPrice = documentSubtotal + shippingFee + expectedUrgentFee;
-                    
-                    totalPriceElement.textContent = window.formatCurrency ? window.formatCurrency(totalPrice, window.currentLang || 'th') : (totalPrice + '.00 บาท');
-                    console.log('🔥 Fixed total price display to:', totalPriceElement.textContent);
-                  }
-                }
-              }
-            }, 500);
-          }
-        });
-      }
-      
-      console.log('🔥 EMERGENCY FIX SCRIPT COMPLETED');
-    }, 2000); // รอ 2 วินาทีเผื่อโหลดสคริปต์หลักเสร็จ
   });
 </script>
    <footer class="footer mt-5 py-3 bg-light">
