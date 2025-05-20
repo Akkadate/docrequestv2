@@ -256,6 +256,10 @@ function calculatePrice() {
     if (selectedDocuments && selectedDocuments.length > 0) {
       documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
     }
+
+    // เพิ่มบรรทัดนี้ในส่วนต้นของฟังก์ชัน calculatePrice()
+console.log('calculatePrice called, selectedDocuments:', selectedDocuments);
+
     
     // ตรวจสอบวิธีการรับเอกสาร
     const deliveryMethodElement = document.querySelector('input[name="delivery_method"]:checked');
@@ -308,6 +312,10 @@ function calculatePrice() {
         urgentFeeContainer.style.display = 'none';
       }
     }
+
+    // เพิ่มบรรทัดนี้หลังจากคำนวณค่าบริการเร่งด่วน
+console.log('Urgent fee calculation:', totalDocuments, 'documents x 50 =', urgentFee);
+
     
     // คำนวณราคารวมทั้งหมด
     totalPrice = documentSubtotal + shippingFee + urgentFee;
@@ -327,6 +335,10 @@ function calculatePrice() {
     
     // อัปเดตสรุปรายการ
     updateSummary(deliveryMethod, isUrgent);
+
+    // เพิ่มบรรทัดนี้ในส่วนท้ายของฟังก์ชัน calculatePrice()
+console.log('Final prices:', {documentSubtotal, shippingFee, urgentFee, totalPrice});
+    
   } catch (error) {
     console.error('Error in calculatePrice function:', error);
   }
