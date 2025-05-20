@@ -2,11 +2,10 @@
 let selectedDocuments = [];
 let documentTypes = [];
 
-// โหลดข้อมูลประเภทเอกสาร
-// ปรับปรุงฟังก์ชัน loadDocumentTypes เพื่อตรวจสอบข้อผิดพลาดให้ชัดเจนยิ่งขึ้น
+// ปรับปรุงฟังก์ชัน loadDocumentTypes เพื่อเพิ่ม debug logs
 async function loadDocumentTypes() {
   try {
-    console.log('Loading document types...');
+    console.log('Loading document types, current language:', currentLang);
     const response = await fetch(`/api/documents/types?lang=${currentLang}`);
     
     if (!response.ok) {
@@ -20,6 +19,7 @@ async function loadDocumentTypes() {
     const modalDocumentTypeSelect = document.getElementById('modal-document-type');
     
     if (modalDocumentTypeSelect) {
+      console.log('Found modal-document-type, populating options');
       // ล้างตัวเลือกเดิม
       modalDocumentTypeSelect.innerHTML = '';
       
@@ -28,19 +28,31 @@ async function loadDocumentTypes() {
       defaultOption.value = '';
       defaultOption.disabled = true;
       defaultOption.selected = true;
-      defaultOption.textContent = i18n[currentLang]?.request?.selectDocumentType || 'เลือกประเภทเอกสาร';
+      
+      // ใช้ข้อความที่เหมาะสมกับภาษาปัจจุบัน
+      if (i18n[currentLang] && i18n[currentLang].request && i18n[currentLang].request.selectDocumentType) {
+        defaultOption.textContent = i18n[currentLang].request.selectDocumentType;
+      } else {
+        defaultOption.textContent = 'เลือกประเภทเอกสาร';
+        console.warn(`Translation for 'request.selectDocumentType' not found in language ${currentLang}`);
+      }
+      
       modalDocumentTypeSelect.appendChild(defaultOption);
       
       // เพิ่มรายการประเภทเอกสาร
-      documentTypes.forEach(type => {
-        const option = document.createElement('option');
-        option.value = type.id;
-        option.textContent = type.name;
-        option.dataset.price = type.price;
-        modalDocumentTypeSelect.appendChild(option);
-      });
-      
-      console.log('Document types added to select:', modalDocumentTypeSelect.options.length - 1);
+      if (documentTypes && documentTypes.length > 0) {
+        documentTypes.forEach(type => {
+          const option = document.createElement('option');
+          option.value = type.id;
+          option.textContent = type.name;
+          option.dataset.price = type.price;
+          modalDocumentTypeSelect.appendChild(option);
+        });
+        
+        console.log('Added document types to select:', modalDocumentTypeSelect.options.length - 1);
+      } else {
+        console.warn('No document types found in response');
+      }
     } else {
       console.error('Modal document type select element not found');
     }
@@ -465,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
    // เพิ่มการฟังเหตุการณ์เมื่อเลือกวิธีการรับเอกสาร
   const deliveryMethods = document.querySelectorAll('input[name="delivery_method"]');
-  if (deliveryMethods.length > 0) {
+  if (deliveryMethods && deliveryMethods.length > 0) {
     deliveryMethods.forEach(method => {
       method.addEventListener('change', () => {
         const addressContainer = document.getElementById('address-container');
@@ -497,16 +509,13 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('No delivery method inputs found');
   }
   
-  
-  // เพิ่มการฟังเหตุการณ์เมื่อเลือกบริการเร่งด่วน
+// เพิ่มการฟังเหตุการณ์เมื่อเลือกบริการเร่งด่วน
   const urgentCheckbox = document.getElementById('urgent');
   if (urgentCheckbox) {
     urgentCheckbox.addEventListener('change', calculatePrice);
   } else {
     console.warn('Element with id "urgent" not found');
   }
-
-  
   
   // เพิ่มการฟังเหตุการณ์เมื่อส่งฟอร์ม
   const documentRequestForm = document.getElementById('document-request-form');
@@ -517,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   
-// โหลดข้อมูลบัญชีธนาคาร
+ // โหลดข้อมูลบัญชีธนาคาร
   const bankNameElement = document.getElementById('bank-name');
   const accountNumberElement = document.getElementById('account-number');
   const accountNameElement = document.getElementById('account-name');
