@@ -208,8 +208,8 @@
   </div>
 
  
-<!-- เพิ่มปุ่มทดสอบในส่วนท้ายของหน้า HTML ก่อน </body> -->
-<button id="test-calculation" style="position: fixed; bottom: 10px; right: 10px; z-index: 9999; background: #f00; color: white; padding: 5px 10px; display: none;">Test Calculation</button>
+<!-- แก้ไขปุ่มทดสอบให้แสดงทุกครั้ง -->
+<button id="test-calculation" style="position: fixed; bottom: 10px; right: 10px; z-index: 9999; background: #f00; color: white; padding: 5px 10px;">ทดสอบการคำนวณ</button>
 
 <script>
   // เพิ่มโค้ดสำหรับทดสอบการคำนวณ
@@ -217,48 +217,66 @@
     const testButton = document.getElementById('test-calculation');
     if (testButton) {
       testButton.addEventListener('click', () => {
+        console.log('Test button clicked');
         // สร้างเอกสารทดสอบ
-        selectedDocuments = [
+        window.selectedDocuments = [
           { id: '1', name: 'ใบแสดงผลการศึกษา', price: 100, quantity: 2, subtotal: 200 },
           { id: '2', name: 'หนังสือรับรองการเป็นนักศึกษา', price: 100, quantity: 1, subtotal: 100 }
         ];
         
+        console.log('Created test documents:', window.selectedDocuments);
+        
         // อัปเดตตาราง
-        updateDocumentTable();
+        window.updateDocumentTable();
         
         // เลือกรับด้วยตนเอง
         const pickupRadio = document.getElementById('pickup');
         if (pickupRadio) {
           pickupRadio.checked = true;
+          console.log('Set pickup radio to checked');
           
           // เลือกบริการเร่งด่วน
           const urgentCheckbox = document.getElementById('urgent');
           if (urgentCheckbox) {
             urgentCheckbox.checked = true;
+            console.log('Set urgent checkbox to checked');
             
             // ทดสอบคำนวณราคา
-            calculatePrice();
+            window.calculatePrice();
             
             // แสดงผลการคำนวณในคอนโซล
             console.log('Test calculation completed');
-            console.log('Selected documents:', selectedDocuments);
-            console.log('Total documents:', selectedDocuments.reduce((count, doc) => count + doc.quantity, 0));
+            console.log('Selected documents:', window.selectedDocuments);
+            console.log('Total documents:', window.selectedDocuments.reduce((count, doc) => count + doc.quantity, 0));
             console.log('Urgent checkbox checked:', urgentCheckbox.checked);
             console.log('Delivery method:', pickupRadio.value);
             
             const urgentFeeElement = document.getElementById('urgent-fee');
             console.log('Urgent fee displayed:', urgentFeeElement ? urgentFeeElement.textContent : 'Element not found');
+            
+            // อัพเดท DOM โดยตรง (แก้ไขฉุกเฉิน)
+            if (urgentFeeElement) {
+              const totalDocuments = window.selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+              const urgentFee = 50 * totalDocuments;
+              urgentFeeElement.textContent = window.formatCurrency(urgentFee, window.currentLang || 'th');
+              console.log('Manually updated urgent fee to:', urgentFeeElement.textContent);
+              
+              // อัพเดทราคารวมด้วย
+              const totalPriceElement = document.getElementById('total-price');
+              if (totalPriceElement) {
+                const docSubtotal = window.selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
+                const totalPrice = docSubtotal + urgentFee;
+                totalPriceElement.textContent = window.formatCurrency(totalPrice, window.currentLang || 'th');
+                console.log('Manually updated total price to:', totalPriceElement.textContent);
+              }
+            }
           }
         }
       });
-      
-      // แสดงปุ่มทดสอบเฉพาะเมื่ออยู่ในโหมดพัฒนา
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        testButton.style.display = 'block';
-      }
     }
   });
 </script>
+  
    <footer class="footer mt-5 py-3 bg-light">
     <div class="container text-center">
       <p>test</p>
