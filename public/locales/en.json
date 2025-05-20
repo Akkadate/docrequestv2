@@ -81,6 +81,7 @@
   "request": {
     "title": "Request Document - Document Request System",
     "header": "Request Document",
+    "addDocument": "Add Document",
     "documentType": "Document Type",
     "documentName": "Document Name",
     "unitPrice": "Unit Price",
