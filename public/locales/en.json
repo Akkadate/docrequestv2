@@ -151,6 +151,7 @@
   },
   "requestDetail": {
     "title": "Request Details - Document Request System",
+    "quantity": "quantity",
     "header": "Document Request Details",
     "backToList": "Back to Request List",
     "requestInfo": "Request Information",
