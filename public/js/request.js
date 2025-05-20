@@ -281,7 +281,11 @@ function calculatePrice() {
   const isUrgent = urgentCheckbox.checked;
   
   if (isUrgent && deliveryMethod === 'pickup') {
-    urgentFee = 50; // ค่าบริการเร่งด่วนเพิ่ม 50 บาท
+    // แก้ไขจากเดิม: urgentFee = 50; // ค่าบริการเร่งด่วนเพิ่ม 50 บาท
+    // เป็น: คำนวณค่าบริการเร่งด่วนตามจำนวนเอกสารที่ขอ (50 บาท x จำนวนเอกสารทั้งหมด)
+    const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+    urgentFee = 50 * totalDocuments; // ค่าบริการเร่งด่วนเพิ่ม 50 บาทต่อฉบับ
+    
     if (urgentFeeContainer) {
       urgentFeeContainer.style.display = 'flex';
     }
@@ -305,7 +309,7 @@ function calculatePrice() {
   totalPriceElement.textContent = formatCurrency(totalPrice, currentLang);
   
   // อัปเดตสรุปรายการ
-  updateSummary(deliveryMethod, isUrgent);
+  updateSummary(deliveryMethod, isUrgent, totalDocuments);
 }
 
 // อัปเดตสรุปรายการ
@@ -313,14 +317,20 @@ function updateSummary(deliveryMethod, isUrgent) {
   const summaryContainer = document.getElementById('summary-container');
   
   if (selectedDocuments.length === 0) {
-    summaryContainer.innerHTML = `<p>${i18n[currentLang].request.emptySelection}</p>`;
+    if (summaryContainer) {
+      // ใช้คำแปลตามภาษาปัจจุบัน
+      summaryContainer.innerHTML = `<p>${i18n[currentLang]?.request?.emptySelection || 'กรุณาเลือกประเภทเอกสารและวิธีการรับเอกสาร'}</p>`;
+    }
     return;
   }
+  
+  // นับจำนวนเอกสารทั้งหมด
+  const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
   
   // สร้างข้อความสรุปรายการ
   let summaryHTML = `
     <div class="mb-3">
-      <strong>${i18n[currentLang].request.documentType}:</strong>
+      <strong>${i18n[currentLang]?.request?.documentType || 'ประเภทเอกสาร'}:</strong>
       <ul class="mb-0">
   `;
   
@@ -337,30 +347,34 @@ function updateSummary(deliveryMethod, isUrgent) {
   // วิธีการรับเอกสาร
   summaryHTML += `
     <div class="mb-3">
-      <strong>${i18n[currentLang].request.deliveryMethod}:</strong>
-      <div>${deliveryMethod === 'pickup' ? i18n[currentLang].request.pickup : i18n[currentLang].request.mail}</div>
+      <strong>${i18n[currentLang]?.request?.deliveryMethod || 'วิธีการรับเอกสาร'}:</strong>
+      <div>${deliveryMethod === 'pickup' ? 
+        (i18n[currentLang]?.request?.pickup || 'รับด้วยตนเอง') : 
+        (i18n[currentLang]?.request?.mail || 'รับทางไปรษณีย์')}</div>
   `;
   
   // ค่าจัดส่ง (ถ้ามี)
   if (deliveryMethod === 'mail') {
-    summaryHTML += `<div>${i18n[currentLang].request.shippingFee}: ${formatCurrency(200, currentLang)}</div>`;
+    summaryHTML += `<div>${i18n[currentLang]?.request?.shippingFee || 'ค่าจัดส่ง'}: ${formatCurrency(200, currentLang)}</div>`;
   }
   
   summaryHTML += `</div>`;
   
   // บริการเร่งด่วน (ถ้ามี)
   if (isUrgent && deliveryMethod === 'pickup') {
+    const urgentFee = 50 * totalDocuments; // 50 บาท x จำนวนเอกสารทั้งหมด
     summaryHTML += `
       <div class="mb-3">
-        <strong>${i18n[currentLang].request.urgentService}:</strong>
-        <div>${formatCurrency(50, currentLang)}</div>
+        <strong>${i18n[currentLang]?.request?.urgentService || 'บริการเร่งด่วน'}:</strong>
+        <div>${formatCurrency(urgentFee, currentLang)} (${totalDocuments} ฉบับ x 50 บาท)</div>
       </div>
     `;
   }
   
-  summaryContainer.innerHTML = summaryHTML;
+  if (summaryContainer) {
+    summaryContainer.innerHTML = summaryHTML;
+  }
 }
-
 // ส่งคำขอเอกสาร
 async function submitDocumentRequest(event) {
   event.preventDefault();
