@@ -214,7 +214,57 @@
       </span>
     </div>
   </footer>
+<!-- เพิ่มปุ่มทดสอบในส่วนท้ายของหน้า HTML ก่อน </body> -->
+<button id="test-calculation" style="position: fixed; bottom: 10px; right: 10px; z-index: 9999; background: #f00; color: white; padding: 5px 10px; display: none;">Test Calculation</button>
 
+<script>
+  // เพิ่มโค้ดสำหรับทดสอบการคำนวณ
+  document.addEventListener('DOMContentLoaded', () => {
+    const testButton = document.getElementById('test-calculation');
+    if (testButton) {
+      testButton.addEventListener('click', () => {
+        // สร้างเอกสารทดสอบ
+        selectedDocuments = [
+          { id: '1', name: 'ใบแสดงผลการศึกษา', price: 100, quantity: 2, subtotal: 200 },
+          { id: '2', name: 'หนังสือรับรองการเป็นนักศึกษา', price: 100, quantity: 1, subtotal: 100 }
+        ];
+        
+        // อัปเดตตาราง
+        updateDocumentTable();
+        
+        // เลือกรับด้วยตนเอง
+        const pickupRadio = document.getElementById('pickup');
+        if (pickupRadio) {
+          pickupRadio.checked = true;
+          
+          // เลือกบริการเร่งด่วน
+          const urgentCheckbox = document.getElementById('urgent');
+          if (urgentCheckbox) {
+            urgentCheckbox.checked = true;
+            
+            // ทดสอบคำนวณราคา
+            calculatePrice();
+            
+            // แสดงผลการคำนวณในคอนโซล
+            console.log('Test calculation completed');
+            console.log('Selected documents:', selectedDocuments);
+            console.log('Total documents:', selectedDocuments.reduce((count, doc) => count + doc.quantity, 0));
+            console.log('Urgent checkbox checked:', urgentCheckbox.checked);
+            console.log('Delivery method:', pickupRadio.value);
+            
+            const urgentFeeElement = document.getElementById('urgent-fee');
+            console.log('Urgent fee displayed:', urgentFeeElement ? urgentFeeElement.textContent : 'Element not found');
+          }
+        }
+      });
+      
+      // แสดงปุ่มทดสอบเฉพาะเมื่ออยู่ในโหมดพัฒนา
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        testButton.style.display = 'block';
+      }
+    }
+  });
+</script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/language.js"></script>
   <script src="js/main.js"></script>
