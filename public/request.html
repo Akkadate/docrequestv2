@@ -247,6 +247,98 @@
     }
   });
 </script>
+
+  <!-- เพิ่มโค้ดนี้ก่อนปิด tag </body> -->
+<script>
+  // ติดตามการเปลี่ยนแปลงของช่องเร่งด่วน
+  document.addEventListener('DOMContentLoaded', function() {
+    const urgentCheckbox = document.getElementById('urgent');
+    if (urgentCheckbox) {
+      urgentCheckbox.addEventListener('change', function() {
+        setTimeout(function() {
+          // ตรวจสอบการคำนวณค่าบริการเร่งด่วน
+          if (urgentCheckbox.checked && document.querySelector('input[name="delivery_method"]:checked').value === 'pickup') {
+            // นับจำนวนเอกสารทั้งหมด
+            if (typeof selectedDocuments !== 'undefined' && selectedDocuments.length > 0) {
+              const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+              const correctUrgentFee = 50 * totalDocuments;
+              
+              // ตรวจสอบและแก้ไขการแสดงผลค่าบริการเร่งด่วน
+              const urgentFeeElement = document.getElementById('urgent-fee');
+              if (urgentFeeElement) {
+                // ตรวจสอบว่าค่าที่แสดงถูกต้องหรือไม่
+                const currentDisplay = urgentFeeElement.textContent;
+                const correctDisplay = formatCurrency ? formatCurrency(correctUrgentFee, currentLang || 'th') : `${correctUrgentFee}.00 บาท`;
+                
+                if (currentDisplay !== correctDisplay) {
+                  console.log('Fixing urgent fee display:', {current: currentDisplay, correct: correctDisplay});
+                  urgentFeeElement.textContent = correctDisplay;
+                  
+                  // แก้ไขราคารวมด้วย
+                  const totalPriceElement = document.getElementById('total-price');
+                  if (totalPriceElement) {
+                    const documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
+                    const totalPrice = documentSubtotal + correctUrgentFee;
+                    totalPriceElement.textContent = formatCurrency ? formatCurrency(totalPrice, currentLang || 'th') : `${totalPrice}.00 บาท`;
+                  }
+                  
+                  // แก้ไขสรุปรายการ
+                  const summaryContainer = document.getElementById('summary-container');
+                  if (summaryContainer) {
+                    const urgentServiceElement = summaryContainer.querySelector('div:contains("บริการเร่งด่วน")');
+                    if (urgentServiceElement) {
+                      const urgentServiceTextElement = urgentServiceElement.querySelector('div');
+                      if (urgentServiceTextElement) {
+                        urgentServiceTextElement.textContent = `${correctDisplay} (${totalDocuments} ฉบับ x 50 บาท)`;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }, 100);
+      });
+    }
+    
+    // แก้ไขปัญหาเมื่อเพิ่มเอกสาร
+    const addDocumentButton = document.getElementById('add-document-button');
+    if (addDocumentButton) {
+      const originalClick = addDocumentButton.onclick;
+      addDocumentButton.onclick = function(event) {
+        if (originalClick) {
+          originalClick.call(this, event);
+        }
+        
+        // ตรวจสอบการคำนวณหลังจากเพิ่มเอกสาร
+        setTimeout(function() {
+          const urgentCheckbox = document.getElementById('urgent');
+          if (urgentCheckbox && urgentCheckbox.checked && document.querySelector('input[name="delivery_method"]:checked').value === 'pickup') {
+            // นับจำนวนเอกสารทั้งหมด
+            if (typeof selectedDocuments !== 'undefined' && selectedDocuments.length > 0) {
+              const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+              const correctUrgentFee = 50 * totalDocuments;
+              
+              // ปรับแก้การแสดงผลค่าบริการเร่งด่วน
+              const urgentFeeElement = document.getElementById('urgent-fee');
+              if (urgentFeeElement) {
+                urgentFeeElement.textContent = formatCurrency ? formatCurrency(correctUrgentFee, currentLang || 'th') : `${correctUrgentFee}.00 บาท`;
+                
+                // ปรับแก้ราคารวม
+                const totalPriceElement = document.getElementById('total-price');
+                if (totalPriceElement) {
+                  const documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
+                  const totalPrice = documentSubtotal + correctUrgentFee;
+                  totalPriceElement.textContent = formatCurrency ? formatCurrency(totalPrice, currentLang || 'th') : `${totalPrice}.00 บาท`;
+                }
+              }
+            }
+          }
+        }, 100);
+      };
+    }
+  });
+</script>
    <footer class="footer mt-5 py-3 bg-light">
     <div class="container text-center">
       <p>test</p>
