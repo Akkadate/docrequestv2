@@ -94,7 +94,7 @@
     "mail": "Mail",
     "address": "Shipping Address",
     "addressPlaceholder": "Enter your shipping address",
-    "urgent": "Urgent Service (Add 50 THB)",
+    "urgent": "Urgent Service (Add 50 baht per document)",
     "urgentLabel": "Urgent",
     "paymentSlip": "Payment Slip",
     "paymentSlipInfo": "Upload payment slip or proof of payment (Image or PDF file)",
