@@ -81,6 +81,7 @@
   "request": {
     "title": "ขอเอกสาร - ระบบขอเอกสารออนไลน์",
     "header": "ขอเอกสาร",
+    "addDocument": "เพิ่มเอกสาร",
     "documentType": "ประเภทเอกสาร",
     "documentName": "ชื่อเอกสาร",
     "unitPrice": "ราคาต่อชิ้น",
