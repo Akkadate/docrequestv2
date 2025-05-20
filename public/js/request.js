@@ -375,6 +375,7 @@ function updateSummary(deliveryMethod, isUrgent) {
     summaryContainer.innerHTML = summaryHTML;
   }
 }
+
 // ส่งคำขอเอกสาร
 async function submitDocumentRequest(event) {
   event.preventDefault();
@@ -388,7 +389,7 @@ async function submitDocumentRequest(event) {
   
   // ตรวจสอบว่ามีการเลือกเอกสารหรือไม่
   if (selectedDocuments.length === 0) {
-    showAlert(i18n[currentLang].errors.selectDocumentType, 'danger');
+    showAlert(i18n[currentLang]?.errors?.selectDocumentType || 'กรุณาเลือกประเภทเอกสารและระบุจำนวน', 'danger');
     return;
   }
   
@@ -400,13 +401,13 @@ async function submitDocumentRequest(event) {
   
   // ตรวจสอบว่าได้กรอกที่อยู่หรือไม่ (ถ้าเลือกส่งทางไปรษณีย์)
   if (deliveryMethod === 'mail' && !address) {
-    showAlert(i18n[currentLang].errors.enterAddress, 'danger');
+    showAlert(i18n[currentLang]?.errors?.enterAddress || 'กรุณากรอกที่อยู่สำหรับจัดส่ง', 'danger');
     return;
   }
   
   // ตรวจสอบว่ามีการแนบหลักฐานการชำระเงินหรือไม่
   if (!paymentSlip) {
-    showAlert(i18n[currentLang].errors.uploadPaymentSlip, 'danger');
+    showAlert(i18n[currentLang]?.errors?.uploadPaymentSlip || 'กรุณาอัปโหลดหลักฐานการชำระเงิน', 'danger');
     return;
   }
   
@@ -416,8 +417,9 @@ async function submitDocumentRequest(event) {
   // คำนวณค่าจัดส่ง (ถ้ามี)
   const shippingFee = deliveryMethod === 'mail' ? 200 : 0;
   
-  // คำนวณค่าบริการเร่งด่วน (ถ้ามี)
-  const urgentFee = (urgent && deliveryMethod === 'pickup') ? 50 : 0;
+  // คำนวณค่าบริการเร่งด่วน (ถ้ามี) - แก้ไขส่วนนี้
+  const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+  const urgentFee = (urgent && deliveryMethod === 'pickup') ? 50 * totalDocuments : 0;
   
   // คำนวณราคารวมทั้งหมด
   const totalPrice = documentsSubtotal + shippingFee + urgentFee;
@@ -452,7 +454,7 @@ async function submitDocumentRequest(event) {
     const data = await response.json();
     
     if (response.ok) {
-      showAlert(i18n[currentLang].success.documentRequest, 'success');
+      showAlert(i18n[currentLang]?.success?.documentRequest || 'สร้างคำขอเอกสารสำเร็จ', 'success');
       // รีเซ็ตฟอร์มและรายการเอกสารที่เลือก
       document.getElementById('document-request-form').reset();
       selectedDocuments = [];
@@ -464,11 +466,11 @@ async function submitDocumentRequest(event) {
         window.location.href = '/status.html';
       }, 2000);
     } else {
-      showAlert(data.message || i18n[currentLang].errors.documentRequestFailed, 'danger');
+      showAlert(data.message || i18n[currentLang]?.errors?.documentRequestFailed || 'เกิดข้อผิดพลาดในการสร้างคำขอเอกสาร', 'danger');
     }
   } catch (error) {
     console.error('Document request error:', error);
-    showAlert(i18n[currentLang].errors.serverError, 'danger');
+    showAlert(i18n[currentLang]?.errors?.serverError || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์', 'danger');
   }
 }
 
