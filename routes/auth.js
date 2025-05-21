@@ -82,27 +82,27 @@ module.exports = (pool) => {
     }
   });
   
-  // ดึงข้อมูลผู้ใช้ปัจจุบัน
-  router.get('/user', async (req, res) => {
-    try {
-      const token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
-      const user = await pool.query(
-        'SELECT id, student_id, full_name, email, phone, faculty, role FROM users WHERE id = $1',
-        [decoded.id]
-      );
-      
-      if (user.rows.length === 0) {
-        return res.status(404).json({ message: 'ไม่พบผู้ใช้' });
-      }
-      
-      res.status(200).json(user.rows[0]);
-    } catch (err) {
-      console.error(err);
-      res.status(401).json({ message: 'ไม่มีการยืนยันตัวตน' });
+ // ดึงข้อมูลผู้ใช้ปัจจุบัน
+router.get('/user', async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const user = await pool.query(
+      'SELECT id, student_id, full_name, email, phone, faculty, role, created_at FROM users WHERE id = $1',
+      [decoded.id]
+    );
+    
+    if (user.rows.length === 0) {
+      return res.status(404).json({ message: 'ไม่พบผู้ใช้' });
     }
-  });
+    
+    res.status(200).json(user.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(401).json({ message: 'ไม่มีการยืนยันตัวตน' });
+  }
+});
   
   return router;
 };
