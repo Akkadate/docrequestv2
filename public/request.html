@@ -207,46 +207,7 @@
     </div>
   </div>
 
-<!-- เปลี่ยนเป็น -->
-<button id="test-calculation" style="position: fixed; bottom: 10px; right: 10px; z-index: 9999; background: #f00; color: white; padding: 5px 10px;">ทดสอบการคำนวณ</button>
 
-<script>
-  // สคริปต์ทดสอบการคำนวณแบบใหม่
-  document.addEventListener('DOMContentLoaded', () => {
-    const testButton = document.getElementById('test-calculation');
-    if (testButton) {
-      testButton.addEventListener('click', () => {
-        console.log('Test button clicked');
-        
-        // สร้างเอกสารทดสอบ
-        selectedDocuments = [
-          { id: '1', name: 'ใบแสดงผลการศึกษา', price: 100, quantity: 2, subtotal: 200 },
-          { id: '2', name: 'หนังสือรับรองการเป็นนักศึกษา', price: 100, quantity: 1, subtotal: 100 }
-        ];
-        
-        console.log('Created test documents:', selectedDocuments);
-        
-        // อัปเดตตารางและราคา
-        updateDocumentTable();
-        
-        // ตั้งค่าการรับเอกสารและบริการเร่งด่วน
-        document.getElementById('pickup').checked = true;
-        document.getElementById('urgent').checked = true;
-        
-        // คำนวณราคาใหม่
-        calculatePrice();
-        
-        // แสดงข้อมูลสำหรับตรวจสอบ
-        console.log('Test summary:');
-        console.log('- เอกสารที่เลือก:', selectedDocuments);
-        console.log('- จำนวนเอกสารทั้งหมด:', selectedDocuments.reduce((count, doc) => count + doc.quantity, 0), 'ฉบับ');
-        console.log('- ราคาเอกสารรวม:', selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0), 'บาท');
-        console.log('- บริการเร่งด่วน:', '50 x', selectedDocuments.reduce((count, doc) => count + doc.quantity, 0), '=', 50 * selectedDocuments.reduce((count, doc) => count + doc.quantity, 0), 'บาท');
-        console.log('- ราคารวมทั้งหมด:', selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0) + (50 * selectedDocuments.reduce((count, doc) => count + doc.quantity, 0)), 'บาท');
-      });
-    }
-  });
-</script>
 
   <!-- เพิ่มโค้ดนี้ก่อนปิด tag </body> -->
 <script>
