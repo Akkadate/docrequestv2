@@ -41,10 +41,72 @@ async function loadRequestDetails() {
     const request = await response.json();
     console.log('Request data loaded:', request);
     displayRequestDetails(request);
+    
+    // โหลดประวัติสถานะ
+    await loadStatusHistory(requestId);
   } catch (error) {
     console.error('Error loading request details:', error);
     showAlert('เกิดข้อผิดพลาดในการโหลดข้อมูลคำขอเอกสาร', 'danger');
   }
+}
+
+// โหลดประวัติสถานะ
+async function loadStatusHistory(requestId) {
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`/api/admin/request/${requestId}/status-history`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to load status history');
+    }
+    
+    const history = await response.json();
+    displayStatusHistory(history);
+  } catch (error) {
+    console.error('Error loading status history:', error);
+    // ไม่แสดงข้อผิดพลาดถ้าโหลดประวัติไม่ได้ แต่แสดงข้อความว่าไม่มีประวัติ
+    document.getElementById('no-history-message').style.display = 'block';
+  }
+}
+
+// แสดงประวัติสถานะ
+function displayStatusHistory(history) {
+  const statusHistoryTable = document.getElementById('status-history-table');
+  const noHistoryMessage = document.getElementById('no-history-message');
+  
+  if (!statusHistoryTable) return;
+  
+  statusHistoryTable.innerHTML = '';
+  
+  if (!history || history.length === 0) {
+    noHistoryMessage.style.display = 'block';
+    return;
+  }
+  
+  noHistoryMessage.style.display = 'none';
+  
+  history.forEach((item, index) => {
+    const row = document.createElement('tr');
+    
+    // ไฮไลท์สถานะปัจจุบัน (รายการแรก)
+    if (index === 0) {
+      row.classList.add('table-active');
+    }
+    
+    row.innerHTML = `
+      <td>${formatDate(item.created_at, currentLang)}</td>
+      <td>${createStatusBadge(item.status)}</td>
+      <td>${item.note || '-'}</td>
+      <td>${item.created_by_name || 'ระบบ'}</td>
+    `;
+    
+    statusHistoryTable.appendChild(row);
+  });
 }
 
 // แก้ไขโค้ดในฟังก์ชัน displayRequestDetails ในไฟล์ request-detail.js
@@ -154,9 +216,9 @@ function displayRequestDetails(request) {
   if (request.delivery_method === 'mail' && request.address) {
     document.getElementById('detail-address-container').style.display = 'block';
     document.getElementById('detail-address').textContent = request.address;
-    const studentNameInAddressElement = document.getElementById('detail-student-name-address'); // ใช้ ID ใหม่ที่ตั้งไว้
+    const studentNameInAddressElement = document.getElementById('detail-student-name-address');
     if (studentNameInAddressElement) {
-      studentNameInAddressElement.textContent = request.full_name || ''; // ใช้ข้อมูลชื่อนักศึกษาเดียวกัน
+      studentNameInAddressElement.textContent = request.full_name || '';
     }
   } else {
     document.getElementById('detail-address-container').style.display = 'none';
@@ -185,75 +247,8 @@ function displayRequestDetails(request) {
   // ตั้งค่าสถานะปัจจุบันในฟอร์ม
   document.getElementById('status').value = request.status;
   
-  // ประวัติสถานะ - แสดงเหมือนกับหน้า student
-  const statusHistoryTable = document.getElementById('status-history-table');
-  if (statusHistoryTable) {
-    statusHistoryTable.innerHTML = '';
-    
-    // สถานะปัจจุบัน
-    const statusRow = document.createElement('tr');
-    statusRow.innerHTML = `
-      <td>${formatDate(request.updated_at, currentLang)}</td>
-      <td>${createStatusBadge(request.status)}</td>
-    `;
-    statusHistoryTable.appendChild(statusRow);
-    
-    // สถานะรอดำเนินการ (เริ่มต้น)
-    if (request.status !== 'pending') {
-      const pendingRow = document.createElement('tr');
-      pendingRow.innerHTML = `
-        <td>${formatDate(request.created_at, currentLang)}</td>
-        <td>${createStatusBadge('pending')}</td>
-      `;
-      statusHistoryTable.appendChild(pendingRow);
-    }
-  }
-  
-  // แสดงข้อความตามสถานะ
-  const statusInfoContainer = document.getElementById('status-info-container');
-  const statusInfoText = document.getElementById('status-info-text');
-  
-  if (statusInfoContainer && statusInfoText) {
-    let infoText = '';
-    
-    switch (request.status) {
-      case 'pending':
-        infoText = 'คำขอนี้อยู่ระหว่างรอการดำเนินการ รอตรวจสอบหลักฐานการชำระเงิน';
-        if (!request.payment_slip_url) {
-          infoText += ' (ยังไม่มีหลักฐานการชำระเงิน)';
-        }
-        break;
-      case 'processing':
-        infoText = 'กำลังดำเนินการจัดเตรียมเอกสาร';
-        break;
-      case 'ready':
-        if (request.delivery_method === 'pickup') {
-          infoText = 'เอกสารพร้อมให้นักศึกษามารับแล้ว';
-        } else {
-          infoText = 'เอกสารพร้อมจัดส่งทางไปรษณีย์แล้ว';
-        }
-        break;
-      case 'completed':
-        if (request.delivery_method === 'pickup') {
-          infoText = 'นักศึกษาได้รับเอกสารเรียบร้อยแล้ว';
-        } else {
-          infoText = 'จัดส่งเอกสารทางไปรษณีย์เรียบร้อยแล้ว';
-        }
-        break;
-      case 'rejected':
-        infoText = 'คำขอถูกปฏิเสธ';
-        break;
-      default:
-        infoText = '';
-    }
-    
-    if (infoText) {
-      statusInfoText.textContent = infoText;
-      statusInfoContainer.style.display = 'block';
-    } else {
-      statusInfoContainer.style.display = 'none';
-    }
-  }
+  // ล้างหมายเหตุเดิม
+  document.getElementById('status-note').value = '';
 }
 
 // ตั้งค่าการอัปเดตสถานะ
@@ -292,6 +287,9 @@ async function updateRequestStatus() {
     
     if (response.ok) {
       showAlert(i18n[currentLang]?.success?.updateStatus || 'อัปเดตสถานะสำเร็จ', 'success');
+      
+      // ล้างฟอร์มหมายเหตุ
+      document.getElementById('status-note').value = '';
       
       // โหลดข้อมูลใหม่
       setTimeout(() => {
