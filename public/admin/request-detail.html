@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n="requestDetail.title">รายละเอียดคำขอ - ระบบขอเอกสารออนไลน์</title>
+  <title data-i18n="requestDetail.title">ADMIN - รายละเอียดคำขอ - ระบบขอเอกสารออนไลน์</title>
   <!-- เพิ่มฟอนต์ Prompt สำหรับภาษาไทยและอังกฤษ -->
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
@@ -101,39 +101,8 @@
               <p id="detail-address"></p>
             </div>
           </div>
-       </div>
-        
-        <!-- เพิ่มปุ่มอัปเดตสถานะและแสดงฟอร์ม -->
-        <div class="card mb-4">
-          <div class="card-header bg-primary text-white">
-            <h5 class="mb-0" data-i18n="requestDetail.updateStatus">อัปเดตสถานะคำขอ</h5>
-          </div>
-          <div class="card-body">
-            <form id="update-status-form">
-              <input type="hidden" id="request-id">
-              <div class="mb-3">
-                <label for="status" class="form-label" data-i18n="requestDetail.selectStatus">เลือกสถานะ:</label>
-                <select class="form-select" id="status">
-                  <option value="pending" data-i18n="requestDetail.statusPending">รอดำเนินการ</option>
-                  <option value="processing" data-i18n="requestDetail.statusProcessing">กำลังดำเนินการ</option>
-                  <option value="ready" data-i18n="requestDetail.statusReady">พร้อมจัดส่ง/รับเอกสาร</option>
-                  <option value="completed" data-i18n="requestDetail.statusCompleted">เสร็จสิ้น</option>
-                  <option value="rejected" data-i18n="requestDetail.statusRejected">ถูกปฏิเสธ</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="status-note" class="form-label" data-i18n="requestDetail.statusNote">หมายเหตุ:</label>
-                <textarea class="form-control" id="status-note" rows="2"></textarea>
-              </div>
-              <button type="button" id="update-status-button" class="btn btn-primary">
-                <i class="bi bi-check-circle"></i> <span data-i18n="requestDetail.updateButton">อัปเดตสถานะ</span>
-              </button>
-            </form>
-          </div>
         </div>
-      </div>
-      
-      <div class="col-md-4">
+        <div class="col-md-4">
         <div class="card mb-4">
           <div class="card-header bg-primary text-white">
             <h5 class="mb-0" data-i18n="requestDetail.paymentInfo">ข้อมูลการชำระเงิน</h5>
@@ -172,6 +141,38 @@
           </div>
         </div>
       </div>
+
+        <!-- เพิ่มปุ่มอัปเดตสถานะและแสดงฟอร์ม -->
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0" data-i18n="requestDetail.updateStatus">อัปเดตสถานะคำขอ</h5>
+          </div>
+          <div class="card-body">
+            <form id="update-status-form">
+              <input type="hidden" id="request-id">
+              <div class="mb-3">
+                <label for="status" class="form-label" data-i18n="requestDetail.selectStatus">เลือกสถานะ:</label>
+                <select class="form-select" id="status">
+                  <option value="pending" data-i18n="requestDetail.statusPending">รอดำเนินการ</option>
+                  <option value="processing" data-i18n="requestDetail.statusProcessing">กำลังดำเนินการ</option>
+                  <option value="ready" data-i18n="requestDetail.statusReady">พร้อมจัดส่ง/รับเอกสาร</option>
+                  <option value="completed" data-i18n="requestDetail.statusCompleted">เสร็จสิ้น</option>
+                  <option value="rejected" data-i18n="requestDetail.statusRejected">ถูกปฏิเสธ</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="status-note" class="form-label" data-i18n="requestDetail.statusNote">หมายเหตุ:</label>
+                <textarea class="form-control" id="status-note" rows="2"></textarea>
+              </div>
+              <button type="button" id="update-status-button" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> <span data-i18n="requestDetail.updateButton">อัปเดตสถานะ</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      
     </div>
   </div>
 
