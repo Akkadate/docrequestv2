@@ -56,9 +56,93 @@ async function loadRequestDetails() {
     console.log('Request details:', request);
     
     displayRequestDetails(request);
+    
+    // โหลดประวัติสถานะ
+    await loadStatusHistory(requestId);
   } catch (error) {
     console.error('Error loading request details:', error);
     showAlert(i18n[currentLang]?.errors?.requestNotFound || 'ไม่พบข้อมูลคำขอเอกสาร', 'danger');
+  }
+}
+
+// โหลดประวัติสถานะ
+async function loadStatusHistory(requestId) {
+  try {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`/api/documents/request/${requestId}/status-history`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.status === 404) {
+      // ถ้า API ยังไม่มี ให้แสดงเฉพาะสถานะปัจจุบัน
+      console.warn('Status history endpoint not found, showing current status only');
+      return;
+    }
+    
+    if (!response.ok) {
+      throw new Error('Failed to load status history');
+    }
+    
+    const history = await response.json();
+    displayStatusHistory(history);
+  } catch (error) {
+    console.error('Error loading status history:', error);
+    // แสดงสถานะปัจจุบันจากข้อมูลคำขอแทน
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestId = urlParams.get('id');
+    const requestElement = document.getElementById('detail-status');
+    if (requestElement) {
+      displayCurrentStatusOnly();
+    }
+  }
+}
+
+// แสดงประวัติสถานะ
+function displayStatusHistory(history) {
+  const statusHistoryTable = document.getElementById('status-history-table');
+  const noHistoryMessage = document.getElementById('no-history-message');
+  
+  if (!statusHistoryTable) return;
+  
+  statusHistoryTable.innerHTML = '';
+  
+  if (!history || history.length === 0) {
+    noHistoryMessage.style.display = 'block';
+    return;
+  }
+  
+  noHistoryMessage.style.display = 'none';
+  
+  history.forEach((item, index) => {
+    const row = document.createElement('tr');
+    
+    // ไฮไลท์สถานะปัจจุบัน (รายการแรก)
+    if (index === 0) {
+      row.classList.add('table-active');
+    }
+    
+    row.innerHTML = `
+      <td>${formatDate(item.created_at, currentLang)}</td>
+      <td>${createStatusBadge(item.status)}</td>
+      <td>${item.note || '-'}</td>
+    `;
+    
+    statusHistoryTable.appendChild(row);
+  });
+}
+
+// แสดงเฉพาะสถานะปัจจุบัน (กรณีไม่มีประวัติจาก API)
+function displayCurrentStatusOnly() {
+  const statusHistoryTable = document.getElementById('status-history-table');
+  if (!statusHistoryTable) return;
+  
+  // เก็บ HTML เดิมไว้ถ้ามีอยู่แล้ว
+  const existingRows = statusHistoryTable.innerHTML;
+  if (existingRows.trim()) {
+    return; // มีข้อมูลอยู่แล้ว ไม่ต้องแสดงอะไรเพิ่ม
   }
 }
 
@@ -98,27 +182,27 @@ function displayRequestDetails(request) {
                 `).join('')}
               </tbody>
               <tfoot>
-            <tr>
-              <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.documentSubtotal || 'รวมค่าเอกสาร'}:</th>
-              <th class="text-end">${formatCurrency(request.document_items.reduce((total, item) => total + parseFloat(item.subtotal), 0))}</th>
-            </tr>
-            ${request.delivery_method === 'mail' ? `
-              <tr>
-                <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.shippingFee || 'ค่าจัดส่ง'}:</th>
-                <th class="text-end">${formatCurrency(200)}</th>
-              </tr>
-            ` : ''}
-            ${request.urgent ? `
-              <tr>
-                <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.urgentFee || 'ค่าบริการเร่งด่วน'}:</th>
-                <th class="text-end">${formatCurrency(50 * request.document_items.reduce((count, item) => count + parseInt(item.quantity), 0))}</th>
-              </tr>
-            ` : ''}
-            <tr>
-              <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.totalPrice || 'ราคารวมทั้งหมด'}:</th>
-              <th class="text-end">${formatCurrency(request.total_price)}</th>
-            </tr>
-          </tfoot>
+                <tr>
+                  <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.documentSubtotal || 'รวมค่าเอกสาร'}:</th>
+                  <th class="text-end">${formatCurrency(request.document_items.reduce((total, item) => total + parseFloat(item.subtotal), 0))}</th>
+                </tr>
+                ${request.delivery_method === 'mail' ? `
+                  <tr>
+                    <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.shippingFee || 'ค่าจัดส่ง'}:</th>
+                    <th class="text-end">${formatCurrency(200)}</th>
+                  </tr>
+                ` : ''}
+                ${request.urgent ? `
+                  <tr>
+                    <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.urgentFee || 'ค่าบริการเร่งด่วน'}:</th>
+                    <th class="text-end">${formatCurrency(50 * request.document_items.reduce((count, item) => count + parseInt(item.quantity), 0))}</th>
+                  </tr>
+                ` : ''}
+                <tr>
+                  <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.totalPrice || 'ราคารวมทั้งหมด'}:</th>
+                  <th class="text-end">${formatCurrency(request.total_price)}</th>
+                </tr>
+              </tfoot>
             </table>
           </div>
         `;
@@ -198,30 +282,6 @@ function displayRequestDetails(request) {
         } else if (uploadPaymentContainer) {
           uploadPaymentContainer.style.display = 'none';
         }
-      }
-    }
-    
-    // ประวัติสถานะ
-    const statusHistoryTable = document.getElementById('status-history-table');
-    if (statusHistoryTable) {
-      statusHistoryTable.innerHTML = '';
-      
-      // สถานะปัจจุบัน
-      const statusRow = document.createElement('tr');
-      statusRow.innerHTML = `
-        <td>${formatDate(request.updated_at, currentLang)}</td>
-        <td>${createStatusBadge(request.status)}</td>
-      `;
-      statusHistoryTable.appendChild(statusRow);
-      
-      // สถานะรอดำเนินการ (เริ่มต้น)
-      if (request.status !== 'pending') {
-        const pendingRow = document.createElement('tr');
-        pendingRow.innerHTML = `
-          <td>${formatDate(request.created_at, currentLang)}</td>
-          <td>${createStatusBadge('pending')}</td>
-        `;
-        statusHistoryTable.appendChild(pendingRow);
       }
     }
     
