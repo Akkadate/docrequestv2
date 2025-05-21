@@ -330,5 +330,52 @@ module.exports = (pool, upload) => {
     }
   });
   
+  // เพิ่ม endpoint สำหรับดึงประวัติสถานะ
+  router.get('/request/:id/status-history', authenticateJWT, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+      
+      // ตรวจสอบว่าคำขอนี้เป็นของผู้ใช้นี้หรือไม่
+      const requestCheck = await pool.query(
+        'SELECT user_id FROM document_requests WHERE id = $1',
+        [id]
+      );
+      
+      if (requestCheck.rows.length === 0) {
+        return res.status(404).json({ message: 'ไม่พบคำขอเอกสาร' });
+      }
+      
+      if (requestCheck.rows[0].user_id !== userId) {
+        return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ดูข้อมูลคำขอนี้' });
+      }
+      
+      // ดึงประวัติสถานะ
+      const query = `
+        SELECT 
+          sh.id,
+          sh.status,
+          sh.note,
+          sh.created_at,
+          CASE 
+            WHEN u.role = 'admin' THEN 'เจ้าหน้าที่'
+            ELSE u.full_name
+          END as created_by_name
+        FROM status_history sh
+        LEFT JOIN users u ON sh.created_by = u.id
+        WHERE sh.request_id = $1
+        ORDER BY sh.created_at DESC
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      res.json(result.rows);
+      
+    } catch (err) {
+      console.error('Error fetching status history:', err);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงประวัติสถานะ' });
+    }
+  });
+  
   return router;
 };
