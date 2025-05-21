@@ -450,15 +450,29 @@ h6 { font-size: 1rem; }
   color: #055160;
 }
 
-/* Footer improvements */
-.footer {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+/* เพิ่ม pattern effect ให้ footer */
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.03) 0,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 15px
+    );
+  pointer-events: none;
 }
 
 .footer .text-muted {
   color: rgba(255, 255, 255, 0.9) !important;
+  position: relative;
+  z-index: 1;
 }
 
 /* Modal improvements */
