@@ -227,6 +227,28 @@ function displayRequestDetails(request) {
                   </tr>
                 `).join('')}
               </tbody>
+              <tfoot>
+            <tr>
+              <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.documentSubtotal || 'รวมค่าเอกสาร'}:</th>
+              <th class="text-end">${formatCurrency(request.document_items.reduce((total, item) => total + parseFloat(item.subtotal), 0))}</th>
+            </tr>
+            ${request.delivery_method === 'mail' ? `
+              <tr>
+                <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.shippingFee || 'ค่าจัดส่ง'}:</th>
+                <th class="text-end">${formatCurrency(200)}</th>
+              </tr>
+            ` : ''}
+            ${request.urgent ? `
+              <tr>
+                <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.urgentFee || 'ค่าบริการเร่งด่วน'}:</th>
+                <th class="text-end">${formatCurrency(50 * request.document_items.reduce((count, item) => count + parseInt(item.quantity), 0))}</th>
+              </tr>
+            ` : ''}
+            <tr>
+              <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.totalPrice || 'ราคารวมทั้งหมด'}:</th>
+              <th class="text-end">${formatCurrency(request.total_price)}</th>
+            </tr>
+          </tfoot>
             </table>
           </div>
         `;
