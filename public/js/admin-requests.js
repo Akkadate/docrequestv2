@@ -305,7 +305,8 @@ function formatDate(dateString, lang = 'th') {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    timeZone: 'Asia/Bangkok' // เพิ่มบรรทัดนี้
   };
   
   const locales = {
