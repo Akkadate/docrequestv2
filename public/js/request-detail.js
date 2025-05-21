@@ -185,17 +185,74 @@ function displayRequestDetails(request) {
   // ตั้งค่าสถานะปัจจุบันในฟอร์ม
   document.getElementById('status').value = request.status;
   
-  // แสดงประวัติสถานะ (ถ้ามี)
-  // หมายเหตุ: ต้องมีการพัฒนาระบบเก็บประวัติสถานะเพิ่มเติม
+  // ประวัติสถานะ - แสดงเหมือนกับหน้า student
   const statusHistoryTable = document.getElementById('status-history-table');
   if (statusHistoryTable) {
-    // ในกรณีที่ยังไม่มีระบบเก็บประวัติสถานะ ให้แสดงสถานะปัจจุบันอย่างเดียว
-    statusHistoryTable.innerHTML = `
-      <tr>
-        <td>${formatDate(request.updated_at)}</td>
-        <td>${createStatusBadge(request.status)}</td>
-      </tr>
+    statusHistoryTable.innerHTML = '';
+    
+    // สถานะปัจจุบัน
+    const statusRow = document.createElement('tr');
+    statusRow.innerHTML = `
+      <td>${formatDate(request.updated_at, currentLang)}</td>
+      <td>${createStatusBadge(request.status)}</td>
     `;
+    statusHistoryTable.appendChild(statusRow);
+    
+    // สถานะรอดำเนินการ (เริ่มต้น)
+    if (request.status !== 'pending') {
+      const pendingRow = document.createElement('tr');
+      pendingRow.innerHTML = `
+        <td>${formatDate(request.created_at, currentLang)}</td>
+        <td>${createStatusBadge('pending')}</td>
+      `;
+      statusHistoryTable.appendChild(pendingRow);
+    }
+  }
+  
+  // แสดงข้อความตามสถานะ
+  const statusInfoContainer = document.getElementById('status-info-container');
+  const statusInfoText = document.getElementById('status-info-text');
+  
+  if (statusInfoContainer && statusInfoText) {
+    let infoText = '';
+    
+    switch (request.status) {
+      case 'pending':
+        infoText = 'คำขอนี้อยู่ระหว่างรอการดำเนินการ รอตรวจสอบหลักฐานการชำระเงิน';
+        if (!request.payment_slip_url) {
+          infoText += ' (ยังไม่มีหลักฐานการชำระเงิน)';
+        }
+        break;
+      case 'processing':
+        infoText = 'กำลังดำเนินการจัดเตรียมเอกสาร';
+        break;
+      case 'ready':
+        if (request.delivery_method === 'pickup') {
+          infoText = 'เอกสารพร้อมให้นักศึกษามารับแล้ว';
+        } else {
+          infoText = 'เอกสารพร้อมจัดส่งทางไปรษณีย์แล้ว';
+        }
+        break;
+      case 'completed':
+        if (request.delivery_method === 'pickup') {
+          infoText = 'นักศึกษาได้รับเอกสารเรียบร้อยแล้ว';
+        } else {
+          infoText = 'จัดส่งเอกสารทางไปรษณีย์เรียบร้อยแล้ว';
+        }
+        break;
+      case 'rejected':
+        infoText = 'คำขอถูกปฏิเสธ';
+        break;
+      default:
+        infoText = '';
+    }
+    
+    if (infoText) {
+      statusInfoText.textContent = infoText;
+      statusInfoContainer.style.display = 'block';
+    } else {
+      statusInfoContainer.style.display = 'none';
+    }
   }
 }
 
@@ -521,8 +578,8 @@ function printReceipt() {
           </div>
           
           <div class="contact">
-            <p>มหาวิทยาลัยนอร์ทกรุงเทพ สำนักทะเบียนและประมวลผล</p>
-            <p>โทร. 02-972-7200 ต่อ 1234-1235 | อีเมล: registrar@northbkk.ac.th</p>
+            <p>มหาวิทยาลัยนอร์ทกรุงเทพ สำนักบริการการศึกษา</p>
+            <p>โทร. 02-972-7200 ต่อ 230 | อีเมล: registrar@northbkk.ac.th</p>
           </div>
         </div>
         
