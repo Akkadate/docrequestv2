@@ -60,43 +60,34 @@
       </a>
     </div>
     
-   <div id="alert-container"></div>
+    <div id="alert-container"></div>
     
     <div class="row">
-
-
-            <div class="col-md-8">
-
-                  <div class="card mb-4">
-
-                        <div class="card-header bg-primary text-white">
-                          <h5 class="mb-0" data-i18n="requestDetail.requestInfo">ข้อมูลคำขอ</h5>
-                        </div>
-
-                                <div class="card-body">
-                                        <div class="row">
-                                               
-                                                  <p><strong data-i18n="requestDetail.requestID">รหัสคำขอ:</strong> <span id="detail-id"></span></p>
-                                                  <p><strong data-i18n="requestDetail.documentType">ประเภทเอกสาร:</strong> <span id="detail-document-name"></span></p>
-                                                  <p><strong data-i18n="requestDetail.deliveryMethod">วิธีการรับเอกสาร:</strong> <span id="detail-delivery-method"></span></p>
-                                                  <p><strong data-i18n="requestDetail.requestDate">วันที่ขอ:</strong> <span id="detail-created-at"></span></p>
-                                                  <p><strong data-i18n="requestDetail.lastUpdated">อัปเดตล่าสุด:</strong> <span id="detail-updated-at"></span></p>
-                                                  <p><strong data-i18n="requestDetail.status">สถานะ:</strong> <span id="detail-status"></span></p>
-                                                  <p><strong data-i18n="requestDetail.price">ราคา:</strong> <span id="detail-price"></span></p>
-                                             
-                                        </div>
-                                </div>
-
-                                <div id="detail-address-container" style="display: none;">
-                                  <hr>
-                                  <p><strong data-i18n="requestDetail.shippingAddress">ที่อยู่จัดส่ง:</strong></p>
-                                  <p id="detail-address"></p>
-                                </div>
-                  </div>
-             </div>
-
-             
-
+      <div class="col-md-8">
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0" data-i18n="requestDetail.requestInfo">ข้อมูลคำขอ</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-12">
+                <p><strong data-i18n="requestDetail.requestID">รหัสคำขอ:</strong> <span id="detail-id"></span></p>
+                <p><strong data-i18n="requestDetail.documentType">ประเภทเอกสาร:</strong> <span id="detail-document-name"></span></p>
+                <p><strong data-i18n="requestDetail.deliveryMethod">วิธีการรับเอกสาร:</strong> <span id="detail-delivery-method"></span></p>
+                <p><strong data-i18n="requestDetail.requestDate">วันที่ขอ:</strong> <span id="detail-created-at"></span></p>
+                <p><strong data-i18n="requestDetail.lastUpdated">อัปเดตล่าสุด:</strong> <span id="detail-updated-at"></span></p>
+                <p><strong data-i18n="requestDetail.status">สถานะ:</strong> <span id="detail-status"></span></p>
+                <p><strong data-i18n="requestDetail.price">ราคา:</strong> <span id="detail-price"></span></p>
+              </div>
+            </div>
+            <div id="detail-address-container" style="display: none;">
+              <hr>
+              <p><strong data-i18n="requestDetail.shippingAddress">ที่อยู่จัดส่ง:</strong></p>
+              <p id="detail-address"></p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="col-md-4">
         <div class="card mb-4">
@@ -124,24 +115,33 @@
             </div>
           </div>
         </div>
-        
+      </div>
+    </div>
+
+    <!-- ย้ายประวัติสถานะมาไว้ด้านล่าง -->
+    <div class="row">
+      <div class="col-12">
         <div class="card">
           <div class="card-header bg-primary text-white">
             <h5 class="mb-0" data-i18n="requestDetail.statusHistory">ประวัติสถานะ</h5>
           </div>
           <div class="card-body">
             <div class="table-responsive">
-              <table class="table table-sm">
+              <table class="table table-hover">
                 <thead>
                   <tr>
-                    <th data-i18n="requestDetail.date">วันที่</th>
-                    <th data-i18n="requestDetail.statusValue">สถานะ</th>
+                    <th style="width: 180px;" data-i18n="requestDetail.date">วันที่</th>
+                    <th style="width: 200px;" data-i18n="requestDetail.statusValue">สถานะ</th>
+                    <th data-i18n="requestDetail.note">หมายเหตุ</th>
                   </tr>
                 </thead>
                 <tbody id="status-history-table">
                   <!-- ข้อมูลจะถูกเพิ่มโดย JavaScript -->
                 </tbody>
               </table>
+            </div>
+            <div id="no-history-message" class="text-center text-muted py-3" style="display: none;">
+              <p data-i18n="requestDetail.noHistory">ไม่มีประวัติการเปลี่ยนแปลงสถานะ</p>
             </div>
             <div id="status-info-container" class="mt-3 p-3 bg-light rounded" style="display: none;">
               <p class="mb-0" id="status-info-text"></p>
