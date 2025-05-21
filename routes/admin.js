@@ -65,31 +65,52 @@ module.exports = (pool) => {
   });
   
   // ดึงรายละเอียดคำขอเอกสาร
-  router.get('/request/:id', authenticateJWT, isAdmin, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const lang = req.query.lang || 'th';
-      const column = `name_${lang}`;
-      
-      const request = await pool.query(
-        `SELECT dr.*, dt.${column} as document_name, u.full_name, u.student_id, u.email, u.phone, u.faculty
-        FROM document_requests dr
-        JOIN document_types dt ON dr.document_type_id = dt.id
-        JOIN users u ON dr.user_id = u.id
-        WHERE dr.id = $1`,
-        [id]
-      );
-      
-      if (request.rows.length === 0) {
-        return res.status(404).json({ message: 'ไม่พบคำขอเอกสาร' });
-      }
-      
-      res.status(200).json(request.rows[0]);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลคำขอเอกสาร' });
+  // แก้ไขเอนด์พอยต์ GET /request/:id ในไฟล์ routes/admin.js
+router.get('/request/:id', authenticateJWT, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const lang = req.query.lang || 'th';
+    const column = `name_${lang}`;
+    
+    const request = await pool.query(
+      `SELECT dr.*, dt.${column} as document_name, u.full_name, u.student_id, u.email, u.phone, u.faculty
+      FROM document_requests dr
+      JOIN document_types dt ON dr.document_type_id = dt.id
+      JOIN users u ON dr.user_id = u.id
+      WHERE dr.id = $1`,
+      [id]
+    );
+    
+    if (request.rows.length === 0) {
+      return res.status(404).json({ message: 'ไม่พบคำขอเอกสาร' });
     }
-  });
+    
+    // ดึงรายการย่อย (ถ้ามี)
+    const itemsQuery = `
+      SELECT dri.*, dt.${column} as document_name
+      FROM document_request_items dri
+      JOIN document_types dt ON dri.document_type_id = dt.id
+      WHERE dri.request_id = $1
+    `;
+    
+    const itemsResult = await pool.query(itemsQuery, [id]);
+    
+    // ประกอบข้อมูลรายการย่อยเข้ากับคำขอหลัก
+    const result = request.rows[0];
+    if (itemsResult.rows.length > 0) {
+      result.has_multiple_items = true;
+      result.document_items = itemsResult.rows;
+      result.item_count = itemsResult.rows.length;
+    } else {
+      result.has_multiple_items = false;
+    }
+    
+    res.status(200).json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลคำขอเอกสาร' });
+  }
+});
   
   // จัดการผู้ใช้งาน
   router.get('/users', authenticateJWT, isAdmin, async (req, res) => {
