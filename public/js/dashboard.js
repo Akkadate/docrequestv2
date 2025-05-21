@@ -103,18 +103,23 @@ async function loadUserProfile() {
     }
     
     const user = await response.json();
+    console.log("User data:", user); // Debug log
     
     // แสดงข้อมูลผู้ใช้
-    document.getElementById('user-student-id').textContent = user.student_id;
-    document.getElementById('user-full-name').textContent = user.full_name;
-    document.getElementById('user-faculty').textContent = user.faculty;
-    document.getElementById('user-email').textContent = user.email;
-    document.getElementById('user-phone').textContent = user.phone;
-   document.getElementById('user-join-date').textContent = user.created_at;
-    console.log("Register date:", user.created_at);
+    document.getElementById('user-student-id').textContent = user.student_id || '-';
+    document.getElementById('user-full-name').textContent = user.full_name || '-';
+    document.getElementById('user-faculty').textContent = user.faculty || '-';
+    document.getElementById('user-email').textContent = user.email || '-';
+    document.getElementById('user-phone').textContent = user.phone || '-';
+    
+    // แก้ไขการแสดงวันที่ลงทะเบียน
+    console.log("Register date:", user.created_at); // Debug log
     if (user.created_at) {
       document.getElementById('user-join-date').textContent = formatDate(user.created_at, currentLang);
+    } else {
+      document.getElementById('user-join-date').textContent = '-';
     }
+    
   } catch (error) {
     console.error('Error loading user profile:', error);
     showAlert(i18n[currentLang].errors.loadingProfileFailed, 'danger');
