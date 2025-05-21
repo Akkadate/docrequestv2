@@ -79,6 +79,8 @@ function createStatusBadge(status) {
 
 // แปลงวันที่เป็นรูปแบบที่อ่านง่าย
 function formatDate(dateString, lang = 'th') {
+  if (!dateString) return '-';
+  
   const date = new Date(dateString);
   
   const options = {
@@ -86,10 +88,17 @@ function formatDate(dateString, lang = 'th') {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    timeZone: 'Asia/Bangkok' // เพิ่มบรรทัดนี้
   };
   
-  return date.toLocaleDateString(getLocale(lang), options);
+  const locales = {
+    'th': 'th-TH',
+    'en': 'en-US',
+    'zh': 'zh-CN'
+  };
+  
+  return date.toLocaleDateString(locales[lang] || 'th-TH', options);
 }
 
 // รับ locale ตามภาษา
