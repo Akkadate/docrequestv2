@@ -185,119 +185,21 @@ function displayRequestDetails(request) {
   // ตั้งค่าสถานะปัจจุบันในฟอร์ม
   document.getElementById('status').value = request.status;
   
- // แก้ไขส่วนแสดงประวัติสถานะในฟังก์ชัน displayRequestDetails
-// ในไฟล์ request-detail.js (admin)
-
-// ประวัติสถานะ
-const statusHistoryTable = document.getElementById('status-history-table');
-if (statusHistoryTable) {
-  statusHistoryTable.innerHTML = '';
-  
-  // สร้าง array สำหรับเก็บประวัติสถานะ
-  const statusHistory = [];
-  
-  // เพิ่มสถานะปัจจุบัน
-  statusHistory.push({
-    date: request.updated_at,
-    status: request.status
-  });
-  
-  // เพิ่มสถานะก่อนหน้า (ถ้ามี)
-  if (request.status === 'completed') {
-    statusHistory.push({
-      date: request.updated_at, // ควรมีวันที่แยกสำหรับแต่ละสถานะ
-      status: 'ready'
-    });
-    statusHistory.push({
-      date: request.created_at,
-      status: 'processing'
-    });
-    statusHistory.push({
-      date: request.created_at,
-      status: 'pending'
-    });
-  } else if (request.status === 'ready') {
-    statusHistory.push({
-      date: request.created_at,
-      status: 'processing'
-    });
-    statusHistory.push({
-      date: request.created_at,
-      status: 'pending'
-    });
-  } else if (request.status === 'processing') {
-    statusHistory.push({
-      date: request.created_at,
-      status: 'pending'
-    });
-  } else if (request.status === 'rejected') {
-    statusHistory.push({
-      date: request.created_at,
-      status: 'pending'
-    });
-  }
-  
-  // แสดงประวัติสถานะทั้งหมด
-  statusHistory.forEach(history => {
-    const statusRow = document.createElement('tr');
-    statusRow.innerHTML = `
-      <td>${formatDate(history.date)}</td>
-      <td>${createStatusBadge(history.status)}</td>
+  // แสดงประวัติสถานะ (ถ้ามี)
+  // หมายเหตุ: ต้องมีการพัฒนาระบบเก็บประวัติสถานะเพิ่มเติม
+  const statusHistoryTable = document.getElementById('status-history-table');
+  if (statusHistoryTable) {
+    // ในกรณีที่ยังไม่มีระบบเก็บประวัติสถานะ ให้แสดงสถานะปัจจุบันอย่างเดียว
+    statusHistoryTable.innerHTML = `
+      <tr>
+        <td>${formatDate(request.updated_at)}</td>
+        <td>${createStatusBadge(request.status)}</td>
+      </tr>
     `;
-    statusHistoryTable.appendChild(statusRow);
-  });
-}
-
-// เพิ่มข้อความแสดงข้อมูลสถานะ
-const statusInfoContainer = document.getElementById('status-info-container');
-const statusInfoText = document.getElementById('status-info-text');
-
-if (statusInfoContainer && statusInfoText) {
-  let infoText = '';
-  
-  switch (request.status) {
-    case 'pending':
-      infoText = 'คำขอนี้อยู่ระหว่างรอการดำเนินการ รอตรวจสอบหลักฐานการชำระเงิน';
-      if (!request.payment_slip_url) {
-        infoText += ' (ยังไม่มีหลักฐานการชำระเงิน)';
-      }
-      break;
-    case 'processing':
-      infoText = 'กำลังดำเนินการจัดเตรียมเอกสาร';
-      break;
-    case 'ready':
-      if (request.delivery_method === 'pickup') {
-        infoText = 'เอกสารพร้อมให้นักศึกษามารับแล้ว';
-      } else {
-        infoText = 'เอกสารพร้อมจัดส่งทางไปรษณีย์แล้ว';
-      }
-      break;
-    case 'completed':
-      if (request.delivery_method === 'pickup') {
-        infoText = 'นักศึกษาได้รับเอกสารเรียบร้อยแล้ว';
-      } else {
-        infoText = 'จัดส่งเอกสารทางไปรษณีย์เรียบร้อยแล้ว';
-      }
-      break;
-    case 'rejected':
-      infoText = 'คำขอถูกปฏิเสธ';
-      if (request.note) {
-        infoText += ` หมายเหตุ: ${request.note}`;
-      }
-      break;
-    default:
-      infoText = '';
-  }
-  
-  if (infoText) {
-    statusInfoText.textContent = infoText;
-    statusInfoContainer.style.display = 'block';
-  } else {
-    statusInfoContainer.style.display = 'none';
   }
 }
-  
-// ตั้งค่าการอัปเดตสถานะ ----
+
+// ตั้งค่าการอัปเดตสถานะ
 function setupStatusUpdate() {
   const updateStatusButton = document.getElementById('update-status-button');
   
