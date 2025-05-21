@@ -47,7 +47,7 @@ async function loadRequestDetails() {
   }
 }
 
-// แสดงรายละเอียดคำขอเอกสาร
+// แก้ไขโค้ดในฟังก์ชัน displayRequestDetails ในไฟล์ request-detail.js
 function displayRequestDetails(request) {
   // ข้อมูลคำขอพื้นฐาน
   document.getElementById('detail-id').textContent = request.id;
@@ -257,7 +257,8 @@ function showImageModal(imageUrl) {
   }
 }
 
-// พิมพ์ใบรับคำขอ
+
+// อัปเดตฟังก์ชัน printReceipt ในไฟล์ request-detail.js
 function printReceipt() {
   try {
     // ดึงข้อมูลจาก DOM
