@@ -71,6 +71,19 @@ COMMENT ON COLUMN document_request_items.quantity IS 'จำนวนเอก�
 COMMENT ON COLUMN document_request_items.price_per_unit IS 'ราคาต่อฉบับ';
 COMMENT ON COLUMN document_request_items.subtotal IS 'ราคารวมของรายการนี้';
 
+-- สร้างตารางประวัติสถานะ
+CREATE TABLE IF NOT EXISTS status_history (
+    id SERIAL PRIMARY KEY,
+    request_id INTEGER REFERENCES document_requests(id) ON DELETE CASCADE,
+    status VARCHAR(50) NOT NULL,
+    note TEXT,
+    created_by INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- สร้าง index เพื่อความเร็วในการค้นหา
+CREATE INDEX IF NOT EXISTS idx_status_history_request_id ON status_history(request_id);
+
 
 -- เพิ่มข้อมูลคณะ
 INSERT INTO faculties (name_th, name_en, name_zh) VALUES
