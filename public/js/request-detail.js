@@ -154,6 +154,10 @@ function displayRequestDetails(request) {
   if (request.delivery_method === 'mail' && request.address) {
     document.getElementById('detail-address-container').style.display = 'block';
     document.getElementById('detail-address').textContent = request.address;
+    const studentNameInAddressElement = document.getElementById('detail-student-name-address'); // ใช้ ID ใหม่ที่ตั้งไว้
+    if (studentNameInAddressElement) {
+      studentNameInAddressElement.textContent = request.full_name || ''; // ใช้ข้อมูลชื่อนักศึกษาเดียวกัน
+    }
   } else {
     document.getElementById('detail-address-container').style.display = 'none';
   }
