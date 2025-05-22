@@ -39,7 +39,6 @@
           </li>
         </ul>
         <div class="language-selector d-flex me-3">
-          <button class="btn btn-sm btn-outline-light me-2" data-lang="th">ไทย</button>
           <button class="btn btn-sm btn-outline-light me-2" data-lang="en">English</button>
           <button class="btn btn-sm btn-outline-light" data-lang="zh">中文</button>
         </div>
@@ -164,6 +163,13 @@
             </div>
           </div>
           
+          <!-- เพิ่มส่วนแสดงข้อความตามสถานะ -->
+          <div id="status-info-container" class="card mb-3" style="display: none;">
+            <div class="card-body bg-light">
+              <p class="mb-0" id="status-info-text"></p>
+            </div>
+          </div>
+          
           <div class="card">
             <div class="card-header">
               <h6 class="mb-0" data-i18n="requestDetail.statusHistory">ประวัติสถานะ</h6>
@@ -182,6 +188,9 @@
                     <!-- ข้อมูลจะถูกเพิ่มโดย JavaScript -->
                   </tbody>
                 </table>
+              </div>
+              <div id="no-history-message" class="text-center text-muted py-3" style="display: none;">
+                <p data-i18n="requestDetail.noHistory">ไม่มีประวัติการเปลี่ยนแปลงสถานะ</p>
               </div>
             </div>
           </div>
