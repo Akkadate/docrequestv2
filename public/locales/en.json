@@ -202,7 +202,7 @@
   },
   "admin": {
     "userDetail": {
-      "title": "User Details - Document Request System",
+      "title": "User Details",
       "header": "User Details",
       "backToList": "Back to User List",
       "userInfo": "User Information",
@@ -230,7 +230,7 @@
       "confirmReset": "Confirm Reset"
     },
     "dashboard": {
-      "title": "Admin Panel - Document Request System",
+      "title": "Admin Panel",
       "header": "Admin Panel",
       "totalRequests": "Total Requests",
       "pendingRequests": "Pending",
@@ -242,7 +242,7 @@
       "reports": "Reports"
     },
     "requests": {
-      "title": "Request Management - Document Request System",
+      "title": "Request Management",
       "header": "Request Management",
       "searchPlaceholder": "Search document requests...",
       "all": "All",
@@ -266,7 +266,7 @@
       "updateButton": "Update"
     },
     "users": {
-      "title": "User Management - Document Request System",
+      "title": "User Management",
       "header": "User Management",
       "searchPlaceholder": "Search users...",
       "addAdmin": "Add Admin",
@@ -284,7 +284,7 @@
       "noUsers": "No users found matching the criteria"
     },
     "reports": {
-      "title": "Reports - Document Request System",
+      "title": "Reports",
       "header": "Reports",
       "dateRange": "Date Range",
       "startDate": "Start Date",
