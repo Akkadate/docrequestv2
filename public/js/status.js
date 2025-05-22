@@ -31,6 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
       loadRequestsList(searchInput?.value, statusFilter.value);
     });
   }
+  
+  // เพิ่มการฟังเหตุการณ์สำหรับการอัปโหลดหลักฐานการชำระเงิน
+  const uploadForm = document.getElementById('upload-payment-form');
+  if (uploadForm) {
+    uploadForm.addEventListener('submit', uploadPaymentSlip);
+  }
 });
 
 // โหลดรายการคำขอเอกสารทั้งหมดของผู้ใช้
@@ -186,9 +192,101 @@ async function loadRequestDetails(requestId) {
     
     // แสดงรายละเอียดคำขอ
     displayRequestDetails(request);
+    
+    // โหลดประวัติสถานะ
+    await loadStatusHistory(requestId);
   } catch (error) {
     console.error('Error loading request details:', error);
     showAlert(i18n[currentLang]?.errors?.requestNotFound || 'ไม่พบข้อมูลคำขอเอกสาร', 'danger');
+  }
+}
+
+// โหลดประวัติสถานะ
+async function loadStatusHistory(requestId) {
+  try {
+    const token = localStorage.getItem('token');
+    
+    console.log('Loading status history for request:', requestId);
+    
+    const response = await fetch(`/api/documents/request/${requestId}/status-history`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.status === 404) {
+      // ถ้า API ยังไม่มี ให้แสดงเฉพาะสถานะปัจจุบัน
+      console.warn('Status history endpoint not found, showing current status only');
+      displayCurrentStatusOnly();
+      return;
+    }
+    
+    if (!response.ok) {
+      throw new Error('Failed to load status history');
+    }
+    
+    const history = await response.json();
+    console.log('Status history loaded:', history);
+    displayStatusHistory(history);
+  } catch (error) {
+    console.error('Error loading status history:', error);
+    // แสดงสถานะปัจจุบันจากข้อมูลคำขอแทน
+    displayCurrentStatusOnly();
+  }
+}
+
+// แสดงประวัติสถานะ
+function displayStatusHistory(history) {
+  const statusHistoryTable = document.getElementById('status-history-table');
+  
+  if (!statusHistoryTable) {
+    console.warn('Status history table not found');
+    return;
+  }
+  
+  statusHistoryTable.innerHTML = '';
+  
+  if (!history || history.length === 0) {
+    // ถ้าไม่มีประวัติ ให้แสดงเฉพาะสถานะปัจจุบัน
+    displayCurrentStatusOnly();
+    return;
+  }
+  
+  history.forEach((item, index) => {
+    const row = document.createElement('tr');
+    
+    // ไฮไลท์สถานะปัจจุบัน (รายการแรก)
+    if (index === 0) {
+      row.classList.add('table-active');
+    }
+    
+    row.innerHTML = `
+      <td>${formatDate(item.created_at, currentLang)}</td>
+      <td>${createStatusBadge(item.status)}</td>
+      <td>${item.note || '-'}</td>
+    `;
+    
+    statusHistoryTable.appendChild(row);
+  });
+}
+
+// แสดงเฉพาะสถานะปัจจุบัน (กรณีไม่มีประวัติจาก API)
+function displayCurrentStatusOnly() {
+  const statusHistoryTable = document.getElementById('status-history-table');
+  if (!statusHistoryTable) return;
+  
+  // ดึงข้อมูลสถานะปัจจุบันจาก modal
+  const currentStatus = document.getElementById('detail-status');
+  const currentDate = document.getElementById('detail-updated-at');
+  
+  if (currentStatus && currentDate) {
+    statusHistoryTable.innerHTML = `
+      <tr class="table-active">
+        <td>${currentDate.textContent}</td>
+        <td>${currentStatus.innerHTML}</td>
+        <td>-</td>
+      </tr>
+    `;
   }
 }
 
@@ -228,27 +326,27 @@ function displayRequestDetails(request) {
                 `).join('')}
               </tbody>
               <tfoot>
-            <tr>
-              <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.documentSubtotal || 'รวมค่าเอกสาร'}:</th>
-              <th class="text-end">${formatCurrency(request.document_items.reduce((total, item) => total + parseFloat(item.subtotal), 0))}</th>
-            </tr>
-            ${request.delivery_method === 'mail' ? `
-              <tr>
-                <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.shippingFee || 'ค่าจัดส่ง'}:</th>
-                <th class="text-end">${formatCurrency(200)}</th>
-              </tr>
-            ` : ''}
-            ${request.urgent ? `
-              <tr>
-                <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.urgentFee || 'ค่าบริการเร่งด่วน'}:</th>
-                <th class="text-end">${formatCurrency(50 * request.document_items.reduce((count, item) => count + parseInt(item.quantity), 0))}</th>
-              </tr>
-            ` : ''}
-            <tr>
-              <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.totalPrice || 'ราคารวมทั้งหมด'}:</th>
-              <th class="text-end">${formatCurrency(request.total_price)}</th>
-            </tr>
-          </tfoot>
+                <tr>
+                  <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.documentSubtotal || 'รวมค่าเอกสาร'}:</th>
+                  <th class="text-end">${formatCurrency(request.document_items.reduce((total, item) => total + parseFloat(item.subtotal), 0))}</th>
+                </tr>
+                ${request.delivery_method === 'mail' ? `
+                  <tr>
+                    <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.shippingFee || 'ค่าจัดส่ง'}:</th>
+                    <th class="text-end">${formatCurrency(200)}</th>
+                  </tr>
+                ` : ''}
+                ${request.urgent ? `
+                  <tr>
+                    <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.urgentFee || 'ค่าบริการเร่งด่วน'}:</th>
+                    <th class="text-end">${formatCurrency(50 * request.document_items.reduce((count, item) => count + parseInt(item.quantity), 0))}</th>
+                  </tr>
+                ` : ''}
+                <tr>
+                  <th colspan="3" class="text-end">${i18n[currentLang]?.requestDetail?.totalPrice || 'ราคารวมทั้งหมด'}:</th>
+                  <th class="text-end">${formatCurrency(request.total_price)}</th>
+                </tr>
+              </tfoot>
             </table>
           </div>
         `;
@@ -331,79 +429,59 @@ function displayRequestDetails(request) {
       }
     }
     
-    // ประวัติสถานะ
-    const statusHistoryTable = document.getElementById('status-history-table');
-    if (statusHistoryTable) {
-      statusHistoryTable.innerHTML = '';
-      
-      // สถานะปัจจุบัน
-      const statusRow = document.createElement('tr');
-      statusRow.innerHTML = `
-        <td>${formatDate(request.updated_at, currentLang)}</td>
-        <td>${createStatusBadge(request.status)}</td>
-        <td>${request.status_note || '-'}</td>
-      `;
-      statusHistoryTable.appendChild(statusRow);
-      
-      // สถานะรอดำเนินการ (เริ่มต้น)
-      if (request.status !== 'pending') {
-        const pendingRow = document.createElement('tr');
-        pendingRow.innerHTML = `
-          <td>${formatDate(request.created_at, currentLang)}</td>
-          <td>${createStatusBadge('pending')}</td>
-          <td>-</td>
-        `;
-        statusHistoryTable.appendChild(pendingRow);
-      }
-    }
-    
     // แสดงข้อความตามสถานะ
-    const statusInfoContainer = document.getElementById('status-info-container');
-    const statusInfoText = document.getElementById('status-info-text');
+    displayStatusInfo(request);
     
-    if (statusInfoContainer && statusInfoText) {
-      let infoText = '';
-      
-      switch (request.status) {
-        case 'pending':
-          infoText = i18n[currentLang]?.statusInfo?.pending || 'คำขอของคุณอยู่ระหว่างรอการดำเนินการ โปรดรอการตรวจสอบจากเจ้าหน้าที่';
-          if (!request.payment_slip_url) {
-            infoText += i18n[currentLang]?.statusInfo?.pendingNoPayment || ' กรุณาอัปโหลดหลักฐานการชำระเงินเพื่อดำเนินการต่อ';
-          }
-          break;
-        case 'processing':
-          infoText = i18n[currentLang]?.statusInfo?.processing || 'คำขอของคุณกำลังอยู่ระหว่างการดำเนินการ เจ้าหน้าที่กำลังจัดเตรียมเอกสารให้คุณ';
-          break;
-        case 'ready':
-          if (request.delivery_method === 'pickup') {
-            infoText = i18n[currentLang]?.statusInfo?.readyPickup || 'เอกสารของคุณพร้อมให้รับแล้ว กรุณาติดต่อรับเอกสารได้ที่สำนักทะเบียนและประมวลผล ชั้น 1 อาคารอำนวยการ';
-          } else {
-            infoText = i18n[currentLang]?.statusInfo?.readyMail || 'เอกสารของคุณพร้อมสำหรับจัดส่งแล้ว และจะถูกจัดส่งไปยังที่อยู่ที่คุณระบุไว้ในไม่ช้า';
-          }
-          break;
-        case 'completed':
-          if (request.delivery_method === 'pickup') {
-            infoText = i18n[currentLang]?.statusInfo?.completedPickup || 'คำขอของคุณเสร็จสิ้นแล้ว คุณได้รับเอกสารเรียบร้อยแล้ว';
-          } else {
-            infoText = i18n[currentLang]?.statusInfo?.completedMail || 'คำขอของคุณเสร็จสิ้นแล้ว เอกสารถูกจัดส่งไปยังที่อยู่ที่คุณระบุไว้เรียบร้อยแล้ว';
-          }
-          break;
-        case 'rejected':
-          infoText = i18n[currentLang]?.statusInfo?.rejected || 'คำขอของคุณถูกปฏิเสธ โปรดติดต่อเจ้าหน้าที่เพื่อขอข้อมูลเพิ่มเติม';
-          break;
-        default:
-          infoText = '';
-      }
-      
-      if (infoText) {
-        statusInfoText.textContent = infoText;
-        statusInfoContainer.style.display = 'block';
-      } else {
-        statusInfoContainer.style.display = 'none';
-      }
-    }
   } catch (error) {
     console.error('Error in displayRequestDetails:', error);
+  }
+}
+
+// แสดงข้อความตามสถานะ
+function displayStatusInfo(request) {
+  const statusInfoContainer = document.getElementById('status-info-container');
+  const statusInfoText = document.getElementById('status-info-text');
+  
+  if (statusInfoContainer && statusInfoText) {
+    let infoText = '';
+    
+    switch (request.status) {
+      case 'pending':
+        infoText = i18n[currentLang]?.statusInfo?.pending || 'คำขอของคุณอยู่ระหว่างรอการดำเนินการ โปรดรอการตรวจสอบจากเจ้าหน้าที่';
+        if (!request.payment_slip_url) {
+          infoText += i18n[currentLang]?.statusInfo?.pendingNoPayment || ' กรุณาอัปโหลดหลักฐานการชำระเงินเพื่อดำเนินการต่อ';
+        }
+        break;
+      case 'processing':
+        infoText = i18n[currentLang]?.statusInfo?.processing || 'คำขอของคุณกำลังอยู่ระหว่างการดำเนินการ เจ้าหน้าที่กำลังจัดเตรียมเอกสารให้คุณ';
+        break;
+      case 'ready':
+        if (request.delivery_method === 'pickup') {
+          infoText = i18n[currentLang]?.statusInfo?.readyPickup || 'เอกสารของคุณพร้อมให้รับแล้ว กรุณาติดต่อรับเอกสารได้ที่สำนักทะเบียนและประมวลผล ชั้น 1 อาคารอำนวยการ';
+        } else {
+          infoText = i18n[currentLang]?.statusInfo?.readyMail || 'เอกสารของคุณพร้อมสำหรับจัดส่งแล้ว และจะถูกจัดส่งไปยังที่อยู่ที่คุณระบุไว้ในไม่ช้า';
+        }
+        break;
+      case 'completed':
+        if (request.delivery_method === 'pickup') {
+          infoText = i18n[currentLang]?.statusInfo?.completedPickup || 'คำขอของคุณเสร็จสิ้นแล้ว คุณได้รับเอกสารเรียบร้อยแล้ว';
+        } else {
+          infoText = i18n[currentLang]?.statusInfo?.completedMail || 'คำขอของคุณเสร็จสิ้นแล้ว เอกสารถูกจัดส่งไปยังที่อยู่ที่คุณระบุไว้เรียบร้อยแล้ว';
+        }
+        break;
+      case 'rejected':
+        infoText = i18n[currentLang]?.statusInfo?.rejected || 'คำขอของคุณถูกปฏิเสธ โปรดติดต่อเจ้าหน้าที่เพื่อขอข้อมูลเพิ่มเติม';
+        break;
+      default:
+        infoText = '';
+    }
+    
+    if (infoText) {
+      statusInfoText.textContent = infoText;
+      statusInfoContainer.style.display = 'block';
+    } else {
+      statusInfoContainer.style.display = 'none';
+    }
   }
 }
 
