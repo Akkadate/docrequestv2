@@ -486,7 +486,7 @@ function updateSummary(deliveryMethod, isUrgent) {
       summaryHTML += `
         <div class="mb-3">
           <strong>${i18n[currentLang]?.request?.urgentService || 'บริการเร่งด่วน'}:</strong>
-          <div>${formatCurrency(urgentFee, currentLang)} (${totalDocuments} ฉบับ x 50 บาท)</div>
+          <div>${formatCurrency(urgentFee, currentLang)} ( ${totalDocuments} x 50 )</div>
         </div>
       `;
     }
