@@ -109,7 +109,11 @@
     "accountNumber": "账号：",
     "accountName": "账户名：",
     "shippingFee": "邮寄费",
-    "urgentService": "加急服务"
+    "urgentService": "加急服务",
+    "qrAmount": "金额",
+    "selectFile": "选择文件",
+    "bankNameValue": "泰京银行",
+    "accountNameValue": "北曼谷大学"
   },
   "dashboard": {
     "title": "仪表板 - 在线文件申请系统",
