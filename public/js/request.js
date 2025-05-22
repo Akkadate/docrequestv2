@@ -232,7 +232,8 @@ function addDocumentToSelection() {
 
 // แก้ไขส่วนนี้ในไฟล์ request.js
 
-// อัปเดตตารางเอกสารที่เลือก - แก้ไขใหม่เพื่อรองรับมือถือ
+// แก้ไขฟังก์ชัน updateDocumentTable() ในไฟล์ request.js
+
 function updateDocumentTable() {
   const tableBody = document.getElementById('selected-documents');
   
@@ -245,19 +246,66 @@ function updateDocumentTable() {
   tableBody.innerHTML = '';
   
   if (selectedDocuments.length === 0) {
-    // ถ้าไม่มีเอกสารที่เลือก - ใช้วิธีเข้าถึง i18n ที่ถูกต้อง
-    const emptyRow = document.createElement('tr');
+    // *** เพิ่มการดีบักเพื่อตรวจสอบปัญหา ***
+    console.log('=== DEBUG: No documents selected ===');
     
-    // ดึงภาษาปัจจุبันจาก localStorage
+    // ดึงภาษาปัจจุบันจาก localStorage
     const currentLanguage = localStorage.getItem('language') || 'th';
+    console.log('Current language from localStorage:', currentLanguage);
     
     // ตรวจสอบว่ามี window.i18n หรือไม่
-    let noDocumentsText = 'ยังไม่ได้เลือกเอกสาร'; // ค่าเริ่มต้น
+    console.log('window.i18n exists:', !!window.i18n);
+    console.log('window.currentLang:', window.currentLang);
     
-    if (window.i18n && window.i18n[currentLanguage] && window.i18n[currentLanguage].request) {
-      noDocumentsText = window.i18n[currentLanguage].request.noDocumentsSelected || noDocumentsText;
+    if (window.i18n) {
+      console.log('Available languages in i18n:', Object.keys(window.i18n));
+      console.log('Current language data:', window.i18n[currentLanguage]);
+      
+      if (window.i18n[currentLanguage] && window.i18n[currentLanguage].request) {
+        console.log('Request section:', window.i18n[currentLanguage].request);
+        console.log('noDocumentsSelected:', window.i18n[currentLanguage].request.noDocumentsSelected);
+      } else {
+        console.log('No request section found for language:', currentLanguage);
+      }
     }
     
+    // ตั้งค่าข้อความเริ่มต้น
+    let noDocumentsText = 'ยังไม่ได้เลือกเอกสาร'; // ค่าเริ่มต้น
+    
+    // ลองหาคำแปลจากหลายแหล่ง
+    if (window.i18n && window.i18n[currentLanguage]) {
+      // วิธีที่ 1: ผ่าน request section
+      if (window.i18n[currentLanguage].request && window.i18n[currentLanguage].request.noDocumentsSelected) {
+        noDocumentsText = window.i18n[currentLanguage].request.noDocumentsSelected;
+        console.log('Found translation via request section:', noDocumentsText);
+      }
+      // วิธีที่ 2: ถ้าไม่มี ลองหาโดยตรง
+      else if (window.i18n[currentLanguage].noDocumentsSelected) {
+        noDocumentsText = window.i18n[currentLanguage].noDocumentsSelected;
+        console.log('Found translation via direct path:', noDocumentsText);
+      }
+      // วิธีที่ 3: ลองหาแบบ nested
+      else {
+        console.log('No translation found, using default');
+        
+        // กำหนดข้อความตามภาษา
+        const defaultTexts = {
+          'th': 'ยังไม่ได้เลือกเอกสาร',
+          'en': 'No documents selected yet',
+          'zh': '尚未选择任何文档'
+        };
+        
+        noDocumentsText = defaultTexts[currentLanguage] || defaultTexts['th'];
+        console.log('Using fallback text:', noDocumentsText);
+      }
+    } else {
+      console.log('window.i18n not available, using default');
+    }
+    
+    console.log('Final text to display:', noDocumentsText);
+    console.log('=== END DEBUG ===');
+    
+    const emptyRow = document.createElement('tr');
     emptyRow.innerHTML = `
       <td colspan="5" class="text-center">${noDocumentsText}</td>
     `;
@@ -269,13 +317,16 @@ function updateDocumentTable() {
   selectedDocuments.forEach((doc, index) => {
     const row = document.createElement('tr');
     
+    // ใช้ currentLanguage แทน currentLang
+    const currentLanguage = localStorage.getItem('language') || 'th';
+    
     row.innerHTML = `
       <td>${doc.name}</td>
-      <td>${formatCurrency(doc.price, localStorage.getItem('language') || 'th')}</td>
+      <td>${formatCurrency(doc.price, currentLanguage)}</td>
       <td>
         ${createQuantityControl(doc, index)}
       </td>
-      <td>${formatCurrency(doc.subtotal, localStorage.getItem('language') || 'th')}</td>
+      <td>${formatCurrency(doc.subtotal, currentLanguage)}</td>
       <td>
         <button type="button" class="btn btn-outline-danger btn-sm remove-document" data-index="${index}">
           <i class="bi bi-trash"></i>
@@ -287,7 +338,6 @@ function updateDocumentTable() {
     
     // เพิ่ม event listeners ตามประเภทของ control
     if (isMobileDevice()) {
-      // สำหรับมือถือ: เพิ่ม listener สำหรับปุ่มแก้ไข
       const editBtn = row.querySelector('.edit-quantity-btn');
       if (editBtn) {
         editBtn.addEventListener('click', () => {
@@ -295,11 +345,10 @@ function updateDocumentTable() {
         });
       }
     } else {
-      // สำหรับ PC: เพิ่ม listeners ปกติ
       setupDesktopQuantityControls(row, doc, index);
     }
     
-    // ปุ่มลบ (ใช้ได้ทั้ง PC และมือถือ)
+    // ปุ่มลบ
     const removeBtn = row.querySelector('.remove-document');
     if (removeBtn) {
       removeBtn.addEventListener('click', () => {
@@ -310,7 +359,6 @@ function updateDocumentTable() {
     }
   });
 }
-
 // คำนวณราคาทั้งหมด - แก้ไขใหม่
 function calculatePrice() {
   try {
