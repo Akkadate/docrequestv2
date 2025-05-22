@@ -474,30 +474,33 @@
 
     // ฟังก์ชันสร้าง Cross Bank Bill Payment QR Code
     function generateCrossBankBillPayment(billingId, ref1, ref2, amount) {
-      // รูปแบบ Cross Bank Bill Payment ด้วย %0D เป็นตัวแยก
-      // |BillingId%0DRef1%0DRef2%0DAmount
+      // รูปแบบ Cross Bank Bill Payment ด้วย line break แยกแต่ละบรรทัด
+      // Billing ID
+      // Student ID  
+      // Ref2
+      // Amount (ในสตางค์)
       
       // เก็บ Billing ID ตามที่ระบุ (มี | ข้างหน้า)
       const fullBillingId = billingId;
       
-      // Ref1 และ Ref2 ใช้ตามที่ได้รับมา (ไม่ต้อง padding)
+      // Ref1 และ Ref2 ใช้ตามที่ได้รับมา
       const studentId = ref1;
       const reference2 = ref2;
       
       // แปลงจำนวนเงินเป็นสตางค์ (คูณ 100)
       const amountInSatang = Math.round(amount * 100);
       
-      // สร้าง QR Data ตามรูปแบบ AppSheet
-      // "|099400000518106"&"%0D"&[studentId]&"%0D"&[ref2]&"%0D"&[Price]
-      const qrData = `${fullBillingId}${studentId}${reference2}${amountInSatang}`;
+      // สร้าง QR Data ด้วย line break (\r หรือ \r\n)
+      const qrData = `${fullBillingId}\r${studentId}\r${reference2}\r${amountInSatang}`;
       
-      console.log('Cross Bank Bill Payment QR Data:', {
-        billingId: fullBillingId,
-        ref1: studentId,
-        ref2: reference2,
-        amountInSatang: amountInSatang,
-        fullData: qrData
-      });
+      console.log('Cross Bank Bill Payment QR Data:');
+      console.log('Billing ID:', fullBillingId);
+      console.log('Student ID:', studentId);
+      console.log('Reference 2:', reference2);
+      console.log('Amount (Satang):', amountInSatang);
+      console.log('Full QR Data:', qrData);
+      console.log('QR Data (formatted):');
+      console.log(qrData);
       
       return qrData;
     }
@@ -515,7 +518,7 @@
       }
       
       // ดึงข้อมูล student ID จาก localStorage (key: userId) หรือใช้ค่าเริ่มต้น
-      const studentId = localStorage.getItem('studentId') || '99999999';
+      const studentId = localStorage.getItem('userId') || '6401234567';
       
       // คำนวณราคารวม
       let totalPrice = 0;
@@ -539,7 +542,7 @@
       
       if (totalPrice > 0) {
         // สร้าง QR Code สำหรับ Bill Payment
-        const billingId = '|099400000518106';
+        const billingId = '099400000518106';
         const ref1 = studentId; // ใช้ student ID เป็น ref1
         const ref2 = '777'; // ใช้ 777 เป็น ref2
         
