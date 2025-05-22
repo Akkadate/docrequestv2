@@ -28,9 +28,9 @@ function checkAuthStatus() {
 
 // ออกจากระบบ
 function logout() {
+  localStorage.removeItem('studentId');
   localStorage.removeItem('token');
   localStorage.removeItem('userId');
-  localStorage.removeItem('studentId');
   localStorage.removeItem('userName');
   localStorage.removeItem('userRole');
   
