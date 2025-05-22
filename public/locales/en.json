@@ -147,6 +147,8 @@
     "ready": "Ready for Pickup/Delivery",
     "completed": "Completed",
     "rejected": "Rejected",
+    "multipleDocuments": "Multiple Items",
+    "items": "items",
     "noRequests": "No document requests found matching the criteria"
   },
   "requestDetail": {
@@ -170,7 +172,26 @@
     "statusHistory": "Status History",
     "date": "Date",
     "statusValue": "Status",
-    "statusNote": "Note"
+    "statusNote": "Note",
+    "documentSubtotal": "Document Subtotal",
+    "shippingFee": "Shipping Fee",
+    "urgentFee": "Urgent Service Fee",
+    "totalPrice": "Total Price",
+    "unitPrice": "Unit Price",
+    "subtotal": "Subtotal",
+    "viewPaymentSlip": "View Payment Slip",
+    "noPaymentSlip": "No payment slip uploaded",
+    "noHistory": "No status change history"
+  },
+   "statusInfo": {
+    "pending": "Your request is pending. Please wait for staff verification.",
+    "pendingNoPayment": " Please upload payment slip to proceed.",
+    "processing": "Your request is being processed. Staff is preparing your documents.",
+    "readyPickup": "Your documents are ready for pickup. Please contact the Registrar Office on the 1st floor of the Administration Building.",
+    "readyMail": "Your documents are ready for shipping and will be sent to your specified address soon.",
+    "completedPickup": "Your request is completed. You have received your documents.",
+    "completedMail": "Your request is completed. Documents have been sent to your specified address.",
+    "rejected": "Your request has been rejected. Please contact staff for more information."
   },
   "admin": {
     "dashboard": {
