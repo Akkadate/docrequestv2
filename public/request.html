@@ -472,81 +472,35 @@
       }
     });
 
-    // ฟังก์ชันสร้าง Thai QR Payment string
-    function generateThaiQRPayment(billingId, ref1, ref2, amount) {
-      // Thai QR Payment format ตามมาตรฐาน EMVCo
-      let qrString = '';
+    // ฟังก์ชันสร้าง Cross Bank Bill Payment QR Code
+    function generateCrossBankBillPayment(billingId, ref1, ref2, amount) {
+      // รูปแบบ Cross Bank Bill Payment: |BillingId + Ref1 + Ref2 + Amount
       
-      // Payload Format Indicator (ID 00)
-      qrString += '000201';
+      // ปรับ Billing ID (เอา | ออกเพราะจะใส่ทีหลัง)
+      const cleanBillingId = billingId.replace('|', '');
       
-      // Point of Initiation Method (ID 01)
-      qrString += '010212';
+      // ปรับ Ref1 ให้เป็น 8 หลัก (เพิ่ม 0 ข้างหน้าถ้าสั้นกว่า 8 หลัก)
+      const paddedRef1 = ref1.padStart(8, '0');
       
-      // Merchant Account Information (ID 30) - Thai Bill Payment
-      let billPaymentData = '';
+      // ปรับ Ref2 ให้เป็น 3 หลัก
+      const paddedRef2 = ref2.padStart(3, '0');
       
-      // Application ID for Thai Bill Payment
-      billPaymentData += '0016A000000677010112';
+      // แปลงจำนวนเงินเป็นสตางค์ (คูณ 100) และเป็น string 5 หลัก
+      const amountInSatang = Math.round(amount * 100);
+      const paddedAmount = amountInSatang.toString().padStart(5, '0');
       
-      // Biller ID
-      billPaymentData += '02' + String(billingId.length).padStart(2, '0') + billingId;
+      // รวมข้อมูลตามรูปแบบ Cross Bank
+      const qrData = `|${cleanBillingId}${paddedRef1}${paddedRef2}${paddedAmount}`;
       
-      // Reference 1
-      billPaymentData += '03' + String(ref1.length).padStart(2, '0') + ref1;
+      console.log('Cross Bank Bill Payment QR Data:', {
+        billingId: cleanBillingId,
+        ref1: paddedRef1,
+        ref2: paddedRef2,
+        amount: paddedAmount,
+        fullData: qrData
+      });
       
-      // Reference 2
-      billPaymentData += '04' + String(ref2.length).padStart(2, '0') + ref2;
-      
-      qrString += '30' + String(billPaymentData.length).padStart(2, '0') + billPaymentData;
-      
-      // Transaction Currency (THB = 764)
-      qrString += '5303764';
-      
-      // Transaction Amount
-      const amountStr = amount.toFixed(2);
-      qrString += '54' + String(amountStr.length).padStart(2, '0') + amountStr;
-      
-      // Country Code (TH)
-      qrString += '5802TH';
-      
-      // Merchant Name
-      const merchantName = 'North Bangkok University';
-      qrString += '59' + String(merchantName.length).padStart(2, '0') + merchantName;
-      
-      // Merchant City
-      const merchantCity = 'Bangkok';
-      qrString += '60' + String(merchantCity.length).padStart(2, '0') + merchantCity;
-      
-      // CRC16 (will be calculated)
-      qrString += '6304';
-      
-      // Calculate CRC16
-      const crc = calculateCRC16(qrString);
-      qrString += crc;
-      
-      return qrString;
-    }
-
-    // ฟังก์ชันคำนวณ CRC16
-    function calculateCRC16(data) {
-      const polynomial = 0x1021;
-      let crc = 0xFFFF;
-      
-      for (let i = 0; i < data.length; i++) {
-        crc ^= (data.charCodeAt(i) << 8);
-        
-        for (let j = 0; j < 8; j++) {
-          if (crc & 0x8000) {
-            crc = (crc << 1) ^ polynomial;
-          } else {
-            crc = crc << 1;
-          }
-          crc &= 0xFFFF;
-        }
-      }
-      
-      return crc.toString(16).toUpperCase().padStart(4, '0');
+      return qrData;
     }
 
     // ฟังก์ชันอัปเดต QR Code โดยใช้ QR Server API
@@ -562,7 +516,7 @@
       }
       
       // ดึงข้อมูล student ID จาก localStorage (key: userId) หรือใช้ค่าเริ่มต้น
-      const studentId = localStorage.getItem('studentId') || '9999999999';
+      const studentId = localStorage.getItem('userId') || '6401234567';
       
       // คำนวณราคารวม
       let totalPrice = 0;
@@ -591,9 +545,8 @@
         const ref2 = '777'; // ใช้ 777 เป็น ref2
         
         try {
-          const qrData = generateThaiQRPayment(billingId, ref1, ref2, totalPrice);
-          console.log('QR Data -qrData-:', qrData);
-          console.log('QR Data generated:', qrData.substring(0, 50) + '...');
+          const qrData = generateCrossBankBillPayment(billingId, ref1, ref2, totalPrice);
+          console.log('Cross Bank QR Data generated:', qrData);
           
           // ใช้ QR Server API แทน library
           generateQRCodeImage(qrData, canvas, function(success) {
