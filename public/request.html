@@ -551,6 +551,13 @@
 
     // ฟังก์ชันอัปเดต QR Code
     function updateQRCode() {
+      // ตรวจสอบว่า QRCode library โหลดเสร็จแล้วหรือไม่
+      if (typeof QRCode === 'undefined') {
+        console.log('QRCode library not loaded yet, retrying...');
+        setTimeout(updateQRCode, 200);
+        return;
+      }
+      
       const canvas = document.getElementById('qr-canvas');
       const placeholder = document.getElementById('qr-placeholder');
       const amountDisplay = document.getElementById('qr-amount-display');
@@ -567,7 +574,7 @@
       // คำนวณราคารวม
       let totalPrice = 0;
       
-      if (selectedDocuments && selectedDocuments.length > 0) {
+      if (typeof selectedDocuments !== 'undefined' && selectedDocuments && selectedDocuments.length > 0) {
         const documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
         
         // ค่าจัดส่ง
@@ -588,35 +595,42 @@
         const ref1 = studentId; // ใช้ student ID เป็น ref1
         const ref2 = '777'; // ใช้ 777 เป็น ref2
         
-        const qrData = generateThaiQRPayment(billingId, ref1, ref2, totalPrice);
-        
-        // แสดง QR Code
-        QRCode.toCanvas(canvas, qrData, {
-          width: 200,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        }, function (error) {
-          if (error) {
-            console.error('QR Code generation error:', error);
-            placeholder.style.display = 'block';
-            canvas.style.display = 'none';
-            amountDisplay.style.display = 'none';
-          } else {
-            placeholder.style.display = 'none';
-            canvas.style.display = 'block';
-            amountDisplay.style.display = 'block';
-            
-            // อัปเดตจำนวนเงิน
-            if (typeof formatCurrency === 'function') {
-              amountSpan.textContent = formatCurrency(totalPrice, currentLang || 'th');
-            } else {
-              amountSpan.textContent = totalPrice.toFixed(2) + ' บาท';
+        try {
+          const qrData = generateThaiQRPayment(billingId, ref1, ref2, totalPrice);
+          
+          // แสดง QR Code
+          QRCode.toCanvas(canvas, qrData, {
+            width: 200,
+            margin: 2,
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF'
             }
-          }
-        });
+          }, function (error) {
+            if (error) {
+              console.error('QR Code generation error:', error);
+              placeholder.style.display = 'block';
+              canvas.style.display = 'none';
+              amountDisplay.style.display = 'none';
+            } else {
+              placeholder.style.display = 'none';
+              canvas.style.display = 'block';
+              amountDisplay.style.display = 'block';
+              
+              // อัปเดตจำนวนเงิน
+              if (typeof formatCurrency === 'function') {
+                amountSpan.textContent = formatCurrency(totalPrice, currentLang || 'th');
+              } else {
+                amountSpan.textContent = totalPrice.toFixed(2) + ' บาท';
+              }
+            }
+          });
+        } catch (error) {
+          console.error('Error creating QR Code:', error);
+          placeholder.style.display = 'block';
+          canvas.style.display = 'none';
+          amountDisplay.style.display = 'none';
+        }
       } else {
         // ไม่มีเอกสารหรือราคาเป็น 0
         placeholder.style.display = 'block';
@@ -653,24 +667,40 @@
   <script>
     // เพิ่ม event listeners เมื่อ DOM โหลดเสร็จ
     document.addEventListener('DOMContentLoaded', function() {
-      // ฟังการเปลี่ยนแปลงวิธีการรับเอกสาร
-      const deliveryMethods = document.querySelectorAll('input[name="delivery_method"]');
-      deliveryMethods.forEach(method => {
-        method.addEventListener('change', function() {
-          setTimeout(updateQRCode, 100);
-        });
-      });
-      
-      // ฟังการเปลี่ยนแปลงบริการเร่งด่วน
-      const urgentCheckbox = document.getElementById('urgent');
-      if (urgentCheckbox) {
-        urgentCheckbox.addEventListener('change', function() {
-          setTimeout(updateQRCode, 100);
-        });
+      // รอให้ QRCode library โหลดเสร็จก่อน
+      function waitForQRCode() {
+        if (typeof QRCode !== 'undefined') {
+          console.log('QRCode library loaded successfully');
+          initializeQRCodeEvents();
+        } else {
+          console.log('Waiting for QRCode library...');
+          setTimeout(waitForQRCode, 100);
+        }
       }
       
-      // อัปเดต QR Code ครั้งแรก
-      setTimeout(updateQRCode, 500);
+      function initializeQRCodeEvents() {
+        // ฟังการเปลี่ยนแปลงวิธีการรับเอกสาร
+        const deliveryMethods = document.querySelectorAll('input[name="delivery_method"]');
+        deliveryMethods.forEach(method => {
+          method.addEventListener('change', function() {
+            setTimeout(updateQRCode, 100);
+          });
+        });
+        
+        // ฟังการเปลี่ยนแปลงบริการเร่งด่วน
+        const urgentCheckbox = document.getElementById('urgent');
+        if (urgentCheckbox) {
+          urgentCheckbox.addEventListener('change', function() {
+            setTimeout(updateQRCode, 100);
+          });
+        }
+        
+        // อัปเดต QR Code ครั้งแรก
+        setTimeout(updateQRCode, 500);
+      }
+      
+      // เริ่มต้นการรอ QRCode library
+      waitForQRCode();
     });
   </script>
 </body>
