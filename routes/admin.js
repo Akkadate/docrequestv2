@@ -200,7 +200,190 @@ router.get('/requests', authenticateJWT, isAdmin, async (req, res) => {
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้' });
     }
   });
-  
+
+ // เพิ่ม endpoints เหล่านี้ในไฟล์ routes/admin.js
+
+  // ดึงประวัติการขอเอกสารของผู้ใช้คนเดียว
+  router.get('/user/:id/requests', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const lang = req.query.lang || 'th';
+      const column = `name_${lang}`;
+      
+      const requests = await pool.query(
+        `SELECT dr.*, dt.${column} as document_name
+        FROM document_requests dr
+        JOIN document_types dt ON dr.document_type_id = dt.id
+        WHERE dr.user_id = $1
+        ORDER BY dr.created_at DESC`,
+        [id]
+      );
+      
+      res.status(200).json(requests.rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลประวัติการขอเอกสาร' });
+    }
+  });
+
+  // ลบผู้ใช้
+  router.delete('/user/:id', authenticateJWT, isAdmin, async (req, res) => {
+    const client = await pool.connect();
+    
+    try {
+      const { id } = req.params;
+      
+      // ตรวจสอบว่าผู้ใช้มีอยู่จริงหรือไม่
+      const userCheck = await client.query(
+        'SELECT id, role, student_id, full_name FROM users WHERE id = $1',
+        [id]
+      );
+      
+      if (userCheck.rows.length === 0) {
+        return res.status(404).json({ message: 'ไม่พบผู้ใช้' });
+      }
+      
+      const user = userCheck.rows[0];
+      
+      // ไม่อนุญาตให้ลบผู้ดูแลระบบ
+      if (user.role === 'admin') {
+        return res.status(403).json({ message: 'ไม่สามารถลบผู้ดูแลระบบได้' });
+      }
+      
+      // เริ่ม transaction
+      await client.query('BEGIN');
+      
+      // ลบประวัติสถานะที่เกี่ยวข้อง
+      await client.query(
+        'DELETE FROM status_history WHERE request_id IN (SELECT id FROM document_requests WHERE user_id = $1)',
+        [id]
+      );
+      
+      // ลบรายการเอกสารย่อย
+      await client.query(
+        'DELETE FROM document_request_items WHERE request_id IN (SELECT id FROM document_requests WHERE user_id = $1)',
+        [id]
+      );
+      
+      // ลบคำขอเอกสาร
+      await client.query(
+        'DELETE FROM document_requests WHERE user_id = $1',
+        [id]
+      );
+      
+      // ลบผู้ใช้
+      await client.query(
+        'DELETE FROM users WHERE id = $1',
+        [id]
+      );
+      
+      // commit transaction
+      await client.query('COMMIT');
+      
+      console.log(`User deleted: ${user.student_id} - ${user.full_name}`);
+      
+      res.status(200).json({ 
+        message: 'ลบผู้ใช้สำเร็จ',
+        deletedUser: {
+          id: user.id,
+          student_id: user.student_id,
+          full_name: user.full_name
+        }
+      });
+      
+    } catch (err) {
+      await client.query('ROLLBACK');
+      console.error('Error deleting user:', err);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลบผู้ใช้' });
+    } finally {
+      client.release();
+    }
+  });
+
+  // รีเซ็ตรหัสผ่านผู้ใช้
+  router.post('/user/:id/reset-password', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // ตรวจสอบว่าผู้ใช้มีอยู่จริงหรือไม่
+      const userCheck = await pool.query(
+        'SELECT id, student_id, full_name FROM users WHERE id = $1',
+        [id]
+      );
+      
+      if (userCheck.rows.length === 0) {
+        return res.status(404).json({ message: 'ไม่พบผู้ใช้' });
+      }
+      
+      const user = userCheck.rows[0];
+      
+      // เข้ารหัสรหัสผ่านใหม่ (123456)
+      const newPassword = '123456';
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      
+      // อัปเดตรหัสผ่าน
+      await pool.query(
+        'UPDATE users SET password = $1 WHERE id = $2',
+        [hashedPassword, id]
+      );
+      
+      console.log(`Password reset for user: ${user.student_id} - ${user.full_name}`);
+      
+      res.status(200).json({ 
+        message: 'รีเซ็ตรหัสผ่านสำเร็จ',
+        newPassword: newPassword,
+        user: {
+          id: user.id,
+          student_id: user.student_id,
+          full_name: user.full_name
+        }
+      });
+      
+    } catch (err) {
+      console.error('Error resetting password:', err);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน' });
+    }
+  });
+
+  // ระงับ/เปิดใช้งานผู้ใช้ (เพิ่มฟีเจอร์ในอนาคต)
+  router.post('/user/:id/toggle-status', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body; // 'active' หรือ 'suspended'
+      
+      // ตรวจสอบว่าผู้ใช้มีอยู่จริงหรือไม่
+      const userCheck = await pool.query(
+        'SELECT id, student_id, full_name, status FROM users WHERE id = $1',
+        [id]
+      );
+      
+      if (userCheck.rows.length === 0) {
+        return res.status(404).json({ message: 'ไม่พบผู้ใช้' });
+      }
+      
+      // อัปเดตสถานะผู้ใช้ (ต้องเพิ่มคอลัมน์ status ในตาราง users ก่อน)
+      // ALTER TABLE users ADD COLUMN status VARCHAR(20) DEFAULT 'active';
+      
+      await pool.query(
+        'UPDATE users SET status = $1 WHERE id = $2',
+        [status, id]
+      );
+      
+      const action = status === 'active' ? 'เปิดใช้งาน' : 'ระงับ';
+      
+      res.status(200).json({ 
+        message: `${action}ผู้ใช้สำเร็จ`,
+        user: userCheck.rows[0],
+        newStatus: status
+      });
+      
+    } catch (err) {
+      console.error('Error toggling user status:', err);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะผู้ใช้' });
+    }
+  });
+ 
   // ดึงข้อมูลผู้ใช้คนเดียว
   router.get('/user/:id', authenticateJWT, isAdmin, async (req, res) => {
     try {
