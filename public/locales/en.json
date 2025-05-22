@@ -85,6 +85,7 @@
     "documentType": "Document Type",
     "documentName": "Document Name",
     "unitPrice": "Unit Price",
+    "currency": "THB",
     "quantity": "Quantity",
     "subtotal": "Subtotal",
     "documentSubtotal": "Document Subtotal:",
