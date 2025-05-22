@@ -14,6 +14,85 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/responsive.css">
+  
+  <!-- เพิ่ม CSS สำหรับปรับความกว้างตาราง -->
+  <style>
+    #document-selection-table {
+      table-layout: fixed;
+      width: 100%;
+    }
+    
+    #document-selection-table th:nth-child(1), /* ชื่อเอกสาร */
+    #document-selection-table td:nth-child(1) {
+      width: 45%;
+    }
+    
+    #document-selection-table th:nth-child(2), /* ราคาต่อชิ้น */
+    #document-selection-table td:nth-child(2) {
+      width: 20%;
+      text-align: right;
+    }
+    
+    #document-selection-table th:nth-child(3), /* จำนวน */
+    #document-selection-table td:nth-child(3) {
+      width: 15%;
+      text-align: center;
+    }
+    
+    #document-selection-table th:nth-child(4), /* รวม */
+    #document-selection-table td:nth-child(4) {
+      width: 15%;
+      text-align: right;
+    }
+    
+    #document-selection-table th:nth-child(5), /* ปุ่มลบ */
+    #document-selection-table td:nth-child(5) {
+      width: 5%;
+      text-align: center;
+    }
+    
+    /* ปรับ input group ในคอลัมน์จำนวน */
+    #document-selection-table .input-group {
+      max-width: 120px;
+      margin: 0 auto;
+    }
+    
+    #document-selection-table .quantity-input {
+      max-width: 50px;
+      text-align: center;
+      padding: 2px 4px;
+      font-size: 14px;
+    }
+    
+    #document-selection-table .btn-outline-secondary {
+      padding: 2px 6px;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+    
+    /* ปรับแต่งสำหรับ responsive */
+    @media (max-width: 768px) {
+      #document-selection-table th:nth-child(1),
+      #document-selection-table td:nth-child(1) {
+        width: 35%;
+      }
+      
+      #document-selection-table th:nth-child(2),
+      #document-selection-table td:nth-child(2) {
+        width: 25%;
+      }
+      
+      #document-selection-table th:nth-child(3),
+      #document-selection-table td:nth-child(3) {
+        width: 20%;
+      }
+      
+      #document-selection-table th:nth-child(4),
+      #document-selection-table td:nth-child(4) {
+        width: 20%;
+      }
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -206,8 +285,6 @@
       </div>
     </div>
   </div>
-
-
 
   <!-- เพิ่มโค้ดนี้ก่อนปิด tag </body> -->
 <script>
