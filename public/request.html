@@ -15,8 +15,8 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/responsive.css">
   
-  <!-- เพิ่ม QR Code library -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <!-- เพิ่ม QR Code library จาก CDN ที่เสถียร -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
   
   <!-- เพิ่ม CSS สำหรับปรับความกว้างตาราง -->
   <style>
@@ -553,8 +553,7 @@
     function updateQRCode() {
       // ตรวจสอบว่า QRCode library โหลดเสร็จแล้วหรือไม่
       if (typeof QRCode === 'undefined') {
-        console.log('QRCode library not loaded yet, retrying...');
-        setTimeout(updateQRCode, 200);
+        console.log('QRCode library not available in updateQRCode');
         return;
       }
       
@@ -589,6 +588,8 @@
         totalPrice = documentSubtotal + shippingFee + urgentFee;
       }
       
+      console.log('updateQRCode called, totalPrice:', totalPrice);
+      
       if (totalPrice > 0) {
         // สร้าง QR Code สำหรับ Bill Payment
         const billingId = '099400000518106';
@@ -597,6 +598,7 @@
         
         try {
           const qrData = generateThaiQRPayment(billingId, ref1, ref2, totalPrice);
+          console.log('QR Data generated:', qrData.substring(0, 50) + '...');
           
           // แสดง QR Code
           QRCode.toCanvas(canvas, qrData, {
@@ -613,6 +615,7 @@
               canvas.style.display = 'none';
               amountDisplay.style.display = 'none';
             } else {
+              console.log('QR Code generated successfully');
               placeholder.style.display = 'none';
               canvas.style.display = 'block';
               amountDisplay.style.display = 'block';
@@ -633,6 +636,7 @@
         }
       } else {
         // ไม่มีเอกสารหรือราคาเป็น 0
+        console.log('No documents selected or price is 0');
         placeholder.style.display = 'block';
         canvas.style.display = 'none';
         amountDisplay.style.display = 'none';
@@ -667,14 +671,30 @@
   <script>
     // เพิ่ม event listeners เมื่อ DOM โหลดเสร็จ
     document.addEventListener('DOMContentLoaded', function() {
+      let qrCodeCheckCount = 0;
+      const maxRetries = 20; // จำกัดการลองใหม่
+      
       // รอให้ QRCode library โหลดเสร็จก่อน
       function waitForQRCode() {
+        qrCodeCheckCount++;
+        
         if (typeof QRCode !== 'undefined') {
           console.log('QRCode library loaded successfully');
           initializeQRCodeEvents();
+        } else if (qrCodeCheckCount < maxRetries) {
+          console.log(`Waiting for QRCode library... (${qrCodeCheckCount}/${maxRetries})`);
+          setTimeout(waitForQRCode, 200);
         } else {
-          console.log('Waiting for QRCode library...');
-          setTimeout(waitForQRCode, 100);
+          console.error('Failed to load QRCode library after', maxRetries, 'attempts');
+          // แสดงข้อความแจ้งเตือนผู้ใช้
+          const qrPlaceholder = document.getElementById('qr-placeholder');
+          if (qrPlaceholder) {
+            qrPlaceholder.innerHTML = `
+              <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+              <p class="mt-2 text-warning">ไม่สามารถโหลด QR Code ได้</p>
+              <small class="text-muted">กรุณาใช้การโอนเงินผ่านบัญชีธนาคารแทน</small>
+            `;
+          }
         }
       }
       
@@ -696,11 +716,11 @@
         }
         
         // อัปเดต QR Code ครั้งแรก
-        setTimeout(updateQRCode, 500);
+        setTimeout(updateQRCode, 300);
       }
       
       // เริ่มต้นการรอ QRCode library
-      waitForQRCode();
+      setTimeout(waitForQRCode, 100);
     });
   </script>
 </body>
