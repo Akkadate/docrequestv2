@@ -85,6 +85,7 @@
     "documentType": "ประเภทเอกสาร",
     "documentName": "ชื่อเอกสาร",
     "unitPrice": "ราคาต่อชิ้น",
+    "currency": "บาท",
     "quantity": "จำนวน",
     "subtotal": "รวม",
     "documentSubtotal": "ราคาเอกสารรวม:",
