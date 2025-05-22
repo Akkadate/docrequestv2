@@ -194,8 +194,7 @@
     "rejected": "您的申请已被拒绝。请联系工作人员了解更多信息。"
   },
   "admin": {
-    "admin": {
-    "userDetail": {
+      "userDetail": {
       "title": "用户详情 - 在线文件申请系统",
       "header": "用户详情",
       "backToList": "返回用户列表",
