@@ -194,6 +194,35 @@
     "rejected": "您的申请已被拒绝。请联系工作人员了解更多信息。"
   },
   "admin": {
+    "admin": {
+    "userDetail": {
+      "title": "用户详情 - 在线文件申请系统",
+      "header": "用户详情",
+      "backToList": "返回用户列表",
+      "userInfo": "用户信息",
+      "requestHistory": "申请历史",
+      "statistics": "使用统计",
+      "totalRequests": "总申请数",
+      "completedRequests": "已完成",
+      "pendingRequests": "待处理",
+      "totalSpent": "总花费",
+      "actions": "操作",
+      "resetPassword": "重置密码",
+      "suspendUser": "暂停用户",
+      "activateUser": "激活用户",
+      "deleteUser": "删除用户",
+      "confirmDelete": "确认删除用户",
+      "deleteWarning": "警告！",
+      "deleteMessage": "删除此用户将删除所有用户数据，包括文件申请历史。此操作无法撤销。",
+      "userToDelete": "要删除的用户",
+      "typeConfirm": "输入 \"DELETE\" 确认",
+      "cancel": "取消",
+      "confirmDeleteBtn": "删除用户",
+      "resetPasswordMessage": "您要重置此用户的密码吗？",
+      "newPasswordInfo": "新密码将设置为：123456",
+      "resetPasswordNote": "用户登录后应更改密码",
+      "confirmReset": "确认重置"
+    },
     "dashboard": {
       "title": "管理面板 - 在线文件申请系统",
       "header": "管理面板",
