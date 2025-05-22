@@ -70,6 +70,7 @@ async function login(event) {
       // บันทึกข้อมูลผู้ใช้และ token
       localStorage.setItem('token', data.token);
       localStorage.setItem('userId', data.user.id);
+      localStorage.setItem('studentId', data.student_id);
       localStorage.setItem('userName', data.user.full_name);
       localStorage.setItem('userRole', data.user.role);
       
