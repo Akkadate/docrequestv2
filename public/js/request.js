@@ -232,6 +232,8 @@ function addDocumentToSelection() {
 
 // แก้ไขส่วนนี้ในไฟล์ request.js
 
+// แก้ไขส่วนนี้ในไฟล์ request.js
+
 // อัปเดตตารางเอกสารที่เลือก - แก้ไขใหม่เพื่อรองรับมือถือ
 function updateDocumentTable() {
   const tableBody = document.getElementById('selected-documents');
