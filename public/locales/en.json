@@ -109,7 +109,11 @@
     "accountNumber": "Account Number:",
     "accountName": "Account Name:",
     "shippingFee": "Shipping Fee",
-    "urgentService": "Urgent Service"
+    "urgentService": "Urgent Service",
+    "qrAmount": "Amount",
+    "selectFile": "Choose File",
+    "bankNameValue": "Krung Thai Bank",
+    "accountNameValue": "North Bangkok University"
   },
   "dashboard": {
     "title": "Dashboard - Document Request System",
