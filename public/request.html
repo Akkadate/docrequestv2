@@ -15,6 +15,9 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/responsive.css">
   
+  <!-- เพิ่ม QR Code library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  
   <!-- เพิ่ม CSS สำหรับปรับความกว้างตาราง -->
   <style>
     #document-selection-table {
@@ -78,6 +81,40 @@
       min-width: 30px;
     }
     
+    /* CSS สำหรับ QR Code container */
+    .qr-code-container {
+      text-align: center;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      border: 2px solid #dee2e6;
+      margin-bottom: 15px;
+    }
+    
+    #qr-canvas {
+      max-width: 100%;
+      height: auto;
+      border: 3px solid #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .qr-amount-display {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    
+    .qr-info {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 10px;
+    }
+    
     /* ปรับแต่งสำหรับ responsive */
     @media (max-width: 768px) {
       #document-selection-table th:nth-child(1),
@@ -105,6 +142,10 @@
         width: 8%;
         min-width: 40px;
       }
+      
+      .qr-code-container {
+        padding: 15px;
+      }
     }
     
     @media (max-width: 576px) {
@@ -118,6 +159,15 @@
         padding: 2px 4px;
         font-size: 11px;
         min-width: 25px;
+      }
+      
+      .qr-code-container {
+        padding: 10px;
+      }
+      
+      .qr-amount-display {
+        font-size: 1em;
+        padding: 8px 12px;
       }
     }
   </style>
@@ -208,12 +258,12 @@
                 <textarea class="form-control" id="address" rows="3" data-i18n-placeholder="request.addressPlaceholder"></textarea>
               </div>
               
-           <div id="urgent-container" class="mb-3">
-  <div class="form-check">
-    <input class="form-check-input" type="checkbox" id="urgent">
-    <label class="form-check-label" for="urgent" data-i18n="request.urgent">บริการเร่งด่วน (เพิ่ม 50 บาทต่อฉบับ)</label>
-  </div>
-</div>
+              <div id="urgent-container" class="mb-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="urgent">
+                  <label class="form-check-label" for="urgent" data-i18n="request.urgent">บริการเร่งด่วน (เพิ่ม 50 บาทต่อฉบับ)</label>
+                </div>
+              </div>
               
               <div class="mb-3">
                 <label for="payment_slip" class="form-label required" data-i18n="request.paymentSlip">หลักฐานการชำระเงิน</label>
@@ -265,9 +315,22 @@
           <div class="card-body">
             <div class="mb-3">
               <div class="qr-code-container">
-                <img src="img/qr-payment.png" alt="QR Code" class="img-fluid">
+                <canvas id="qr-canvas" style="display: none;"></canvas>
+                <div id="qr-placeholder" class="text-muted">
+                  <i class="bi bi-qr-code" style="font-size: 3rem;"></i>
+                  <p class="mt-2">เลือกเอกสารเพื่อสร้าง QR Code</p>
+                </div>
+                <div id="qr-amount-display" class="qr-amount-display" style="display: none;">
+                  จำนวนเงิน: <span id="qr-amount">0.00 บาท</span>
+                </div>
               </div>
               <p class="text-center mt-2" data-i18n="request.scanQR">สแกน QR Code เพื่อชำระเงิน</p>
+              <div class="qr-info">
+                <small class="text-muted">
+                  <i class="bi bi-info-circle"></i> 
+                  QR Code จะอัปเดตอัตโนมัติตามจำนวนเงินที่ต้องชำระ
+                </small>
+              </div>
             </div>
             <div class="mb-3">
               <p data-i18n="request.bankTransfer">หรือโอนเงินผ่านบัญชีธนาคาร:</p>
@@ -315,106 +378,300 @@
   </div>
 
   <!-- เพิ่มโค้ดนี้ก่อนปิด tag </body> -->
-<script>
-  // ติดตามการเปลี่ยนแปลงของช่องเร่งด่วน
-  document.addEventListener('DOMContentLoaded', function() {
-    const urgentCheckbox = document.getElementById('urgent');
-    if (urgentCheckbox) {
-      urgentCheckbox.addEventListener('change', function() {
-        setTimeout(function() {
-          // ตรวจสอบการคำนวณค่าบริการเร่งด่วน
-          if (urgentCheckbox.checked && document.querySelector('input[name="delivery_method"]:checked').value === 'pickup') {
-            // นับจำนวนเอกสารทั้งหมด
-            if (typeof selectedDocuments !== 'undefined' && selectedDocuments.length > 0) {
-              const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-              const correctUrgentFee = 50 * totalDocuments;
-              
-              // ตรวจสอบและแก้ไขการแสดงผลค่าบริการเร่งด่วน
-              const urgentFeeElement = document.getElementById('urgent-fee');
-              if (urgentFeeElement) {
-                // ตรวจสอบว่าค่าที่แสดงถูกต้องหรือไม่
-                const currentDisplay = urgentFeeElement.textContent;
-                const correctDisplay = formatCurrency ? formatCurrency(correctUrgentFee, currentLang || 'th') : `${correctUrgentFee}.00 บาท`;
+  <script>
+    // ติดตามการเปลี่ยนแปลงของช่องเร่งด่วน
+    document.addEventListener('DOMContentLoaded', function() {
+      const urgentCheckbox = document.getElementById('urgent');
+      if (urgentCheckbox) {
+        urgentCheckbox.addEventListener('change', function() {
+          setTimeout(function() {
+            // ตรวจสอบการคำนวณค่าบริการเร่งด่วน
+            if (urgentCheckbox.checked && document.querySelector('input[name="delivery_method"]:checked').value === 'pickup') {
+              // นับจำนวนเอกสารทั้งหมด
+              if (typeof selectedDocuments !== 'undefined' && selectedDocuments.length > 0) {
+                const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+                const correctUrgentFee = 50 * totalDocuments;
                 
-                if (currentDisplay !== correctDisplay) {
-                  console.log('Fixing urgent fee display:', {current: currentDisplay, correct: correctDisplay});
-                  urgentFeeElement.textContent = correctDisplay;
+                // ตรวจสอบและแก้ไขการแสดงผลค่าบริการเร่งด่วน
+                const urgentFeeElement = document.getElementById('urgent-fee');
+                if (urgentFeeElement) {
+                  // ตรวจสอบว่าค่าที่แสดงถูกต้องหรือไม่
+                  const currentDisplay = urgentFeeElement.textContent;
+                  const correctDisplay = formatCurrency ? formatCurrency(correctUrgentFee, currentLang || 'th') : `${correctUrgentFee}.00 บาท`;
                   
-                  // แก้ไขราคารวมด้วย
-                  const totalPriceElement = document.getElementById('total-price');
-                  if (totalPriceElement) {
-                    const documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
-                    const totalPrice = documentSubtotal + correctUrgentFee;
-                    totalPriceElement.textContent = formatCurrency ? formatCurrency(totalPrice, currentLang || 'th') : `${totalPrice}.00 บาท`;
-                  }
-                  
-                  // แก้ไขสรุปรายการ
-                  const summaryContainer = document.getElementById('summary-container');
-                  if (summaryContainer) {
-                    const urgentServiceElement = summaryContainer.querySelector('div:contains("บริการเร่งด่วน")');
-                    if (urgentServiceElement) {
-                      const urgentServiceTextElement = urgentServiceElement.querySelector('div');
-                      if (urgentServiceTextElement) {
-                        urgentServiceTextElement.textContent = `${correctDisplay} (${totalDocuments} ฉบับ x 50 บาท)`;
+                  if (currentDisplay !== correctDisplay) {
+                    console.log('Fixing urgent fee display:', {current: currentDisplay, correct: correctDisplay});
+                    urgentFeeElement.textContent = correctDisplay;
+                    
+                    // แก้ไขราคารวมด้วย
+                    const totalPriceElement = document.getElementById('total-price');
+                    if (totalPriceElement) {
+                      const documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
+                      const totalPrice = documentSubtotal + correctUrgentFee;
+                      totalPriceElement.textContent = formatCurrency ? formatCurrency(totalPrice, currentLang || 'th') : `${totalPrice}.00 บาท`;
+                    }
+                    
+                    // แก้ไขสรุปรายการ
+                    const summaryContainer = document.getElementById('summary-container');
+                    if (summaryContainer) {
+                      const urgentServiceElement = summaryContainer.querySelector('div:contains("บริการเร่งด่วน")');
+                      if (urgentServiceElement) {
+                        const urgentServiceTextElement = urgentServiceElement.querySelector('div');
+                        if (urgentServiceTextElement) {
+                          urgentServiceTextElement.textContent = `${correctDisplay} (${totalDocuments} ฉบับ x 50 บาท)`;
+                        }
                       }
                     }
                   }
                 }
               }
             }
+            // อัปเดต QR Code เมื่อมีการเปลี่ยนแปลง
+            updateQRCode();
+          }, 100);
+        });
+      }
+      
+      // แก้ไขปัญหาเมื่อเพิ่มเอกสาร
+      const addDocumentButton = document.getElementById('add-document-button');
+      if (addDocumentButton) {
+        const originalClick = addDocumentButton.onclick;
+        addDocumentButton.onclick = function(event) {
+          if (originalClick) {
+            originalClick.call(this, event);
           }
-        }, 100);
-      });
-    }
-    
-    // แก้ไขปัญหาเมื่อเพิ่มเอกสาร
-    const addDocumentButton = document.getElementById('add-document-button');
-    if (addDocumentButton) {
-      const originalClick = addDocumentButton.onclick;
-      addDocumentButton.onclick = function(event) {
-        if (originalClick) {
-          originalClick.call(this, event);
-        }
-        
-        // ตรวจสอบการคำนวณหลังจากเพิ่มเอกสาร
-        setTimeout(function() {
-          const urgentCheckbox = document.getElementById('urgent');
-          if (urgentCheckbox && urgentCheckbox.checked && document.querySelector('input[name="delivery_method"]:checked').value === 'pickup') {
-            // นับจำนวนเอกสารทั้งหมด
-            if (typeof selectedDocuments !== 'undefined' && selectedDocuments.length > 0) {
-              const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-              const correctUrgentFee = 50 * totalDocuments;
-              
-              // ปรับแก้การแสดงผลค่าบริการเร่งด่วน
-              const urgentFeeElement = document.getElementById('urgent-fee');
-              if (urgentFeeElement) {
-                urgentFeeElement.textContent = formatCurrency ? formatCurrency(correctUrgentFee, currentLang || 'th') : `${correctUrgentFee}.00 บาท`;
+          
+          // ตรวจสอบการคำนวณหลังจากเพิ่มเอกสาร
+          setTimeout(function() {
+            const urgentCheckbox = document.getElementById('urgent');
+            if (urgentCheckbox && urgentCheckbox.checked && document.querySelector('input[name="delivery_method"]:checked').value === 'pickup') {
+              // นับจำนวนเอกสารทั้งหมด
+              if (typeof selectedDocuments !== 'undefined' && selectedDocuments.length > 0) {
+                const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+                const correctUrgentFee = 50 * totalDocuments;
                 
-                // ปรับแก้ราคารวม
-                const totalPriceElement = document.getElementById('total-price');
-                if (totalPriceElement) {
-                  const documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
-                  const totalPrice = documentSubtotal + correctUrgentFee;
-                  totalPriceElement.textContent = formatCurrency ? formatCurrency(totalPrice, currentLang || 'th') : `${totalPrice}.00 บาท`;
+                // ปรับแก้การแสดงผลค่าบริการเร่งด่วน
+                const urgentFeeElement = document.getElementById('urgent-fee');
+                if (urgentFeeElement) {
+                  urgentFeeElement.textContent = formatCurrency ? formatCurrency(correctUrgentFee, currentLang || 'th') : `${correctUrgentFee}.00 บาท`;
+                  
+                  // ปรับแก้ราคารวม
+                  const totalPriceElement = document.getElementById('total-price');
+                  if (totalPriceElement) {
+                    const documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
+                    const totalPrice = documentSubtotal + correctUrgentFee;
+                    totalPriceElement.textContent = formatCurrency ? formatCurrency(totalPrice, currentLang || 'th') : `${totalPrice}.00 บาท`;
+                  }
                 }
               }
             }
-          }
-        }, 100);
-      };
+            // อัปเดต QR Code เมื่อมีการเปลี่ยนแปลง
+            updateQRCode();
+          }, 100);
+        };
+      }
+    });
+
+    // ฟังก์ชันสร้าง Thai QR Payment string
+    function generateThaiQRPayment(billingId, ref1, ref2, amount) {
+      // Thai QR Payment format ตามมาตรฐาน EMVCo
+      let qrString = '';
+      
+      // Payload Format Indicator (ID 00)
+      qrString += '000201';
+      
+      // Point of Initiation Method (ID 01)
+      qrString += '010212';
+      
+      // Merchant Account Information (ID 30) - Thai Bill Payment
+      let billPaymentData = '';
+      
+      // Application ID for Thai Bill Payment
+      billPaymentData += '0016A000000677010112';
+      
+      // Biller ID
+      billPaymentData += '02' + String(billingId.length).padStart(2, '0') + billingId;
+      
+      // Reference 1
+      billPaymentData += '03' + String(ref1.length).padStart(2, '0') + ref1;
+      
+      // Reference 2
+      billPaymentData += '04' + String(ref2.length).padStart(2, '0') + ref2;
+      
+      qrString += '30' + String(billPaymentData.length).padStart(2, '0') + billPaymentData;
+      
+      // Transaction Currency (THB = 764)
+      qrString += '5303764';
+      
+      // Transaction Amount
+      const amountStr = amount.toFixed(2);
+      qrString += '54' + String(amountStr.length).padStart(2, '0') + amountStr;
+      
+      // Country Code (TH)
+      qrString += '5802TH';
+      
+      // Merchant Name
+      const merchantName = 'North Bangkok University';
+      qrString += '59' + String(merchantName.length).padStart(2, '0') + merchantName;
+      
+      // Merchant City
+      const merchantCity = 'Bangkok';
+      qrString += '60' + String(merchantCity.length).padStart(2, '0') + merchantCity;
+      
+      // CRC16 (will be calculated)
+      qrString += '6304';
+      
+      // Calculate CRC16
+      const crc = calculateCRC16(qrString);
+      qrString += crc;
+      
+      return qrString;
     }
-  });
-</script>
-   <footer class="footer mt-5 py-3 bg-light">
+
+    // ฟังก์ชันคำนวณ CRC16
+    function calculateCRC16(data) {
+      const polynomial = 0x1021;
+      let crc = 0xFFFF;
+      
+      for (let i = 0; i < data.length; i++) {
+        crc ^= (data.charCodeAt(i) << 8);
+        
+        for (let j = 0; j < 8; j++) {
+          if (crc & 0x8000) {
+            crc = (crc << 1) ^ polynomial;
+          } else {
+            crc = crc << 1;
+          }
+          crc &= 0xFFFF;
+        }
+      }
+      
+      return crc.toString(16).toUpperCase().padStart(4, '0');
+    }
+
+    // ฟังก์ชันอัปเดต QR Code
+    function updateQRCode() {
+      const canvas = document.getElementById('qr-canvas');
+      const placeholder = document.getElementById('qr-placeholder');
+      const amountDisplay = document.getElementById('qr-amount-display');
+      const amountSpan = document.getElementById('qr-amount');
+      
+      if (!canvas || !placeholder || !amountDisplay || !amountSpan) {
+        console.error('QR Code elements not found');
+        return;
+      }
+      
+      // ดึงข้อมูล student ID จาก localStorage (key: userId) หรือใช้ค่าเริ่มต้น
+      const studentId = localStorage.getItem('userId') || '6401234567';
+      
+      // คำนวณราคารวม
+      let totalPrice = 0;
+      
+      if (selectedDocuments && selectedDocuments.length > 0) {
+        const documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
+        
+        // ค่าจัดส่ง
+        const deliveryMethod = document.querySelector('input[name="delivery_method"]:checked')?.value || 'pickup';
+        const shippingFee = deliveryMethod === 'mail' ? 200 : 0;
+        
+        // ค่าบริการเร่งด่วน
+        const isUrgent = document.getElementById('urgent')?.checked || false;
+        const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+        const urgentFee = (isUrgent && deliveryMethod === 'pickup') ? 50 * totalDocuments : 0;
+        
+        totalPrice = documentSubtotal + shippingFee + urgentFee;
+      }
+      
+      if (totalPrice > 0) {
+        // สร้าง QR Code สำหรับ Bill Payment
+        const billingId = '099400000518106';
+        const ref1 = studentId; // ใช้ student ID เป็น ref1
+        const ref2 = '777'; // ใช้ 777 เป็น ref2
+        
+        const qrData = generateThaiQRPayment(billingId, ref1, ref2, totalPrice);
+        
+        // แสดง QR Code
+        QRCode.toCanvas(canvas, qrData, {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        }, function (error) {
+          if (error) {
+            console.error('QR Code generation error:', error);
+            placeholder.style.display = 'block';
+            canvas.style.display = 'none';
+            amountDisplay.style.display = 'none';
+          } else {
+            placeholder.style.display = 'none';
+            canvas.style.display = 'block';
+            amountDisplay.style.display = 'block';
+            
+            // อัปเดตจำนวนเงิน
+            if (typeof formatCurrency === 'function') {
+              amountSpan.textContent = formatCurrency(totalPrice, currentLang || 'th');
+            } else {
+              amountSpan.textContent = totalPrice.toFixed(2) + ' บาท';
+            }
+          }
+        });
+      } else {
+        // ไม่มีเอกสารหรือราคาเป็น 0
+        placeholder.style.display = 'block';
+        canvas.style.display = 'none';
+        amountDisplay.style.display = 'none';
+      }
+    }
+
+    // Override calculatePrice function เพื่อให้อัปเดต QR Code ด้วย
+    const originalCalculatePrice = window.calculatePrice;
+    
+    window.calculatePrice = function() {
+      if (originalCalculatePrice) {
+        originalCalculatePrice();
+      }
+      // อัปเดต QR Code หลังจากคำนวณราคา
+      setTimeout(updateQRCode, 100);
+    };
+  </script>
+
+  <footer class="footer mt-5 py-3 bg-light">
     <div class="container text-center">
-          <span class="text-muted" data-i18n="footer.copyright">
+      <span class="text-muted" data-i18n="footer.copyright">
         © 2025 ระบบขอเอกสารออนไลน์สำหรับนักศึกษา มหาวิทยาลัยนอร์ทกรุงเทพ
       </span>
     </div>
   </footer>
+  
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/language.js"></script>
   <script src="js/main.js"></script>
   <script src="js/request.js"></script>
+  
+  <script>
+    // เพิ่ม event listeners เมื่อ DOM โหลดเสร็จ
+    document.addEventListener('DOMContentLoaded', function() {
+      // ฟังการเปลี่ยนแปลงวิธีการรับเอกสาร
+      const deliveryMethods = document.querySelectorAll('input[name="delivery_method"]');
+      deliveryMethods.forEach(method => {
+        method.addEventListener('change', function() {
+          setTimeout(updateQRCode, 100);
+        });
+      });
+      
+      // ฟังการเปลี่ยนแปลงบริการเร่งด่วน
+      const urgentCheckbox = document.getElementById('urgent');
+      if (urgentCheckbox) {
+        urgentCheckbox.addEventListener('change', function() {
+          setTimeout(updateQRCode, 100);
+        });
+      }
+      
+      // อัปเดต QR Code ครั้งแรก
+      setTimeout(updateQRCode, 500);
+    });
+  </script>
 </body>
 </html>
