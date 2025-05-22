@@ -489,7 +489,7 @@
       
       // สร้าง QR Data ตามรูปแบบ AppSheet
       // "|099400000518106"&"%0D"&[studentId]&"%0D"&[ref2]&"%0D"&[Price]
-      const qrData = `${fullBillingId}%0D${studentId}%0D${reference2}%0D${amountInSatang}`;
+      const qrData = `${fullBillingId}${studentId}${reference2}${amountInSatang}`;
       
       console.log('Cross Bank Bill Payment QR Data:', {
         billingId: fullBillingId,
@@ -515,7 +515,7 @@
       }
       
       // ดึงข้อมูล student ID จาก localStorage (key: userId) หรือใช้ค่าเริ่มต้น
-      const studentId = localStorage.getItem('userId') || '6401234567';
+      const studentId = localStorage.getItem('studentId') || '99999999';
       
       // คำนวณราคารวม
       let totalPrice = 0;
@@ -539,7 +539,7 @@
       
       if (totalPrice > 0) {
         // สร้าง QR Code สำหรับ Bill Payment
-        const billingId = '099400000518106';
+        const billingId = '|099400000518106';
         const ref1 = studentId; // ใช้ student ID เป็น ref1
         const ref2 = '777'; // ใช้ 777 เป็น ref2
         
