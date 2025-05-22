@@ -43,6 +43,74 @@ function setupAddAdmin() {
   }
 }
 
+// โหลดข้อมูลผู้ใช้ทั้งหมด - อัปเดตจากไฟล์เดิม
+async function loadUsers(searchQuery = '') {
+  try {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      window.location.href = '/login.html';
+      return;
+    }
+    
+    let url = '/api/admin/users';
+    
+    // ถ้ามีการค้นหา
+    if (searchQuery) {
+      url += `?search=${encodeURIComponent(searchQuery)}`;
+    }
+    
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to load users');
+    }
+    
+    const users = await response.json();
+    displayUsers(users);
+  } catch (error) {
+    console.error('Error loading users:', error);
+    showAlert('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้', 'danger');
+  }
+}
+
+// เพิ่มการรองรับการค้นหาใน API routes/admin.js
+// อัปเดต endpoint GET /api/admin/users ใน routes/admin.js:
+
+router.get('/users', authenticateJWT, isAdmin, async (req, res) => {
+  try {
+    const search = req.query.search || '';
+    
+    let query = 'SELECT id, student_id, full_name, email, phone, faculty, role, created_at FROM users';
+    let queryParams = [];
+    
+    // เพิ่มการค้นหา
+    if (search) {
+      query += ` WHERE (
+        student_id ILIKE $1 OR
+        full_name ILIKE $1 OR
+        email ILIKE $1 OR
+        phone ILIKE $1 OR
+        faculty ILIKE $1
+      )`;
+      queryParams.push(`%${search}%`);
+    }
+    
+    query += ' ORDER BY created_at DESC';
+    
+    const users = await pool.query(query, queryParams);
+    
+    res.status(200).json(users.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้' });
+  }
+});
+
 // โหลดข้อมูลผู้ใช้ทั้งหมด
 async function loadUsers(searchQuery = '') {
   try {
