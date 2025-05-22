@@ -455,7 +455,7 @@ function updateSummary(deliveryMethod, isUrgent) {
     
     // เพิ่มรายการเอกสารแต่ละรายการ
     selectedDocuments.forEach(doc => {
-      summaryHTML += `<li>${doc.name} ( x${doc.quantity} ) - ${formatCurrency(doc.subtotal, currentLang)}</li>`;
+      summaryHTML += `<li>${doc.name} ( x ${doc.quantity} ) = ${formatCurrency(doc.subtotal, currentLang)}</li>`;
     });
     
     summaryHTML += `
