@@ -269,7 +269,7 @@
               
               <div class="mb-3">
                 <label for="payment_slip" class="form-label required" data-i18n="request.paymentSlip">หลักฐานการชำระเงิน</label>
-                <input type="file" class="form-control" id="payment_slip" accept="image/*,.pdf" required>
+                <input type="file" class="form-control" id="payment_slip" accept="image/*,.pdf" required data-i18n-placeholder="request.selectFile">
                 <div class="form-text" data-i18n="request.paymentSlipInfo">อัปโหลดสลิปหรือหลักฐานการชำระเงิน (ไฟล์ภาพหรือ PDF)</div>
               </div>
               
@@ -323,7 +323,7 @@
                   <p class="mt-2">เลือกเอกสารเพื่อสร้าง QR Code</p>
                 </div>
                 <div id="qr-amount-display" class="qr-amount-display" style="display: none;">
-                  จำนวนเงิน: <span id="qr-amount">0.00 บาท</span>
+                  <span data-i18n="request.qrAmount">จำนวนเงิน</span>: <span id="qr-amount">0.00 บาท</span>
                 </div>
               </div>
               <p class="text-center mt-2" data-i18n="request.scanQR">สแกน QR Code เพื่อชำระเงิน</p>
@@ -337,9 +337,9 @@
             <div class="mb-3">
               <p data-i18n="request.bankTransfer">หรือโอนเงินผ่านบัญชีธนาคาร:</p>
               <p>
-                <strong data-i18n="request.bankName">ธนาคาร:</strong> <span id="bank-name">ธนาคารกรุงไทย</span><br>
+                <strong data-i18n="request.bankName">ธนาคาร:</strong> <span id="bank-name" data-i18n="request.bankNameValue">ธนาคารกรุงไทย</span>
                 <strong data-i18n="request.accountNumber">เลขที่บัญชี:</strong> <span id="account-number">1234567890</span><br>
-                <strong data-i18n="request.accountName">ชื่อบัญชี:</strong> <span id="account-name">มหาวิทยาลัยนอร์ทกรุงเทพ</span>
+                <strong data-i18n="request.accountName">ชื่อบัญชี:</strong> <span id="account-name" data-i18n="request.accountNameValue">มหาวิทยาลัยนอร์ทกรุงเทพ</span>
               </p>
             </div>
           </div>
