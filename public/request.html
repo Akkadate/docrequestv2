@@ -117,6 +117,52 @@
       margin-top: 10px;
     }
     
+    /* CSS สำหรับ custom file input */
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .file-input-wrapper input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      z-index: 2;
+    }
+    
+    .file-input-label {
+      display: block;
+      padding: 0.375rem 0.75rem;
+      margin-bottom: 0;
+      font-weight: 400;
+      line-height: 1.5;
+      color: #212529;
+      text-align: center;
+      background-color: #fff;
+      border: 1px solid #ced4da;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .file-input-wrapper:hover .file-input-label {
+      border-color: #86b7fe;
+    }
+    
+    .file-input-wrapper input[type="file"]:focus + .file-input-label {
+      border-color: #86b7fe;
+      outline: 0;
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .file-input-selected {
+      color: #0d6efd;
+      font-weight: 500;
+    }
+    
     /* ปรับแต่งสำหรับ responsive */
     @media (max-width: 768px) {
       #document-selection-table th:nth-child(1),
@@ -269,7 +315,10 @@
               
               <div class="mb-3">
                 <label for="payment_slip" class="form-label required" data-i18n="request.paymentSlip">หลักฐานการชำระเงิน</label>
-                <input type="file" class="form-control" id="payment_slip" accept="image/*,.pdf" required data-i18n-placeholder="request.selectFile">
+                <div class="file-input-wrapper">
+                  <input type="file" class="form-control" id="payment_slip" accept="image/*,.pdf" required>
+                  <label for="payment_slip" class="file-input-label" data-i18n="request.selectFile">เลือกไฟล์</label>
+                </div>
                 <div class="form-text" data-i18n="request.paymentSlipInfo">อัปโหลดสลิปหรือหลักฐานการชำระเงิน (ไฟล์ภาพหรือ PDF)</div>
               </div>
               
@@ -337,7 +386,7 @@
             <div class="mb-3">
               <p data-i18n="request.bankTransfer">หรือโอนเงินผ่านบัญชีธนาคาร:</p>
               <p>
-                <strong data-i18n="request.bankName">ธนาคาร:</strong> <span id="bank-name" data-i18n="request.bankNameValue">ธนาคารกรุงเทพ</span><br>
+                <strong data-i18n="request.bankName">ธนาคาร:</strong> <span id="bank-name" data-i18n="request.bankNameValue">ธนาคารกรุงไทย</span><br>
                 <strong data-i18n="request.accountNumber">เลขที่บัญชี:</strong> <span id="account-number">1234567890</span><br>
                 <strong data-i18n="request.accountName">ชื่อบัญชี:</strong> <span id="account-name" data-i18n="request.accountNameValue">มหาวิทยาลัยนอร์ทกรุงเทพ</span>
               </p>
@@ -546,7 +595,7 @@
         // สร้าง QR Code สำหรับ Bill Payment
         const billingId = '|099400000518106';
         const ref1 = studentId; // ใช้ student ID เป็น ref1
-        const ref2 = '777'; // ใช้ 777 เป็น ref2
+        const ref2 = '77777'; // ใช้ 777 เป็น ref2
         
         try {
           const qrData = generateCrossBankBillPayment(billingId, ref1, ref2, totalPrice);
@@ -742,6 +791,30 @@
       if (urgentCheckbox) {
         urgentCheckbox.addEventListener('change', function() {
           setTimeout(updateQRCode, 100);
+        });
+      }
+      
+      // จัดการ file input custom
+      const fileInput = document.getElementById('payment_slip');
+      const fileLabel = document.querySelector('.file-input-label');
+      
+      if (fileInput && fileLabel) {
+        fileInput.addEventListener('change', function() {
+          if (this.files && this.files.length > 0) {
+            const fileName = this.files[0].name;
+            fileLabel.textContent = fileName;
+            fileLabel.classList.add('file-input-selected');
+          } else {
+            // รีเซ็ตกลับเป็นข้อความเดิม
+            const currentLang = localStorage.getItem('language') || 'th';
+            const labels = {
+              'th': 'เลือกไฟล์',
+              'en': 'Choose File', 
+              'zh': '选择文件'
+            };
+            fileLabel.textContent = labels[currentLang] || 'เลือกไฟล์';
+            fileLabel.classList.remove('file-input-selected');
+          }
         });
       }
       
