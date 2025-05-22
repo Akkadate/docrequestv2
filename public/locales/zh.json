@@ -147,7 +147,9 @@
     "ready": "可自取/已发送",
     "completed": "已完成",
     "rejected": "被拒绝",
-    "noRequests": "未找到符合条件的文件申请"
+    "noRequests": "未找到符合条件的文件申请",
+     "multipleDocuments": "多个项目",
+    "items": "项目"
   },
   "requestDetail": {
     "title": "申请详情 - 在线文件申请系统",
@@ -170,7 +172,26 @@
     "statusHistory": "状态历史",
     "date": "日期",
     "statusValue": "状态",
-    "statusNote": "备注"
+    "statusNote": "备注",
+    "documentSubtotal": "文件小计",
+    "shippingFee": "邮寄费",
+    "urgentFee": "加急服务费",
+    "totalPrice": "总价",
+    "unitPrice": "单价",
+    "subtotal": "小计",
+    "viewPaymentSlip": "查看支付凭证",
+    "noPaymentSlip": "尚未上传支付凭证",
+    "noHistory": "无状态变更历史"
+  },
+   "statusInfo": {
+    "pending": "您的申请正在等待处理。请等待工作人员审核。",
+    "pendingNoPayment": " 请上传支付凭证以继续处理。",
+    "processing": "您的申请正在处理中。工作人员正在为您准备文件。",
+    "readyPickup": "您的文件已准备好自取。请联系行政楼1楼的注册办公室。",
+    "readyMail": "您的文件已准备好寄送，将很快寄到您指定的地址。",
+    "completedPickup": "您的申请已完成。您已收到文件。",
+    "completedMail": "您的申请已完成。文件已寄送到您指定的地址。",
+    "rejected": "您的申请已被拒绝。请联系工作人员了解更多信息。"
   },
   "admin": {
     "dashboard": {
