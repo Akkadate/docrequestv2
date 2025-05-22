@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="admin.userDetail.title">รายละเอียดผู้ใช้ - ระบบขอเอกสารออนไลน์</title>
+  <!-- เพิ่มฟอนต์ Prompt สำหรับภาษาไทยและอังกฤษ -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- เพิ่มฟอนต์ Noto Sans SC สำหรับภาษาจีน -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#" data-i18n="navbar.title">ระบบขอเอกสารออนไลน์</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="../index.html" data-i18n="navbar.home">หน้าหลัก</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="dashboard.html" data-i18n="navbar.dashboard">แดชบอร์ด</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="requests.html" data-i18n="admin.requests.title">จัดการคำขอ</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="users.html" data-i18n="admin.users.title">จัดการผู้ใช้</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="reports.html" data-i18n="admin.reports.title">รายงาน</a>
+          </li>
+        </ul>
+        <div class="language-selector d-flex me-3">
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="th">ไทย</button>
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="en">English</button>
+          <button class="btn btn-sm btn-outline-light" data-lang="zh">中文</button>
+        </div>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="logout" data-i18n="navbar.logout">ออกจากระบบ</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 data-i18n="admin.userDetail.header">รายละเอียดผู้ใช้</h2>
+      <a href="users.html" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left"></i> <span data-i18n="admin.userDetail.backToList">กลับไปยังรายการผู้ใช้</span>
+      </a>
+    </div>
+    
+    <div id="alert-container"></div>
+    
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0" data-i18n="admin.userDetail.userInfo">ข้อมูลผู้ใช้</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <dl class="row">
+                  <dt class="col-sm-5" data-i18n="admin.users.studentID">รหัสนักศึกษา:</dt>
+                  <dd class="col-sm-7" id="user-student-id">-</dd>
+                  
+                  <dt class="col-sm-5" data-i18n="admin.users.fullName">ชื่อ-นามสกุล:</dt>
+                  <dd class="col-sm-7" id="user-full-name">-</dd>
+                  
+                  <dt class="col-sm-5" data-i18n="admin.users.email">อีเมล:</dt>
+                  <dd class="col-sm-7" id="user-email">-</dd>
+                </dl>
+              </div>
+              <div class="col-md-6">
+                <dl class="row">
+                  <dt class="col-sm-5" data-i18n="admin.users.phone">เบอร์โทรศัพท์:</dt>
+                  <dd class="col-sm-7" id="user-phone">-</dd>
+                  
+                  <dt class="col-sm-5" data-i18n="admin.users.faculty">คณะ:</dt>
+                  <dd class="col-sm-7" id="user-faculty">-</dd>
+                  
+                  <dt class="col-sm-5" data-i18n="admin.users.role">บทบาท:</dt>
+                  <dd class="col-sm-7">
+                    <span id="user-role-badge"></span>
+                  </dd>
+                </dl>
+              </div>
+              <div class="col-12">
+                <dl class="row">
+                  <dt class="col-sm-3" data-i18n="admin.users.joinDate">วันที่ลงทะเบียน:</dt>
+                  <dd class="col-sm-9" id="user-join-date">-</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ประวัติการขอเอกสาร -->
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0" data-i18n="admin.userDetail.requestHistory">ประวัติการขอเอกสาร</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th data-i18n="admin.requests.requestID">รหัสคำขอ</th>
+                    <th data-i18n="admin.requests.documentType">ประเภทเอกสาร</th>
+                    <th data-i18n="admin.requests.requestDate">วันที่ขอ</th>
+                    <th data-i18n="admin.requests.status">สถานะ</th>
+                    <th data-i18n="dashboard.price">ราคา</th>
+                    <th data-i18n="admin.requests.actions">การดำเนินการ</th>
+                  </tr>
+                </thead>
+                <tbody id="user-requests-table">
+                  <!-- ข้อมูลจะถูกเพิ่มโดย JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <!-- สถิติการใช้งาน -->
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0" data-i18n="admin.userDetail.statistics">สถิติการใช้งาน</h5>
+          </div>
+          <div class="card-body">
+            <div class="row text-center">
+              <div class="col-6 mb-3">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h4 class="card-title text-primary mb-0" id="total-requests">0</h4>
+                    <p class="card-text small" data-i18n="admin.userDetail.totalRequests">คำขอทั้งหมด</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 mb-3">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h4 class="card-title text-success mb-0" id="completed-requests">0</h4>
+                    <p class="card-text small" data-i18n="admin.userDetail.completedRequests">เสร็จสิ้น</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 mb-3">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h4 class="card-title text-warning mb-0" id="pending-requests">0</h4>
+                    <p class="card-text small" data-i18n="admin.userDetail.pendingRequests">รอดำเนินการ</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 mb-3">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h4 class="card-title text-info mb-0" id="total-spent">0</h4>
+                    <p class="card-text small" data-i18n="admin.userDetail.totalSpent">ค่าใช้จ่ายรวม</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- การดำเนินการ -->
+        <div class="card">
+          <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0" data-i18n="admin.userDetail.actions">การดำเนินการ</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-grid gap-2">
+              <button type="button" class="btn btn-info" id="reset-password-btn">
+                <i class="bi bi-key"></i> <span data-i18n="admin.userDetail.resetPassword">รีเซ็ตรหัสผ่าน</span>
+              </button>
+              
+              <button type="button" class="btn btn-warning" id="suspend-user-btn" style="display: none;">
+                <i class="bi bi-person-x"></i> <span data-i18n="admin.userDetail.suspendUser">ระงับผู้ใช้</span>
+              </button>
+              
+              <button type="button" class="btn btn-success" id="activate-user-btn" style="display: none;">
+                <i class="bi bi-person-check"></i> <span data-i18n="admin.userDetail.activateUser">เปิดใช้งานผู้ใช้</span>
+              </button>
+              
+              <hr>
+              
+              <button type="button" class="btn btn-danger" id="delete-user-btn" data-bs-toggle="modal" data-bs-target="#deleteUserModal">
+                <i class="bi bi-trash"></i> <span data-i18n="admin.userDetail.deleteUser">ลบผู้ใช้</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal ยืนยันการลบผู้ใช้ -->
+  <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="deleteUserModalLabel" data-i18n="admin.userDetail.confirmDelete">ยืนยันการลบผู้ใช้</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-danger">
+            <h6 data-i18n="admin.userDetail.deleteWarning">คำเตือน!</h6>
+            <p data-i18n="admin.userDetail.deleteMessage">การลบผู้ใช้นี้จะลบข้อมูลทั้งหมดของผู้ใช้รวมถึงประวัติการขอเอกสาร การดำเนินการนี้ไม่สามารถยกเลิกได้</p>
+          </div>
+          <p><strong data-i18n="admin.userDetail.userToDelete">ผู้ใช้ที่จะลบ:</strong></p>
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-1"><strong data-i18n="admin.users.studentID">รหัสนักศึกษา:</strong> <span id="delete-user-student-id"></span></p>
+              <p class="mb-1"><strong data-i18n="admin.users.fullName">ชื่อ-นามสกุล:</strong> <span id="delete-user-name"></span></p>
+              <p class="mb-0"><strong data-i18n="admin.users.email">อีเมล:</strong> <span id="delete-user-email"></span></p>
+            </div>
+          </div>
+          <div class="mt-3">
+            <label for="confirm-delete-input" class="form-label" data-i18n="admin.userDetail.typeConfirm">พิมพ์ "DELETE" เพื่อยืนยัน:</label>
+            <input type="text" class="form-control" id="confirm-delete-input" placeholder="DELETE">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="admin.userDetail.cancel">ยกเลิก</button>
+          <button type="button" class="btn btn-danger" id="confirm-delete-btn" disabled data-i18n="admin.userDetail.confirmDeleteBtn">ลบผู้ใช้</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal รีเซ็ตรหัสผ่าน -->
+  <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title" id="resetPasswordModalLabel" data-i18n="admin.userDetail.resetPassword">รีเซ็ตรหัสผ่าน</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p data-i18n="admin.userDetail.resetPasswordMessage">คุณต้องการรีเซ็ตรหัสผ่านของผู้ใช้นี้หรือไม่?</p>
+          <div class="alert alert-info">
+            <p class="mb-0" data-i18n="admin.userDetail.newPasswordInfo">รหัสผ่านใหม่จะถูกตั้งเป็น: <code>123456</code></p>
+          </div>
+          <p class="text-muted small" data-i18n="admin.userDetail.resetPasswordNote">ผู้ใช้ควรเปลี่ยนรหัสผ่านใหม่หลังจากเข้าสู่ระบบ</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="admin.userDetail.cancel">ยกเลิก</button>
+          <button type="button" class="btn btn-info" id="confirm-reset-password-btn" data-i18n="admin.userDetail.confirmReset">ยืนยันการรีเซ็ต</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer mt-5 py-3 bg-light">
+    <div class="container text-center">
+      <span class="text-muted" data-i18n="footer.copyright">
+        © 2025 ระบบขอเอกสารออนไลน์สำหรับนักศึกษามหาวิทยาลัยนอร์ทกรุงเทพ
+      </span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../js/language.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/admin-common.js"></script>
+  <script src="../js/user-detail.js"></script>
+</body>
+</html>
