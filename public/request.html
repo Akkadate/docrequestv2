@@ -15,8 +15,8 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/responsive.css">
   
-  <!-- เพิ่ม QR Code library จาก CDN ที่เสถียร -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+  <!-- ใช้ QR Code API แทน library -->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script> -->
   
   <!-- เพิ่ม CSS สำหรับปรับความกว้างตาราง -->
   <style>
@@ -549,14 +549,8 @@
       return crc.toString(16).toUpperCase().padStart(4, '0');
     }
 
-    // ฟังก์ชันอัปเดต QR Code
+    // ฟังก์ชันอัปเดต QR Code โดยใช้ QR Server API
     function updateQRCode() {
-      // ตรวจสอบว่า QRCode library โหลดเสร็จแล้วหรือไม่
-      if (typeof QRCode === 'undefined') {
-        console.log('QRCode library not available in updateQRCode');
-        return;
-      }
-      
       const canvas = document.getElementById('qr-canvas');
       const placeholder = document.getElementById('qr-placeholder');
       const amountDisplay = document.getElementById('qr-amount-display');
@@ -600,22 +594,10 @@
           const qrData = generateThaiQRPayment(billingId, ref1, ref2, totalPrice);
           console.log('QR Data generated:', qrData.substring(0, 50) + '...');
           
-          // แสดง QR Code
-          QRCode.toCanvas(canvas, qrData, {
-            width: 200,
-            margin: 2,
-            color: {
-              dark: '#000000',
-              light: '#FFFFFF'
-            }
-          }, function (error) {
-            if (error) {
-              console.error('QR Code generation error:', error);
-              placeholder.style.display = 'block';
-              canvas.style.display = 'none';
-              amountDisplay.style.display = 'none';
-            } else {
-              console.log('QR Code generated successfully');
+          // ใช้ QR Server API แทน library
+          generateQRCodeImage(qrData, canvas, function(success) {
+            if (success) {
+              console.log('QR Code generated successfully via API');
               placeholder.style.display = 'none';
               canvas.style.display = 'block';
               amountDisplay.style.display = 'block';
@@ -626,8 +608,14 @@
               } else {
                 amountSpan.textContent = totalPrice.toFixed(2) + ' บาท';
               }
+            } else {
+              console.error('Failed to generate QR Code via API');
+              placeholder.style.display = 'block';
+              canvas.style.display = 'none';
+              amountDisplay.style.display = 'none';
             }
           });
+          
         } catch (error) {
           console.error('Error creating QR Code:', error);
           placeholder.style.display = 'block';
@@ -640,6 +628,43 @@
         placeholder.style.display = 'block';
         canvas.style.display = 'none';
         amountDisplay.style.display = 'none';
+      }
+    }
+
+    // ฟังก์ชันสร้าง QR Code ด้วย API
+    function generateQRCodeImage(data, canvas, callback) {
+      try {
+        // ใช้ QR Server API (ฟรี)
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data)}`;
+        
+        // สร้าง image element
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        img.onload = function() {
+          try {
+            // วาด image ลงใน canvas
+            const ctx = canvas.getContext('2d');
+            canvas.width = 200;
+            canvas.height = 200;
+            ctx.drawImage(img, 0, 0, 200, 200);
+            callback(true);
+          } catch (error) {
+            console.error('Error drawing QR Code to canvas:', error);
+            callback(false);
+          }
+        };
+        
+        img.onerror = function() {
+          console.error('Error loading QR Code image');
+          callback(false);
+        };
+        
+        img.src = qrApiUrl;
+        
+      } catch (error) {
+        console.error('Error in generateQRCodeImage:', error);
+        callback(false);
       }
     }
 
@@ -671,56 +696,27 @@
   <script>
     // เพิ่ม event listeners เมื่อ DOM โหลดเสร็จ
     document.addEventListener('DOMContentLoaded', function() {
-      let qrCodeCheckCount = 0;
-      const maxRetries = 20; // จำกัดการลองใหม่
+      // ไม่ต้องรอ QRCode library แล้ว เพราะใช้ API
+      console.log('Initializing QR Code events...');
       
-      // รอให้ QRCode library โหลดเสร็จก่อน
-      function waitForQRCode() {
-        qrCodeCheckCount++;
-        
-        if (typeof QRCode !== 'undefined') {
-          console.log('QRCode library loaded successfully');
-          initializeQRCodeEvents();
-        } else if (qrCodeCheckCount < maxRetries) {
-          console.log(`Waiting for QRCode library... (${qrCodeCheckCount}/${maxRetries})`);
-          setTimeout(waitForQRCode, 200);
-        } else {
-          console.error('Failed to load QRCode library after', maxRetries, 'attempts');
-          // แสดงข้อความแจ้งเตือนผู้ใช้
-          const qrPlaceholder = document.getElementById('qr-placeholder');
-          if (qrPlaceholder) {
-            qrPlaceholder.innerHTML = `
-              <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
-              <p class="mt-2 text-warning">ไม่สามารถโหลด QR Code ได้</p>
-              <small class="text-muted">กรุณาใช้การโอนเงินผ่านบัญชีธนาคารแทน</small>
-            `;
-          }
-        }
-      }
-      
-      function initializeQRCodeEvents() {
-        // ฟังการเปลี่ยนแปลงวิธีการรับเอกสาร
-        const deliveryMethods = document.querySelectorAll('input[name="delivery_method"]');
-        deliveryMethods.forEach(method => {
-          method.addEventListener('change', function() {
-            setTimeout(updateQRCode, 100);
-          });
+      // ฟังการเปลี่ยนแปลงวิธีการรับเอกสาร
+      const deliveryMethods = document.querySelectorAll('input[name="delivery_method"]');
+      deliveryMethods.forEach(method => {
+        method.addEventListener('change', function() {
+          setTimeout(updateQRCode, 100);
         });
-        
-        // ฟังการเปลี่ยนแปลงบริการเร่งด่วน
-        const urgentCheckbox = document.getElementById('urgent');
-        if (urgentCheckbox) {
-          urgentCheckbox.addEventListener('change', function() {
-            setTimeout(updateQRCode, 100);
-          });
-        }
-        
-        // อัปเดต QR Code ครั้งแรก
-        setTimeout(updateQRCode, 300);
+      });
+      
+      // ฟังการเปลี่ยนแปลงบริการเร่งด่วน
+      const urgentCheckbox = document.getElementById('urgent');
+      if (urgentCheckbox) {
+        urgentCheckbox.addEventListener('change', function() {
+          setTimeout(updateQRCode, 100);
+        });
       }
       
-      // เริ่มต้นการรอ QRCode library
-      setTimeout(waitForQRCode, 100);
+      // อัปเดต QR Code ครั้งแรก
+      setTimeout(updateQRCode, 300);
     });
   </script>
 </body>
