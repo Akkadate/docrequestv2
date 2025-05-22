@@ -474,29 +474,28 @@
 
     // ฟังก์ชันสร้าง Cross Bank Bill Payment QR Code
     function generateCrossBankBillPayment(billingId, ref1, ref2, amount) {
-      // รูปแบบ Cross Bank Bill Payment: |BillingId + Ref1 + Ref2 + Amount
+      // รูปแบบ Cross Bank Bill Payment ด้วย %0D เป็นตัวแยก
+      // |BillingId%0DRef1%0DRef2%0DAmount
       
-      // ปรับ Billing ID (เอา | ออกเพราะจะใส่ทีหลัง)
-      const cleanBillingId = billingId.replace('|', '');
+      // เก็บ Billing ID ตามที่ระบุ (มี | ข้างหน้า)
+      const fullBillingId = billingId;
       
-      // ปรับ Ref1 ให้เป็น 8 หลัก (เพิ่ม 0 ข้างหน้าถ้าสั้นกว่า 8 หลัก)
-      const paddedRef1 = ref1.padStart(8, '0');
+      // Ref1 และ Ref2 ใช้ตามที่ได้รับมา (ไม่ต้อง padding)
+      const studentId = ref1;
+      const reference2 = ref2;
       
-      // ปรับ Ref2 ให้เป็น 3 หลัก
-      const paddedRef2 = ref2.padStart(3, '0');
-      
-      // แปลงจำนวนเงินเป็นสตางค์ (คูณ 100) และเป็น string 5 หลัก
+      // แปลงจำนวนเงินเป็นสตางค์ (คูณ 100)
       const amountInSatang = Math.round(amount * 100);
-      const paddedAmount = amountInSatang.toString().padStart(5, '0');
       
-      // รวมข้อมูลตามรูปแบบ Cross Bank
-      const qrData = `|${cleanBillingId}${paddedRef1}${paddedRef2}${paddedAmount}`;
+      // สร้าง QR Data ตามรูปแบบ AppSheet
+      // "|099400000518106"&"%0D"&[studentId]&"%0D"&[ref2]&"%0D"&[Price]
+      const qrData = `${fullBillingId}%0D${studentId}%0D${reference2}%0D${amountInSatang}`;
       
       console.log('Cross Bank Bill Payment QR Data:', {
-        billingId: cleanBillingId,
-        ref1: paddedRef1,
-        ref2: paddedRef2,
-        amount: paddedAmount,
+        billingId: fullBillingId,
+        ref1: studentId,
+        ref2: reference2,
+        amountInSatang: amountInSatang,
         fullData: qrData
       });
       
@@ -516,7 +515,7 @@
       }
       
       // ดึงข้อมูล student ID จาก localStorage (key: userId) หรือใช้ค่าเริ่มต้น
-      const studentId = localStorage.getItem('studentId') || '999999999';
+      const studentId = localStorage.getItem('userId') || '6401234567';
       
       // คำนวณราคารวม
       let totalPrice = 0;
