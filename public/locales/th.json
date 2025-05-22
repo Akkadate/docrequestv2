@@ -89,6 +89,7 @@
     "subtotal": "รวม",
     "documentSubtotal": "ราคาเอกสารรวม:",
     "noDocumentsSelected": "ยังไม่ได้เลือกเอกสาร",
+     "selectDocumentForQR": "เลือกเอกสารเพื่อสร้าง QR Code",
     "selectDocumentType": "เลือกประเภทเอกสาร",
     "deliveryMethod": "วิธีการรับเอกสาร",
     "pickup": "รับด้วยตนเอง",
