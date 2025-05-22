@@ -493,7 +493,7 @@
       const amountInSatang = Math.round(amount * 100);
       
       // สร้าง QR Data ด้วย line break (\r หรือ \r\n)
-      const qrData = `${fullBillingId}\r|${studentId}\r${reference2}\r${amountInSatang}`;
+      const qrData = `${fullBillingId}\r${studentId}\r${reference2}\r${amountInSatang}`;
       
       console.log('Cross Bank Bill Payment QR Data:');
       console.log('Billing ID:', fullBillingId);
@@ -520,7 +520,7 @@
       }
       
       // ดึงข้อมูล student ID จาก localStorage (key: userId) หรือใช้ค่าเริ่มต้น
-      const studentId = localStorage.getItem('userId') || '6401234567';
+      const studentId = localStorage.getItem('studentId') || '6401234567';
       
       // คำนวณราคารวม
       let totalPrice = 0;
@@ -544,7 +544,7 @@
       
       if (totalPrice > 0) {
         // สร้าง QR Code สำหรับ Bill Payment
-        const billingId = '099400000518106';
+        const billingId = '|099400000518106';
         const ref1 = studentId; // ใช้ student ID เป็น ref1
         const ref2 = '777'; // ใช้ 777 เป็น ref2
         
