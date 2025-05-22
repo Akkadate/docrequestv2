@@ -230,6 +230,8 @@ function addDocumentToSelection() {
   calculatePrice();
 }
 
+// แก้ไขส่วนนี้ในไฟล์ request.js
+
 // อัปเดตตารางเอกสารที่เลือก - แก้ไขใหม่เพื่อรองรับมือถือ
 function updateDocumentTable() {
   const tableBody = document.getElementById('selected-documents');
@@ -243,10 +245,21 @@ function updateDocumentTable() {
   tableBody.innerHTML = '';
   
   if (selectedDocuments.length === 0) {
-    // ถ้าไม่มีเอกสารที่เลือก
+    // ถ้าไม่มีเอกสารที่เลือก - ใช้วิธีเข้าถึง i18n ที่ถูกต้อง
     const emptyRow = document.createElement('tr');
+    
+    // ดึงภาษาปัจจุبันจาก localStorage
+    const currentLanguage = localStorage.getItem('language') || 'th';
+    
+    // ตรวจสอบว่ามี window.i18n หรือไม่
+    let noDocumentsText = 'ยังไม่ได้เลือกเอกสาร'; // ค่าเริ่มต้น
+    
+    if (window.i18n && window.i18n[currentLanguage] && window.i18n[currentLanguage].request) {
+      noDocumentsText = window.i18n[currentLanguage].request.noDocumentsSelected || noDocumentsText;
+    }
+    
     emptyRow.innerHTML = `
-      <td colspan="5" class="text-center">${i18n[currentLang]?.request?.noDocumentsSelected || 'ยังไม่ได้เลือกเอกสาร'}</td>
+      <td colspan="5" class="text-center">${noDocumentsText}</td>
     `;
     tableBody.appendChild(emptyRow);
     return;
@@ -258,11 +271,11 @@ function updateDocumentTable() {
     
     row.innerHTML = `
       <td>${doc.name}</td>
-      <td>${formatCurrency(doc.price, currentLang)}</td>
+      <td>${formatCurrency(doc.price, localStorage.getItem('language') || 'th')}</td>
       <td>
         ${createQuantityControl(doc, index)}
       </td>
-      <td>${formatCurrency(doc.subtotal, currentLang)}</td>
+      <td>${formatCurrency(doc.subtotal, localStorage.getItem('language') || 'th')}</td>
       <td>
         <button type="button" class="btn btn-outline-danger btn-sm remove-document" data-index="${index}">
           <i class="bi bi-trash"></i>
