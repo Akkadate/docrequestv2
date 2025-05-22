@@ -109,7 +109,11 @@
     "accountNumber": "เลขที่บัญชี:",
     "accountName": "ชื่อบัญชี:",
     "shippingFee": "ค่าจัดส่ง",
-    "urgentService": "บริการเร่งด่วน"
+    "urgentService": "บริการเร่งด่วน",
+    "qrAmount": "จำนวนเงิน",
+    "selectFile": "เลือกไฟล์",
+    "bankNameValue": "ธนาคารกรุงเทพ",
+    "accountNameValue": "มหาวิทยาลัยนอร์ทกรุงเทพ"
   },
   "dashboard": {
     "title": "แดชบอร์ด - ระบบขอเอกสารออนไลน์",
