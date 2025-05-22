@@ -2,6 +2,107 @@
 let selectedDocuments = [];
 let documentTypes = [];
 
+// ฟังก์ชันตรวจสอบว่าเป็นอุปกรณ์มือถือหรือไม่
+function isMobileDevice() {
+  return window.innerWidth <= 576;
+}
+
+// ฟังก์ชันสร้าง quantity control ที่เหมาะสมกับอุปกรณ์
+function createQuantityControl(doc, index) {
+  if (isMobileDevice()) {
+    // สำหรับมือถือ: แสดงตัวเลขและปุ่มแก้ไข
+    return `
+      <div class="quantity-display">
+        <span class="quantity-number" id="qty-${index}">${doc.quantity}</span>
+        <button type="button" class="btn btn-outline-primary btn-sm edit-quantity-btn" 
+                data-index="${index}" data-bs-toggle="modal" data-bs-target="#editQuantityModal">
+          <i class="bi bi-pencil"></i>
+        </button>
+      </div>
+    `;
+  } else {
+    // สำหรับ PC: แสดง input group ปกติ
+    return `
+      <div class="input-group input-group-sm">
+        <button type="button" class="btn btn-outline-secondary decrease-quantity" data-index="${index}">-</button>
+        <input type="number" class="form-control quantity-input text-center" value="${doc.quantity}" min="1" data-index="${index}">
+        <button type="button" class="btn btn-outline-secondary increase-quantity" data-index="${index}">+</button>
+      </div>
+    `;
+  }
+}
+
+// ฟังก์ชันสำหรับตั้งค่า quantity controls บน PC
+function setupDesktopQuantityControls(row, doc, index) {
+  const decreaseBtn = row.querySelector('.decrease-quantity');
+  const increaseBtn = row.querySelector('.increase-quantity');
+  const quantityInput = row.querySelector('.quantity-input');
+  
+  if (decreaseBtn) {
+    decreaseBtn.addEventListener('click', () => {
+      if (doc.quantity > 1) {
+        doc.quantity--;
+        doc.subtotal = doc.quantity * doc.price;
+        updateDocumentTable();
+        calculatePrice();
+      }
+    });
+  }
+  
+  if (increaseBtn) {
+    increaseBtn.addEventListener('click', () => {
+      doc.quantity++;
+      doc.subtotal = doc.quantity * doc.price;
+      updateDocumentTable();
+      calculatePrice();
+    });
+  }
+  
+  if (quantityInput) {
+    quantityInput.addEventListener('change', () => {
+      const newQuantity = parseInt(quantityInput.value);
+      if (!isNaN(newQuantity) && newQuantity > 0) {
+        doc.quantity = newQuantity;
+        doc.subtotal = doc.quantity * doc.price;
+        updateDocumentTable();
+        calculatePrice();
+      } else {
+        quantityInput.value = doc.quantity;
+      }
+    });
+  }
+}
+
+// ฟังก์ชันสำหรับตั้งค่า Modal แก้ไขจำนวนบนมือถือ
+function setupEditQuantityModal(index, doc) {
+  // ตั้งค่าข้อมูลใน Modal
+  document.getElementById('edit-quantity-input').value = doc.quantity;
+  document.getElementById('edit-quantity-document-name').textContent = doc.name;
+  
+  // เก็บ index ไว้ใน Modal
+  document.getElementById('editQuantityModal').setAttribute('data-index', index);
+}
+
+// ฟังก์ชันสำหรับบันทึกจำนวนใหม่จาก Modal
+function saveQuantityFromModal() {
+  const modal = document.getElementById('editQuantityModal');
+  const index = parseInt(modal.getAttribute('data-index'));
+  const newQuantity = parseInt(document.getElementById('edit-quantity-input').value);
+  
+  if (!isNaN(newQuantity) && newQuantity > 0 && selectedDocuments[index]) {
+    selectedDocuments[index].quantity = newQuantity;
+    selectedDocuments[index].subtotal = selectedDocuments[index].quantity * selectedDocuments[index].price;
+    updateDocumentTable();
+    calculatePrice();
+    
+    // ปิด Modal
+    const modalInstance = bootstrap.Modal.getInstance(modal);
+    if (modalInstance) {
+      modalInstance.hide();
+    }
+  }
+}
+
 // ปรับปรุงฟังก์ชัน loadDocumentTypes เพื่อเพิ่ม debug logs
 async function loadDocumentTypes() {
   try {
@@ -129,7 +230,7 @@ function addDocumentToSelection() {
   calculatePrice();
 }
 
-// อัปเดตตารางเอกสารที่เลือก
+// อัปเดตตารางเอกสารที่เลือก - แก้ไขใหม่เพื่อรองรับมือถือ
 function updateDocumentTable() {
   const tableBody = document.getElementById('selected-documents');
   
@@ -159,11 +260,7 @@ function updateDocumentTable() {
       <td>${doc.name}</td>
       <td>${formatCurrency(doc.price, currentLang)}</td>
       <td>
-        <div class="input-group input-group-sm">
-          <button type="button" class="btn btn-outline-secondary decrease-quantity" data-index="${index}">-</button>
-          <input type="number" class="form-control quantity-input text-center" value="${doc.quantity}" min="1" data-index="${index}">
-          <button type="button" class="btn btn-outline-secondary increase-quantity" data-index="${index}">+</button>
-        </div>
+        ${createQuantityControl(doc, index)}
       </td>
       <td>${formatCurrency(doc.subtotal, currentLang)}</td>
       <td>
@@ -175,51 +272,22 @@ function updateDocumentTable() {
     
     tableBody.appendChild(row);
     
-    // เพิ่มการฟังเหตุการณ์สำหรับปุ่มและช่อง input
-    const decreaseBtn = row.querySelector('.decrease-quantity');
-    const increaseBtn = row.querySelector('.increase-quantity');
-    const quantityInput = row.querySelector('.quantity-input');
+    // เพิ่ม event listeners ตามประเภทของ control
+    if (isMobileDevice()) {
+      // สำหรับมือถือ: เพิ่ม listener สำหรับปุ่มแก้ไข
+      const editBtn = row.querySelector('.edit-quantity-btn');
+      if (editBtn) {
+        editBtn.addEventListener('click', () => {
+          setupEditQuantityModal(index, doc);
+        });
+      }
+    } else {
+      // สำหรับ PC: เพิ่ม listeners ปกติ
+      setupDesktopQuantityControls(row, doc, index);
+    }
+    
+    // ปุ่มลบ (ใช้ได้ทั้ง PC และมือถือ)
     const removeBtn = row.querySelector('.remove-document');
-    
-    // ลดจำนวน
-    if (decreaseBtn) {
-      decreaseBtn.addEventListener('click', () => {
-        if (doc.quantity > 1) {
-          doc.quantity--;
-          doc.subtotal = doc.quantity * doc.price;
-          updateDocumentTable();
-          calculatePrice();
-        }
-      });
-    }
-    
-    // เพิ่มจำนวน
-    if (increaseBtn) {
-      increaseBtn.addEventListener('click', () => {
-        doc.quantity++;
-        doc.subtotal = doc.quantity * doc.price;
-        updateDocumentTable();
-        calculatePrice();
-      });
-    }
-    
-    // เปลี่ยนจำนวนโดยตรง
-    if (quantityInput) {
-      quantityInput.addEventListener('change', () => {
-        const newQuantity = parseInt(quantityInput.value);
-        if (!isNaN(newQuantity) && newQuantity > 0) {
-          doc.quantity = newQuantity;
-          doc.subtotal = doc.quantity * doc.price;
-          updateDocumentTable();
-          calculatePrice();
-        } else {
-          // ถ้าค่าไม่ถูกต้อง ให้กลับไปใช้ค่าเดิม
-          quantityInput.value = doc.quantity;
-        }
-      });
-    }
-    
-    // ลบเอกสาร
     if (removeBtn) {
       removeBtn.addEventListener('click', () => {
         selectedDocuments.splice(index, 1);
@@ -598,6 +666,14 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('Element with id "document-request-form" not found');
   }
   
+  // เพิ่ม event listener สำหรับการเปลี่ยนขนาดหน้าจอ
+  window.addEventListener('resize', () => {
+    updateDocumentTable(); // อัปเดตตารางเมื่อขนาดหน้าจอเปลี่ยน
+  });
+  
+  // ตั้งค่า Modal controls สำหรับมือถือ
+  setupMobileModalControls();
+  
   // โหลดข้อมูลบัญชีธนาคาร
   const bankNameElement = document.getElementById('bank-name');
   const accountNumberElement = document.getElementById('account-number');
@@ -619,4 +695,122 @@ document.addEventListener('DOMContentLoaded', () => {
   window.updateSummary = updateSummary;
   window.formatCurrency = formatCurrency;
   window.currentLang = currentLang;
+  window.saveQuantityFromModal = saveQuantityFromModal;
 });
+
+// ฟังก์ชันตั้งค่า Modal controls สำหรับมือถือ
+function setupMobileModalControls() {
+  // เพิ่ม Modal สำหรับแก้ไขจำนวนบนมือถือ (ถ้ายังไม่มี)
+  if (!document.getElementById('editQuantityModal')) {
+    const modalHTML = `
+      <!-- Modal แก้ไขจำนวนเอกสาร (สำหรับมือถือ) -->
+      <div class="modal fade" id="editQuantityModal" tabindex="-1" aria-labelledby="editQuantityModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+              <h5 class="modal-title" id="editQuantityModalLabel" data-i18n="request.editQuantity">แก้ไขจำนวนเอกสาร</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label"><strong data-i18n="request.documentName">ชื่อเอกสาร:</strong></label>
+                <p id="edit-quantity-document-name" class="text-muted"></p>
+              </div>
+              <div class="mb-3">
+                <label for="edit-quantity-input" class="form-label" data-i18n="request.quantity">จำนวน:</label>
+                <div class="row align-items-center">
+                  <div class="col-4">
+                    <button type="button" class="btn btn-outline-secondary w-100" id="modal-decrease-btn">
+                      <i class="bi bi-dash-lg"></i>
+                    </button>
+                  </div>
+                  <div class="col-4">
+                    <input type="number" class="form-control text-center" id="edit-quantity-input" min="1" value="1" style="font-size: 18px; font-weight: bold;">
+                  </div>
+                  <div class="col-4">
+                    <button type="button" class="btn btn-outline-secondary w-100" id="modal-increase-btn">
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="request.cancel">ยกเลิก</button>
+              <button type="button" class="btn btn-primary" onclick="saveQuantityFromModal()" data-i18n="request.save">บันทึก</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // เพิ่ม Modal ลงใน DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+  }
+  
+  // ตั้งค่า event listeners สำหรับปุ่ม +/- ใน Modal
+  const modalDecreaseBtn = document.getElementById('modal-decrease-btn');
+  const modalIncreaseBtn = document.getElementById('modal-increase-btn');
+  const editQuantityInput = document.getElementById('edit-quantity-input');
+  
+  if (modalDecreaseBtn) {
+    modalDecreaseBtn.addEventListener('click', function() {
+      const currentValue = parseInt(editQuantityInput.value) || 1;
+      if (currentValue > 1) {
+        editQuantityInput.value = currentValue - 1;
+      }
+    });
+  }
+  
+  if (modalIncreaseBtn) {
+    modalIncreaseBtn.addEventListener('click', function() {
+      const currentValue = parseInt(editQuantityInput.value) || 1;
+      editQuantityInput.value = currentValue + 1;
+    });
+  }
+}
+
+// เพิ่ม CSS สำหรับมือถือ
+const mobileCSSStyle = document.createElement('style');
+mobileCSSStyle.textContent = `
+  /* CSS สำหรับ quantity display บนมือถือ */
+  @media (max-width: 576px) {
+    .quantity-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .quantity-number {
+      font-size: 18px;
+      font-weight: bold;
+      color: #0d6efd;
+      min-width: 30px;
+      text-align: center;
+      background-color: #f8f9fa;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #dee2e6;
+    }
+    
+    .edit-quantity-btn {
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+    
+    /* ปรับคอลัมน์จำนวนให้กว้างขึ้นบนมือถือ */
+    #document-selection-table th:nth-child(3),
+    #document-selection-table td:nth-child(3) {
+      width: 30%;
+    }
+    
+    #document-selection-table th:nth-child(1),
+    #document-selection-table td:nth-child(1) {
+      width: 25%;
+    }
+  }
+`;
+
+document.head.appendChild(mobileCSSStyle);
