@@ -101,6 +101,16 @@ function updatePageLanguage() {
       element.title = translation;
     }
   });
+  
+  // *** เพิ่มส่วนนี้เพื่อทำให้ตัวแปรเป็น global ***
+  // ทำให้ไฟล์อื่นเข้าถึง i18n และ currentLang ได้
+  window.i18n = i18n;
+  window.currentLang = currentLang;
+  
+  // อัปเดตตารางเอกสารถ้ามีฟังก์ชัน updateDocumentTable
+  if (typeof window.updateDocumentTable === 'function') {
+    window.updateDocumentTable();
+  }
 }
 
 // เปลี่ยนภาษา
