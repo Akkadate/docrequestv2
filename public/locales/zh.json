@@ -88,6 +88,7 @@
     "quantity": "数量",
     "subtotal": "小计",
     "noDocumentsSelected": "尚未选择任何文档",
+     "selectDocumentForQR": "选择文档以生成二维码",
     "documentSubtotal": "文件小计:",
     "selectDocumentType": "选择文件类型",
     "deliveryMethod": "接收方式",
