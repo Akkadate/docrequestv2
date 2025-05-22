@@ -97,6 +97,8 @@
       border: 3px solid #ffffff;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: block;
+      margin: 0 auto;
     }
     
     .qr-amount-display {
@@ -491,7 +493,7 @@
       const amountInSatang = Math.round(amount * 100);
       
       // สร้าง QR Data ด้วย line break (\r หรือ \r\n)
-      const qrData = `${fullBillingId}\r${studentId}\r${reference2}\r${amountInSatang}`;
+      const qrData = `${fullBillingId}\r|${studentId}\r${reference2}\r${amountInSatang}`;
       
       console.log('Cross Bank Bill Payment QR Data:');
       console.log('Billing ID:', fullBillingId);
@@ -518,7 +520,7 @@
       }
       
       // ดึงข้อมูล student ID จาก localStorage (key: userId) หรือใช้ค่าเริ่มต้น
-      const studentId = localStorage.getItem('studentId') || '6401234567';
+      const studentId = localStorage.getItem('userId') || '6401234567';
       
       // คำนวณราคารวม
       let totalPrice = 0;
@@ -542,7 +544,7 @@
       
       if (totalPrice > 0) {
         // สร้าง QR Code สำหรับ Bill Payment
-        const billingId = '|099400000518106';
+        const billingId = '099400000518106';
         const ref1 = studentId; // ใช้ student ID เป็น ref1
         const ref2 = '777'; // ใช้ 777 เป็น ref2
         
@@ -634,6 +636,78 @@
       // อัปเดต QR Code หลังจากคำนวณราคา
       setTimeout(updateQRCode, 100);
     };
+
+    // ฟังก์ชันเพิ่มเติมสำหรับ quantity changes ในตาราง
+    function attachQuantityChangeListeners() {
+      // ฟังการเปลี่ยนแปลงของ quantity input ในตาราง
+      const quantityInputs = document.querySelectorAll('#selected-documents .quantity-input');
+      quantityInputs.forEach(input => {
+        // ลบ event listeners เดิมก่อน (ถ้ามี)
+        input.removeEventListener('input', updateQROnQuantityChange);
+        input.removeEventListener('change', updateQROnQuantityChange);
+        
+        // เพิ่ม event listeners ใหม่
+        input.addEventListener('input', updateQROnQuantityChange);
+        input.addEventListener('change', updateQROnQuantityChange);
+      });
+      
+      // ฟังการคลิกปุ่ม + และ - ในตาราง
+      const quantityButtons = document.querySelectorAll('#selected-documents .btn-outline-secondary');
+      quantityButtons.forEach(button => {
+        button.removeEventListener('click', updateQROnQuantityChange);
+        button.addEventListener('click', updateQROnQuantityChange);
+      });
+    }
+
+    // ฟังก์ชันอัปเดต QR Code เมื่อ quantity เปลี่ยน
+    function updateQROnQuantityChange() {
+      setTimeout(() => {
+        console.log('Quantity changed, updating QR Code...');
+        updateQRCode();
+      }, 200);
+    }
+
+    // ต้อง override การเพิ่มเอกสารเพื่อให้ attach listeners
+    const originalAddDocument = window.addDocument || function() {};
+
+    window.addDocument = function() {
+      const result = originalAddDocument.apply(this, arguments);
+      
+      // Attach listeners หลังจากเพิ่มเอกสาร
+      setTimeout(() => {
+        attachQuantityChangeListeners();
+        updateQRCode();
+      }, 100);
+      
+      return result;
+    };
+
+    // MutationObserver เพื่อติดตามการเปลี่ยนแปลงในตาราง
+    const tableObserver = new MutationObserver(function(mutations) {
+      let shouldUpdate = false;
+      
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'childList' && mutation.target.id === 'selected-documents') {
+          shouldUpdate = true;
+        }
+      });
+      
+      if (shouldUpdate) {
+        setTimeout(() => {
+          attachQuantityChangeListeners();
+          updateQRCode();
+        }, 100);
+      }
+    });
+
+    // เริ่มต้น observer
+    const selectedDocumentsTable = document.getElementById('selected-documents');
+    if (selectedDocumentsTable) {
+      tableObserver.observe(selectedDocumentsTable, {
+        childList: true,
+        subtree: true
+      });
+    }
   </script>
 
   <footer class="footer mt-5 py-3 bg-light">
@@ -672,7 +746,10 @@
       }
       
       // อัปเดต QR Code ครั้งแรก
-      setTimeout(updateQRCode, 300);
+      setTimeout(() => {
+        attachQuantityChangeListeners();
+        updateQRCode();
+      }, 300);
     });
   </script>
 </body>
