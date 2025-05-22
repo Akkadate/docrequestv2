@@ -89,6 +89,7 @@
     "subtotal": "Subtotal",
     "documentSubtotal": "Document Subtotal:",
     "noDocumentsSelected": "No documents selected yet",
+    "selectDocumentForQR": "Select documents to generate QR Code",
     "selectDocumentType": "Select document type",
     "deliveryMethod": "Delivery Method",
     "pickup": "Pickup",
