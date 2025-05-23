@@ -134,7 +134,7 @@ app.use((error, req, res, next) => {
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-const PORT = process.env.PORT || 3201;
+const PORT = 3201;
 app.listen(PORT, () => {
   console.log('\n🔍 LINE Group ID Finder Started!');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
