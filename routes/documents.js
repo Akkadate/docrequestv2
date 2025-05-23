@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authenticateJWT = require('../middleware/auth');
+const { notifyNewDocumentRequest } = require('../services/lineNotification'); // เพิ่มบรรทัดนี้
 
 module.exports = (pool, upload) => {
   // ดึงรายการประเภทเอกสาร
@@ -79,6 +80,37 @@ module.exports = (pool, upload) => {
         'INSERT INTO document_requests (user_id, document_type_id, delivery_method, address, urgent, total_price, payment_slip_url, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
         [user_id, document_type_id, delivery_method, address, urgent === 'true', total_price, payment_slip_url, 'pending']
       );
+
+      // ดึงข้อมูลเพิ่มเติมสำหรับ LINE notification
+      const userInfo = await pool.query(
+        'SELECT student_id, full_name FROM users WHERE id = $1',
+        [user_id]
+      );
+
+      const docTypeInfo = await pool.query(
+        'SELECT name_th FROM document_types WHERE id = $1',
+        [document_type_id]
+      );
+
+      // ส่ง LINE notification
+      try {
+        const notificationData = {
+          requestId: newRequest.rows[0].id,
+          studentId: userInfo.rows[0].student_id,
+          studentName: userInfo.rows[0].full_name,
+          documentName: docTypeInfo.rows[0].name_th,
+          deliveryMethod: delivery_method,
+          urgent: urgent === 'true',
+          totalPrice: total_price,
+          timestamp: new Date().toISOString()
+        };
+
+        await notifyNewDocumentRequest(notificationData);
+        console.log(`✅ LINE notification sent for request ID: ${newRequest.rows[0].id}`);
+      } catch (lineError) {
+        console.error('❌ LINE notification failed:', lineError);
+        // ไม่ให้ error ของ LINE ส่งผลต่อการสร้างคำขอ
+      }
       
       res.status(201).json({
         message: 'สร้างคำขอเอกสารสำเร็จ',
@@ -90,7 +122,7 @@ module.exports = (pool, upload) => {
     }
   });
   
-  // สร้างคำขอเอกสารหลายรายการ (ใหม่)
+  // สร้างคำขอเอกสารหลายรายการ (ใหม่) - เพิ่ม LINE notification
   router.post('/request-multiple', authenticateJWT, upload.single('payment_slip'), async (req, res) => {
     try {
       const { delivery_method, address, urgent, total_price } = req.body;
@@ -146,6 +178,40 @@ module.exports = (pool, upload) => {
         }
         
         await client.query('COMMIT');
+
+        // ดึงข้อมูลเพิ่มเติมสำหรับ LINE notification
+        const userInfo = await pool.query(
+          'SELECT student_id, full_name FROM users WHERE id = $1',
+          [user_id]
+        );
+
+        // สร้างข้อความรายการเอกสาร
+        let documentNames = '';
+        if (documents.length === 1) {
+          documentNames = documents[0].name;
+        } else {
+          documentNames = `${documents.length} รายการ (${documents.map(doc => `${doc.name} x${doc.quantity}`).join(', ')})`;
+        }
+
+        // ส่ง LINE notification
+        try {
+          const notificationData = {
+            requestId: mainRequestId,
+            studentId: userInfo.rows[0].student_id,
+            studentName: userInfo.rows[0].full_name,
+            documentName: documentNames,
+            deliveryMethod: delivery_method,
+            urgent: urgent === 'true',
+            totalPrice: total_price,
+            timestamp: new Date().toISOString()
+          };
+
+          await notifyNewDocumentRequest(notificationData);
+          console.log(`✅ LINE notification sent for multiple documents request ID: ${mainRequestId}`);
+        } catch (lineError) {
+          console.error('❌ LINE notification failed:', lineError);
+          // ไม่ให้ error ของ LINE ส่งผลต่อการสร้างคำขอ
+        }
         
         res.status(201).json({
           message: 'สร้างคำขอเอกสารสำเร็จ',
