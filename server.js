@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const multer = require('multer');
 const { Pool } = require('pg');
+const { testLineNotification, getLineConfiguration } = require('./services/lineNotification'); // เพิ่มบรรทัดนี้
 
 // สร้าง Express app
 const app = express();
@@ -48,6 +49,52 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
 
+// เพิ่ม endpoint สำหรับทดสอบ LINE notification
+app.get('/api/test-line', async (req, res) => {
+  try {
+    console.log('🧪 Testing LINE notification...');
+    
+    const config = getLineConfiguration();
+    console.log('LINE Configuration:', config);
+    
+    if (!config.configured) {
+      return res.status(400).json({
+        success: false,
+        message: 'LINE notification not properly configured',
+        config: config
+      });
+    }
+    
+    const result = await testLineNotification();
+    
+    res.json({
+      success: result.success,
+      message: result.message,
+      config: config,
+      details: result.details || null
+    });
+  } catch (error) {
+    console.error('Error testing LINE notification:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+// เพิ่ม endpoint สำหรับดูการตั้งค่า LINE
+app.get('/api/line-config', (req, res) => {
+  try {
+    const config = getLineConfiguration();
+    res.json(config);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 // เส้นทางหลัก
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public/index.html'));
@@ -56,4 +103,5 @@ app.get('/', (req, res) => {
 // เริ่มเซิร์ฟเวอร์
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-});
+  console.log(`🔗 Test LINE notification: http://localhost:${PORT}/api/test-line`);
+  console.log(`⚙️  Check LINE config: http://localhost:${PORT}/api/line
