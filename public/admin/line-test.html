@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ทดสอบ LINE Notification - ระบบขอเอกสารออนไลน์</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#">จัดการระบบ</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="dashboard.html">
+          <i class="bi bi-arrow-left"></i> กลับสู่แดชบอร์ด
+        </a>
+        <a class="nav-link" href="#" id="logout">ออกจากระบบ</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    <h2 class="mb-4">🔔 ทดสอบ LINE Notification</h2>
+    
+    <div id="alert-container"></div>
+    
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">การตั้งค่า LINE</h5>
+          </div>
+          <div class="card-body">
+            <div id="config-status">
+              <div class="text-center">
+                <div class="spinner-border" role="status">
+                  <span class="visually-hidden">กำลังโหลด...</span>
+                </div>
+                <p class="mt-2">กำลังตรวจสอบการตั้งค่า...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0">ทดสอบการส่งข้อความ</h5>
+          </div>
+          <div class="card-body">
+            <p>คลิกปุ่มด้านล่างเพื่อส่งข้อความทดสอบไปยัง LINE Official Account</p>
+            <button id="test-btn" class="btn btn-success" disabled>
+              <i class="bi bi-send"></i> ส่งข้อความทดสอบ
+            </button>
+            <div id="test-result" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            <h6 class="mb-0">วิธีการตั้งค่า LINE</h6>
+          </div>
+          <div class="card-body">
+            <ol class="small">
+              <li>สร้าง LINE Official Account</li>
+              <li>สร้าง Channel ใน LINE Developers Console</li>
+              <li>คัดลอก Channel Access Token</li>
+              <li>เพิ่มเป็นเพื่อนใน LINE และคัดลอก User ID</li>
+              <li>เพิ่มค่าต่อไปนี้ในไฟล์ .env:
+                <pre class="mt-2 p-2 bg-light"><code>LINE_CHANNEL_ACCESS_TOKEN=xxx
+LINE_ADMIN_USER_ID=xxx</code></pre>
+              </li>
+              <li>รีสตาร์ทเซิร์ฟเวอร์</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="card mt-3">
+          <div class="card-header bg-warning text-dark">
+            <h6 class="mb-0">📋 การทำงาน</h6>
+          </div>
+          <div class="card-body">
+            <p class="small mb-0">
+              ระบบจะส่งการแจ้งเตือนผ่าน LINE เฉพาะเมื่อ:
+            </p>
+            <ul class="small">
+              <li>มีคำขอเอกสารใหม่เข้ามา</li>
+              <li>ส่งให้ Admin เท่านั้น</li>
+              <li>ไม่ส่งให้นักศึกษา</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // ตรวจสอบการเข้าสู่ระบบ
+    const token = localStorage.getItem('token');
+    const userRole = localStorage.getItem('userRole');
+    
+    if (!token || userRole !== 'admin') {
+      window.location.href = '../login.html';
+    }
+
+    // ฟังก์ชันแสดงข้อความแจ้งเตือน
+    function showAlert(message, type = 'success') {
+      const alertContainer = document.getElementById('alert-container');
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type} alert-dismissible fade show`;
+      alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      alertContainer.innerHTML = '';
+      alertContainer.appendChild(alert);
+    }
+
+    // โหลดสถานะการตั้งค่า
+    async function loadConfig() {
+      try {
+        const response = await fetch('/api/admin/line-config', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const config = await response.json();
+        displayConfig(config);
+      } catch (error) {
+        console.error('Error loading config:', error);
+        document.getElementById('config-status').innerHTML = `
+          <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle"></i>
+            เกิดข้อผิดพลาดในการโหลดการตั้งค่า
+          </div>
+        `;
+      }
+    }
+
+    // แสดงสถานะการตั้งค่า
+    function displayConfig(config) {
+      const statusContainer = document.getElementById('config-status');
+      const testBtn = document.getElementById('test-btn');
+
+      if (config.configured) {
+        let modeText = '';
+        let modeIcon = '';
+        
+        if (config.mode === 'group') {
+          modeText = 'ส่งเข้า LINE Group';
+          modeIcon = '👥';
+        } else if (config.mode === 'multiple') {
+          modeText = `ส่งให้หลายคน (${config.targetCount} คน)`;
+          modeIcon = '👤👤';
+        } else {
+          modeText = 'ส่งให้ Admin คนเดียว';
+          modeIcon = '👤';
+        }
+
+        let targetsList = '';
+        if (config.targets && config.targets.length > 0) {
+          targetsList = config.targets.map(target => 
+            `<li>${target.type === 'group' ? '👥' : '👤'} ${target.name}: ${target.id}</li>`
+          ).join('');
+        }
+
+        statusContainer.innerHTML = `
+          <div class="alert alert-success">
+            <h6><i class="bi bi-check-circle"></i> การตั้งค่า LINE เรียบร้อย</h6>
+            <div class="row">
+              <div class="col-md-6">
+                <ul class="mb-0">
+                  <li>Channel Access Token: ✅ กำหนดแล้ว</li>
+                  <li>โหมดการส่ง: ${modeIcon} ${modeText}</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <strong>เป้าหมายการส่ง:</strong>
+                <ul class="mb-0 small">${targetsList}</ul>
+              </div>
+            </div>
+          </div>
+        `;
+        testBtn.disabled = false;
+      } else {
+        statusContainer.innerHTML = `
+          <div class="alert alert-warning">
+            <h6><i class="bi bi-exclamation-triangle"></i> การตั้งค่า LINE ยังไม่สมบูรณ์</h6>
+            <ul class="mb-0">
+              <li>Channel Access Token: ${config.hasAccessToken ? '✅' : '❌'}</li>
+              <li>Notification Targets: ${config.targetCount > 0 ? '✅' : '❌'} (${config.targetCount} targets)</li>
+            </ul>
+            <p class="mt-2 mb-0">กรุณาตั้งค่าในไฟล์ .env และรีสตาร์ทเซิร์ฟเวอร์</p>
+          </div>
+        `;
+        testBtn.disabled = true;
+      }
+    }
+
+    // ทดสอบการส่งข้อความ
+    async function testNotification() {
+      const testBtn = document.getElementById('test-btn');
+      const testResult = document.getElementById('test-result');
+      
+      testBtn.disabled = true;
+      testBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> กำลังส่ง...';
+      
+      try {
+        const response = await fetch('/api/admin/test-line-notification', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          testResult.innerHTML = `
+            <div class="alert alert-success">
+              <i class="bi bi-check-circle"></i> ${result.message}
+            </div>
+          `;
+          showAlert('ส่งข้อความทดสอบสำเร็จ กรุณาตรวจสอบใน LINE', 'success');
+        } else {
+          testResult.innerHTML = `
+            <div class="alert alert-danger">
+              <i class="bi bi-x-circle"></i> ${result.message}
+            </div>
+          `;
+          showAlert('ส่งข้อความทดสอบไม่สำเร็จ', 'danger');
+        }
+      } catch (error) {
+        console.error('Error testing notification:', error);
+        testResult.innerHTML = `
+          <div class="alert alert-danger">
+            <i class="bi bi-x-circle"></i> เกิดข้อผิดพลาดในการเชื่อมต่อ
+          </div>
+        `;
+        showAlert('เกิดข้อผิดพลาดในการทดสอบ', 'danger');
+      } finally {
+        testBtn.disabled = false;
+        testBtn.innerHTML = '<i class="bi bi-send"></i> ส่งข้อความทดสอบ';
+      }
+    }
+
+    // Event listeners
+    document.getElementById('test-btn').addEventListener('click', testNotification);
+    
+    document.getElementById('logout').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.clear();
+      window.location.href = '../login.html';
+    });
+
+    // โหลดข้อมูลเมื่อหน้าเว็บโหลดเสร็จ
+    document.addEventListener('DOMContentLoaded', loadConfig);
+  </script>
+</body>
+</html>
