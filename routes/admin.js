@@ -112,7 +112,21 @@ router.get('/requests', authenticateJWT, isAdmin, async (req, res) => {
       client.release();
     }
   });
-  
+
+ // แทนที่ endpoint /line-config เดิมด้วยโค้ดนี้
+
+router.get('/line-config', authenticateJWT, isAdmin, async (req, res) => {
+  try {
+    const lineNotification = require('../services/lineNotification');
+    const config = lineNotification.getLineConfiguration();
+    
+    res.status(200).json(config);
+  } catch (error) {
+    console.error('Error checking LINE config:', error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการตรวจสอบการตั้งค่า' });
+  }
+});
+ 
   // เพิ่ม endpoint สำหรับดึงประวัติสถานะ
   router.get('/request/:id/status-history', authenticateJWT, isAdmin, async (req, res) => {
     try {
