@@ -22,14 +22,17 @@
     "fees": "ค่าบริการ"
   },
   "documents": {
-    "transcript": "ใบแสดงผลการศึกษา",
-    "studentCertificate": "หนังสือรับรองการเป็นนักศึกษา",
-    "expectedGraduationCertificate": "หนังสือรับรองคาดว่าสำเร็จการศึกษา",
-    "graduationCertificate": "หนังสือรับรองการสำเร็จการศึกษา",
-    "courseCertificate": "หนังสือรับรองรายวิชา",
-    "degreeCertificate": "สำเนาใบปริญญาบัตร",
-    "conductCertificate": "หนังสือรับรองความประพฤติ",
-    "otherCertificates": "หนังสือรับรองอื่น ๆ"
+    "transcript": "[T01] ใบแสดงผลการศึกษา  ฉบับกำลังศึกษา",
+    "studentCertificate": "[T02] ใบแสดงผลการศึกษา - ฉบับก่อนสภาอนุมัติสำเร็จการศึกษา",
+    "expectedGraduationCertificate": "[T03] ใบแสดงผลการศึกษา ฉบับหลังสภาอนุมัติปริญญา",
+    "graduationCertificate": "[T04] หนังสือรับรองการเป็นนักศึกษา",
+    "courseCertificate": "[T05] หนังสือรับรองคาดว่าจะสำเร็จการศึกษา",
+    "degreeCertificate": "[T06] หนังสือรับรองฉบับรอสภาอนุมัติสำเร็จการศึกษา",
+    "conductCertificate": "[T07] หนังสือรับรองการสำเร็จการศึกษา",
+    "otherCertificates": "[T08] หนังสือรับรองรายวิชา",
+    "Certificates9": "[T09] สำเนาใบปริญญาบัตร",
+    "Certificates10": "[T10] หนังสือรับรองความประพฤติ",
+    "Certificates11": "[T11] หนังสือรับรองอื่น ๆ",
   },
   "howTo": {
     "step1": "ลงทะเบียนหรือเข้าสู่ระบบ",
