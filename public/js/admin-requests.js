@@ -1,3 +1,11 @@
+// ตัวแปรสำหรับ Pagination
+let currentPage = 1;
+let pageSize = 10;
+let totalRecords = 0;
+let totalPages = 0;
+let currentSearchQuery = '';
+let currentStatusFilter = '';
+
 // ตรวจสอบว่าเป็นผู้ดูแลระบบหรือไม่
 document.addEventListener('DOMContentLoaded', () => {
   console.log('Admin requests page loaded');
@@ -5,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAllRequests();
   setupFilters();
   setupStatusUpdateModal();
+  setupPagination();
 });
 
 // ตั้งค่าการกรองและค้นหา
@@ -13,9 +22,12 @@ function setupFilters() {
   const statusFilter = document.getElementById('status-filter');
   if (statusFilter) {
     statusFilter.addEventListener('change', () => {
+      currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
       const searchQuery = document.getElementById('search-input')?.value || '';
       const statusFilter = document.getElementById('status-filter')?.value || '';
-      loadAllRequests(searchQuery, statusFilter);
+      currentSearchQuery = searchQuery;
+      currentStatusFilter = statusFilter;
+      loadAllRequests(searchQuery, statusFilter, currentPage, pageSize);
     });
   }
   
@@ -23,9 +35,12 @@ function setupFilters() {
   const searchButton = document.getElementById('search-button');
   if (searchButton) {
     searchButton.addEventListener('click', () => {
+      currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
       const searchQuery = document.getElementById('search-input')?.value || '';
       const statusFilter = document.getElementById('status-filter')?.value || '';
-      loadAllRequests(searchQuery, statusFilter);
+      currentSearchQuery = searchQuery;
+      currentStatusFilter = statusFilter;
+      loadAllRequests(searchQuery, statusFilter, currentPage, pageSize);
     });
   }
   
@@ -34,10 +49,26 @@ function setupFilters() {
   if (searchInput) {
     searchInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
+        currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
         const searchQuery = document.getElementById('search-input')?.value || '';
         const statusFilter = document.getElementById('status-filter')?.value || '';
-        loadAllRequests(searchQuery, statusFilter);
+        currentSearchQuery = searchQuery;
+        currentStatusFilter = statusFilter;
+        loadAllRequests(searchQuery, statusFilter, currentPage, pageSize);
       }
+    });
+  }
+}
+
+// ตั้งค่า Pagination
+function setupPagination() {
+  // เพิ่มการฟังเหตุการณ์สำหรับการเปลี่ยนจำนวนรายการต่อหน้า
+  const pageSizeSelect = document.getElementById('page-size-select');
+  if (pageSizeSelect) {
+    pageSizeSelect.addEventListener('change', () => {
+      pageSize = parseInt(pageSizeSelect.value);
+      currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
+      loadAllRequests(currentSearchQuery, currentStatusFilter, currentPage, pageSize);
     });
   }
 }
@@ -52,7 +83,7 @@ function setupStatusUpdateModal() {
 }
 
 // โหลดข้อมูลคำขอทั้งหมด
-async function loadAllRequests(searchQuery = '', statusFilter = '') {
+async function loadAllRequests(searchQuery = '', statusFilter = '', page = 1, limit = 10) {
   try {
     const token = localStorage.getItem('token');
     
@@ -64,8 +95,10 @@ async function loadAllRequests(searchQuery = '', statusFilter = '') {
     console.log('Loading all requests...');
     console.log('Search query:', searchQuery);
     console.log('Status filter:', statusFilter);
+    console.log('Page:', page);
+    console.log('Limit:', limit);
     
-    let url = `/api/admin/requests?lang=${currentLang || 'th'}`;
+    let url = `/api/admin/requests?lang=${currentLang || 'th'}&page=${page}&limit=${limit}`;
     
     // ถ้ามีการกรองตามสถานะ
     if (statusFilter) {
@@ -91,10 +124,30 @@ async function loadAllRequests(searchQuery = '', statusFilter = '') {
       throw new Error('Failed to load requests');
     }
     
-    const requests = await response.json();
-    console.log('Requests loaded:', requests.length);
+    const result = await response.json();
+    console.log('API Response:', result);
     
-    displayAllRequests(requests);
+    // อัปเดตตัวแปร pagination
+    totalRecords = result.total || 0;
+    totalPages = result.totalPages || 0;
+    currentPage = result.currentPage || page;
+    
+    console.log('Pagination info:', {
+      totalRecords,
+      totalPages,
+      currentPage,
+      pageSize: limit
+    });
+    
+    // แสดงข้อมูลคำขอ
+    displayAllRequests(result.requests || []);
+    
+    // อัปเดต pagination UI
+    updatePaginationUI();
+    
+    // อัปเดตข้อมูลสถิติ
+    updateResultsInfo();
+    
   } catch (error) {
     console.error('Error loading all requests:', error);
     const alertContainer = document.getElementById('alert-container');
@@ -180,6 +233,116 @@ function displayAllRequests(requests) {
   });
 }
 
+// อัปเดต Pagination UI
+function updatePaginationUI() {
+  const paginationContainer = document.getElementById('pagination-container');
+  
+  if (!paginationContainer) {
+    console.error('Pagination container not found');
+    return;
+  }
+  
+  paginationContainer.innerHTML = '';
+  
+  if (totalPages <= 1) {
+    return; // ไม่แสดง pagination ถ้ามีหน้าเดียว
+  }
+  
+  // ปุ่ม Previous
+  const prevButton = createPaginationButton('‹', currentPage - 1, currentPage === 1);
+  paginationContainer.appendChild(prevButton);
+  
+  // คำนวณหน้าที่จะแสดง
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(totalPages, currentPage + 2);
+  
+  // ปรับให้แสดง 5 หน้าเสมอ (ถ้าเป็นไปได้)
+  if (endPage - startPage < 4) {
+    if (startPage === 1) {
+      endPage = Math.min(totalPages, startPage + 4);
+    } else if (endPage === totalPages) {
+      startPage = Math.max(1, endPage - 4);
+    }
+  }
+  
+  // แสดงหน้าแรก + ... ถ้าจำเป็น
+  if (startPage > 1) {
+    const firstButton = createPaginationButton('1', 1, false);
+    paginationContainer.appendChild(firstButton);
+    
+    if (startPage > 2) {
+      const dotsButton = createPaginationButton('...', null, true);
+      paginationContainer.appendChild(dotsButton);
+    }
+  }
+  
+  // แสดงหน้าตามช่วงที่คำนวณ
+  for (let i = startPage; i <= endPage; i++) {
+    const pageButton = createPaginationButton(i.toString(), i, false, i === currentPage);
+    paginationContainer.appendChild(pageButton);
+  }
+  
+  // แสดงหน้าสุดท้าย + ... ถ้าจำเป็น
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      const dotsButton = createPaginationButton('...', null, true);
+      paginationContainer.appendChild(dotsButton);
+    }
+    
+    const lastButton = createPaginationButton(totalPages.toString(), totalPages, false);
+    paginationContainer.appendChild(lastButton);
+  }
+  
+  // ปุ่ม Next
+  const nextButton = createPaginationButton('›', currentPage + 1, currentPage === totalPages);
+  paginationContainer.appendChild(nextButton);
+}
+
+// สร้างปุ่ม Pagination
+function createPaginationButton(text, page, disabled = false, active = false) {
+  const li = document.createElement('li');
+  li.className = `page-item ${disabled ? 'disabled' : ''} ${active ? 'active' : ''}`;
+  
+  const a = document.createElement('a');
+  a.className = 'page-link';
+  a.href = '#';
+  a.textContent = text;
+  
+  if (!disabled && page !== null) {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (page !== currentPage) {
+        currentPage = page;
+        loadAllRequests(currentSearchQuery, currentStatusFilter, currentPage, pageSize);
+      }
+    });
+  }
+  
+  li.appendChild(a);
+  return li;
+}
+
+// อัปเดตข้อมูลสถิติ
+function updateResultsInfo() {
+  const resultsCount = document.getElementById('results-count');
+  const paginationInfo = document.getElementById('pagination-info');
+  
+  if (resultsCount) {
+    resultsCount.textContent = `พบ ${totalRecords} รายการ`;
+  }
+  
+  if (paginationInfo) {
+    const start = (currentPage - 1) * pageSize + 1;
+    const end = Math.min(currentPage * pageSize, totalRecords);
+    
+    if (totalRecords === 0) {
+      paginationInfo.textContent = 'แสดง 0 ถึง 0 จาก 0 รายการ';
+    } else {
+      paginationInfo.textContent = `แสดง ${start} ถึง ${end} จาก ${totalRecords} รายการ`;
+    }
+  }
+}
+
 // อัปเดตสถานะคำขอเอกสาร
 async function updateRequestStatus() {
   try {
@@ -223,10 +386,8 @@ async function updateRequestStatus() {
         `;
       }
       
-      // โหลดข้อมูลใหม่
-      const searchQuery = document.getElementById('search-input')?.value || '';
-      const statusFilter = document.getElementById('status-filter')?.value || '';
-      loadAllRequests(searchQuery, statusFilter);
+      // โหลดข้อมูลใหม่ (คงหน้าปัจจุบัน)
+      loadAllRequests(currentSearchQuery, currentStatusFilter, currentPage, pageSize);
     } else {
       // แสดงข้อความแจ้งเตือน
       const alertContainer = document.getElementById('alert-container');
