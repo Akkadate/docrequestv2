@@ -22,14 +22,17 @@
     "fees": "Fees"
   },
   "documents": {
-    "transcript": "Transcript",
-    "studentCertificate": "Student Certificate",
-    "expectedGraduationCertificate": "Expected Graduation Certificate",
-    "graduationCertificate": "Graduation Certificate",
-    "courseCertificate": "Course Certificate",
-    "degreeCertificate": "Copy of Degree Certificate",
-    "conductCertificate": "Certificate of Good Conduct",
-    "otherCertificates": "Other Certificates"
+    "transcript": "[E01] Transcript",
+    "studentCertificate": "[E02] Provisional Transcript (Pending University Council Approval)",
+    "expectedGraduationCertificate": "[E03] Official Transcript (Degree Conferred / Approved by University Council) ",
+    "graduationCertificate": "[E04] Student Certificate",
+    "courseCertificate": "[E05] Certificate of Expected Graduation ",
+    "degreeCertificate": "[E06] Certificate of completion awaiting council approval",
+    "conductCertificate": "[E07] Certificate of Graduation ",
+    "otherCertificates": "[E08] Course Certificate",
+    "Certificates9": "[E09] Copy of Degree Certificate ",
+    "Certificates10": "[E10] Certificate of Good Conduct ",
+    "Certificates11": "[E11] Other Certificates"
   },
   "howTo": {
     "step1": "Register or Login",
