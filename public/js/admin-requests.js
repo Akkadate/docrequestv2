@@ -127,20 +127,61 @@ async function loadAllRequests(searchQuery = '', statusFilter = '', page = 1, li
     const result = await response.json();
     console.log('API Response:', result);
     
-    // อัปเดตตัวแปร pagination
-    totalRecords = result.total || 0;
-    totalPages = result.totalPages || 0;
-    currentPage = result.currentPage || page;
+    // **แก้ไข: ตรวจสอบ structure ของ API response**
+    let requests = [];
+    let total = 0;
+    let totalPagesCalculated = 0;
+    let currentPageResult = page;
     
-    console.log('Pagination info:', {
+    if (Array.isArray(result)) {
+      // ถ้า API ส่งกลับมาเป็น Array โดยตรง (แบบเดิม)
+      console.log('API returns array directly');
+      requests = result;
+      total = result.length;
+      
+      // คำนวณ pagination แบบ client-side
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      requests = result.slice(startIndex, endIndex);
+      
+      totalPagesCalculated = Math.ceil(total / limit);
+      currentPageResult = page;
+      
+      console.log('Client-side pagination:', {
+        total: total,
+        startIndex: startIndex,
+        endIndex: endIndex,
+        slicedRequests: requests.length
+      });
+      
+    } else if (result && typeof result === 'object') {
+      // ถ้า API ส่งกลับมาเป็น Object ที่มี pagination info
+      console.log('API returns object with pagination');
+      requests = result.requests || result.data || [];
+      total = result.total || requests.length;
+      totalPagesCalculated = result.totalPages || Math.ceil(total / limit);
+      currentPageResult = result.currentPage || page;
+    } else {
+      console.error('Unexpected API response format:', result);
+      requests = [];
+      total = 0;
+    }
+    
+    // อัปเดตตัวแปร pagination
+    totalRecords = total;
+    totalPages = totalPagesCalculated;
+    currentPage = currentPageResult;
+    
+    console.log('Final pagination info:', {
       totalRecords,
       totalPages,
       currentPage,
-      pageSize: limit
+      pageSize: limit,
+      requestsCount: requests.length
     });
     
     // แสดงข้อมูลคำขอ
-    displayAllRequests(result.requests || []);
+    displayAllRequests(requests);
     
     // อัปเดต pagination UI
     updatePaginationUI();
@@ -154,7 +195,7 @@ async function loadAllRequests(searchQuery = '', statusFilter = '', page = 1, li
     if (alertContainer) {
       alertContainer.innerHTML = `
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          เกิดข้อผิดพลาดในการโหลดข้อมูลคำขอเอกสาร
+          เกิดข้อผิดพลาดในการโหลดข้อมูลคำขอเอกสาร: ${error.message}
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
       `;
@@ -171,9 +212,10 @@ function displayAllRequests(requests) {
     return;
   }
   
+  console.log('Displaying requests:', requests.length);
   requestsTable.innerHTML = '';
   
-  if (requests.length === 0) {
+  if (!requests || requests.length === 0) {
     const emptyRow = document.createElement('tr');
     emptyRow.innerHTML = `
       <td colspan="8" class="text-center">ไม่พบคำขอเอกสารที่ตรงกับเงื่อนไข</td>
@@ -182,29 +224,31 @@ function displayAllRequests(requests) {
     return;
   }
   
-  requests.forEach(request => {
+  requests.forEach((request, index) => {
     try {
+      console.log(`Processing request ${index + 1}:`, request);
+      
       const row = document.createElement('tr');
       
       row.innerHTML = `
-        <td data-label="รหัสคำขอ">${request.id}</td>
-        <td data-label="ชื่อนักศึกษา">${request.full_name || '-'}</td>
-        <td data-label="รหัสนักศึกษา">${request.student_id || '-'}</td>
-        <td data-label="ประเภทเอกสาร">${request.document_name || '-'}</td>
-        <td data-label="วันที่ขอ">${formatDate(request.created_at) || '-'}</td>
+        <td data-label="รหัสคำขอ">${request.id || '-'}</td>
+        <td data-label="ชื่อนักศึกษา">${request.full_name || request.fullName || '-'}</td>
+        <td data-label="รหัสนักศึกษา">${request.student_id || request.studentId || '-'}</td>
+        <td data-label="ประเภทเอกสาร">${request.document_name || request.documentName || request.document_type || '-'}</td>
+        <td data-label="วันที่ขอ">${formatDate(request.created_at || request.createdAt) || '-'}</td>
         <td data-label="วิธีการรับ">
-          ${request.delivery_method === 'pickup' ? 
+          ${(request.delivery_method || request.deliveryMethod) === 'pickup' ? 
             'รับด้วยตนเอง' : 
             'รับทางไปรษณีย์'}
           ${request.urgent ? '<span class="badge bg-warning text-dark ms-2">เร่งด่วน</span>' : ''}
         </td>
-        <td data-label="สถานะ">${createStatusBadge(request.status)}</td>
+        <td data-label="สถานะ">${createStatusBadge(request.status || 'pending')}</td>
         <td data-label="การดำเนินการ">
           <div class="btn-group">
             <a href="request-detail.html?id=${request.id}" class="btn btn-sm btn-primary">
               <i class="bi bi-eye"></i> ดูรายละเอียด
             </a>
-            <button class="btn btn-sm btn-success update-status" data-id="${request.id}" data-status="${request.status}" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+            <button class="btn btn-sm btn-success update-status" data-id="${request.id}" data-status="${request.status || 'pending'}" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
               <i class="bi bi-pencil"></i> อัปเดตสถานะ
             </button>
           </div>
@@ -228,9 +272,11 @@ function displayAllRequests(requests) {
         });
       }
     } catch (err) {
-      console.error('Error displaying request row:', err);
+      console.error('Error displaying request row:', err, request);
     }
   });
+  
+  console.log('Finished displaying all requests');
 }
 
 // อัปเดต Pagination UI
@@ -467,7 +513,7 @@ function formatDate(dateString, lang = 'th') {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    timeZone: 'Asia/Bangkok' // เพิ่มบรรทัดนี้
+    timeZone: 'Asia/Bangkok'
   };
   
   const locales = {
