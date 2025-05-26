@@ -85,6 +85,27 @@
         
         <div id="alert-container"></div>
         
+        <!-- เพิ่มข้อมูลสถิติ -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div id="results-info" class="text-muted">
+              <span id="results-count">กำลังโหลด...</span>
+            </div>
+          </div>
+          <div class="col-md-6 text-end">
+            <div class="d-flex align-items-center justify-content-end">
+              <label for="page-size-select" class="form-label me-2 mb-0">แสดง:</label>
+              <select class="form-select" id="page-size-select" style="width: auto;">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <span class="ms-2">รายการต่อหน้า</span>
+            </div>
+          </div>
+        </div>
+        
         <div class="table-responsive">
           <table class="table table-hover responsive-table">
             <thead>
@@ -103,6 +124,20 @@
               <!-- ข้อมูลจะถูกเพิ่มโดย JavaScript -->
             </tbody>
           </table>
+        </div>
+
+        <!-- เพิ่มส่วน Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <div>
+            <span class="text-muted" id="pagination-info">
+              แสดง 0 ถึง 0 จาก 0 รายการ
+            </span>
+          </div>
+          <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0" id="pagination-container">
+              <!-- Pagination จะถูกสร้างโดย JavaScript -->
+            </ul>
+          </nav>
         </div>
       </div>
     </div>
