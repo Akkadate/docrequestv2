@@ -103,7 +103,7 @@ function saveQuantityFromModal() {
   }
 }
 
-// ปรับปรุงฟังก์ชัน loadDocumentTypes เพื่อเพิ่ม debug logs
+// ปรับปรุงฟังก์ชัน loadDocumentTypes เพื่อเพิ่ม debug logs และเรียงตาม ID
 async function loadDocumentTypes() {
   try {
     console.log('Loading document types, current language:', currentLang);
@@ -115,6 +115,16 @@ async function loadDocumentTypes() {
     
     documentTypes = await response.json();
     console.log('Loaded document types:', documentTypes);
+    
+    // **เพิ่มการเรียงลำดับตาม ID**
+    documentTypes.sort((a, b) => {
+      // แปลง ID เป็นตัวเลข (ถ้า ID เป็น string ที่มีตัวเลข)
+      const idA = parseInt(a.id) || 0;
+      const idB = parseInt(b.id) || 0;
+      return idA - idB; // เรียงจากน้อยไปมาก
+    });
+    
+    console.log('Document types sorted by ID:', documentTypes);
     
     // เพิ่มรายการประเภทเอกสารในหน้าต่าง Modal
     const modalDocumentTypeSelect = document.getElementById('modal-document-type');
@@ -140,7 +150,7 @@ async function loadDocumentTypes() {
       
       modalDocumentTypeSelect.appendChild(defaultOption);
       
-      // เพิ่มรายการประเภทเอกสาร
+      // เพิ่มรายการประเภทเอกสาร (ตามลำดับ ID ที่เรียงแล้ว)
       if (documentTypes && documentTypes.length > 0) {
         documentTypes.forEach(type => {
           const option = document.createElement('option');
@@ -150,7 +160,7 @@ async function loadDocumentTypes() {
           modalDocumentTypeSelect.appendChild(option);
         });
         
-        console.log('Added document types to select:', modalDocumentTypeSelect.options.length - 1);
+        console.log('Added document types to select (sorted by ID):', modalDocumentTypeSelect.options.length - 1);
       } else {
         console.warn('No document types found in response');
       }
@@ -250,7 +260,7 @@ function updateDocumentTable() {
     // ถ้าไม่มีเอกสารที่เลือก - ใช้วิธีเข้าถึง i18n ที่ถูกต้อง
     const emptyRow = document.createElement('tr');
     
-    // ดึงภาษาปัจจุبันจาก localStorage
+    // ดึงภาษาปัจจุบันจาก localStorage
     const currentLanguage = localStorage.getItem('language') || 'th';
     
     // ตรวจสอบว่ามี window.i18n หรือไม่
