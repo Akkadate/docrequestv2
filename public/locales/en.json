@@ -24,7 +24,7 @@
   "documents": {
     "transcript": "[E01] Transcript (Current Student Version)",
     "studentCertificate": "[E02] Provisional Transcript (Pending University Council Approval)",
-    "expectedGraduationCertificate": "[E03] Official Transcript (Degree Conferred / Approved by University Council) ",
+    "expectedGraduationCertificate": "[E03] Official Transcript (Approved by University Council) ",
     "graduationCertificate": "[E04] Student Certificate",
     "courseCertificate": "[E05] Certificate of Expected Graduation ",
     "degreeCertificate": "[E06] Certificate of completion awaiting council approval",
