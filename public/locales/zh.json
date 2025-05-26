@@ -22,17 +22,17 @@
     "fees": "费用"
   },
   "documents": {
-    "transcript": "[E01] 成绩单 ",
-    "studentCertificate": "学生证明",
-    "expectedGraduationCertificate": "预计毕业证明",
-    "graduationCertificate": "毕业证明",
-    "courseCertificate": "课程证明",
-    "degreeCertificate": "学位证书副本",
-    "conductCertificate": "品行证明",
-    "otherCertificates": "其他证明",
-    "Certificates9": "[E09] Copy of Degree Certificate ",
-    "Certificates10": "[E10] Certificate of Good Conduct ",
-    "Certificates11": "[E11] Other Certificates"
+    "transcript": "[E01] 成绩单",
+    "studentCertificate": "[E02] 临时成绩单（待理事会批准毕业）",
+    "expectedGraduationCertificate": "[E03] 正式成绩单（已获学位） ",
+    "graduationCertificate": "[E04]  学生证明,
+    "courseCertificate": "[E05] 预计毕业证明 ",
+    "degreeCertificate": "[E06] 完成证书正在等待理事会批准",
+    "conductCertificate": "[E07] 毕业证明 ",
+    "otherCertificates": "[E08]  课程证明 ",
+    "Certificates9": "[E09] 学位证书副本 ",
+    "Certificates10": "[E10] 品行证明",
+    "Certificates11": "[E11] 其他证明"
   },
   "howTo": {
     "step1": "注册或登录",
