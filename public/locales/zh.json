@@ -25,7 +25,7 @@
     "transcript": "[E01] 成绩单",
     "studentCertificate": "[E02] 临时成绩单（待理事会批准毕业）",
     "expectedGraduationCertificate": "[E03] 正式成绩单（已获学位） ",
-    "graduationCertificate": "[E04]  学生证明,
+    "graduationCertificate": "[E04]  学生证明",
     "courseCertificate": "[E05] 预计毕业证明 ",
     "degreeCertificate": "[E06] 完成证书正在等待理事会批准",
     "conductCertificate": "[E07] 毕业证明 ",
