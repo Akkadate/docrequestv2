@@ -616,7 +616,7 @@ function printReceipt() {
           <div class="header">
             <img src="../img/logo.png" alt="Logo" class="logo">
             <h1>ใบรับคำขอเอกสาร</h1>
-            <h2>สำนักทะเบียนและประมวลผล มหาวิทยาลัยนอร์ทกรุงเทพ</h2>
+            <h2>สำนักบริการการศึกษา มหาวิทยาลัยนอร์ทกรุงเทพ</h2>
           </div>
           
           <div class="info">
@@ -655,7 +655,8 @@ function printReceipt() {
           
           <div class="contact">
             <p>มหาวิทยาลัยนอร์ทกรุงเทพ สำนักบริการการศึกษา</p>
-            <p>โทร. 02-972-7200 ต่อ 230 | อีเมล: registrar@northbkk.ac.th</p>
+            <p>วิทยาเขตสะพานใหม่ โทร. 02-972-7200 ต่อ 230 , 231 || วิทยาเขตรังสิต โทร 02-533-1000 ต่อ 113 , 115 , 117 </p>
+            <p>อีเมล: reg.acd@northbkk.ac.th</p>
           </div>
         </div>
         
