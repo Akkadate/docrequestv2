@@ -35,7 +35,7 @@
     "Certificates11": "[E11] Other Certificates"
   },
   "howTo": {
-    "step1": "Register or Login",
+    "step1": "Register or ",
     "step2": "Select document type",
     "step3": "Choose delivery method (pickup or mail)",
     "step4": "Pay the fee and upload payment slip",
@@ -57,7 +57,7 @@
     "password": "Password",
     "passwordPlaceholder": "Enter your password",
     "button": "Login",
-    "noAccountText": "Don't have an account yet?<a href='register.html'>ลงทะเบียน</a>",
+    "noAccountText": "Don't have an account yet? ",
     "register": "Register"
   },
   "register": {
