@@ -196,7 +196,7 @@ function displayRequestDetails(request) {
   document.getElementById('detail-status').innerHTML = createStatusBadge(request.status);
   document.getElementById('detail-price').textContent = formatCurrency(request.total_price);
   
- // ข้อมูลนักศึกษา
+  // ข้อมูลนักศึกษา
   const studentInfoElements = {
     'detail-student-name': request.full_name || '',
     'detail-student-id': request.student_id || '',
@@ -212,7 +212,7 @@ function displayRequestDetails(request) {
     }
   });
   
-  // แสดงวันเดือนปีเกิด
+   // แสดงวันเดือนปีเกิด
   const studentBirthDateElement = document.getElementById('detail-student-birth-date');
   if (studentBirthDateElement) {
     if (request.birth_date) {
@@ -226,7 +226,7 @@ function displayRequestDetails(request) {
         day: 'numeric',
         timeZone: 'Asia/Bangkok'
       };
-      
+
       const formattedDate = birthDate.toLocaleDateString('th-TH', options);
       console.log('Formatted student birth date:', formattedDate);
       
@@ -235,8 +235,9 @@ function displayRequestDetails(request) {
       studentBirthDateElement.textContent = '-';
     }
   }
-  
-  // แสดงหมายเลขบัตรประชาชน/Passport
+
+   
+   // แสดงหมายเลขบัตรประชาชน/Passport
   const studentIdNumberElement = document.getElementById('detail-student-id-number');
   if (studentIdNumberElement) {
     if (request.id_number) {
@@ -265,6 +266,7 @@ function displayRequestDetails(request) {
       studentIdNumberElement.textContent = '-';
     }
   }
+  
   
  
   
