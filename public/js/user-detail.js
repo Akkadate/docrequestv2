@@ -99,6 +99,8 @@ async function loadUserDetails() {
 // แสดงรายละเอียดผู้ใช้
 function displayUserDetails(user) {
   try {
+    console.log('Displaying user details:', user); // เพิ่ม debug log
+    
     // ข้อมูลพื้นฐาน
     document.getElementById('user-student-id').textContent = user.student_id || '-';
     document.getElementById('user-full-name').textContent = user.full_name || '-';
@@ -108,44 +110,75 @@ function displayUserDetails(user) {
     
     // แสดงวันเดือนปีเกิด
     const birthDateElement = document.getElementById('user-birth-date');
-    if (user.birth_date) {
-      birthDateElement.textContent = formatDate(user.birth_date, currentLang);
+    if (birthDateElement) {
+      if (user.birth_date) {
+        // แปลงวันที่จาก ISO format
+        const birthDate = new Date(user.birth_date);
+        console.log('Birth date raw:', user.birth_date, 'Parsed:', birthDate);
+        
+        const options = {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          timeZone: 'Asia/Bangkok'
+        };
+        
+        const formattedDate = birthDate.toLocaleDateString('th-TH', options);
+        console.log('Formatted birth date:', formattedDate);
+        
+        birthDateElement.textContent = formattedDate;
+      } else {
+        birthDateElement.textContent = '-';
+      }
     } else {
-      birthDateElement.textContent = '-';
+      console.error('Birth date element not found');
     }
     
     // แสดงหมายเลขบัตรประชาชน/Passport
     const idNumberElement = document.getElementById('user-id-number');
-    if (user.id_number) {
-      // ซ่อนบางส่วนของหมายเลขเพื่อความปลอดภัย
-      const maskedIdNumber = maskIdNumber(user.id_number);
-      idNumberElement.textContent = maskedIdNumber;
-      idNumberElement.title = 'คลิกเพื่อดูหมายเลขเต็ม'; // tooltip
-      idNumberElement.style.cursor = 'pointer';
-      
-      // เพิ่มการคลิกเพื่อแสดงหมายเลขเต็ม
-      idNumberElement.addEventListener('click', function() {
-        if (this.textContent === maskedIdNumber) {
-          this.textContent = user.id_number;
-          this.title = 'คลิกเพื่อซ่อนหมายเลข';
-        } else {
-          this.textContent = maskedIdNumber;
-          this.title = 'คลิกเพื่อดูหมายเลขเต็ม';
-        }
-      });
+    if (idNumberElement) {
+      if (user.id_number) {
+        console.log('ID Number raw:', user.id_number);
+        
+        // ซ่อนบางส่วนของหมายเลขเพื่อความปลอดภัย
+        const maskedIdNumber = maskIdNumber(user.id_number);
+        console.log('Masked ID Number:', maskedIdNumber);
+        
+        idNumberElement.textContent = maskedIdNumber;
+        idNumberElement.title = 'คลิกเพื่อดูหมายเลขเต็ม';
+        idNumberElement.style.cursor = 'pointer';
+        
+        // เพิ่มการคลิกเพื่อแสดงหมายเลขเต็ม
+        idNumberElement.addEventListener('click', function() {
+          if (this.textContent === maskedIdNumber) {
+            this.textContent = user.id_number;
+            this.title = 'คลิกเพื่อซ่อนหมายเลข';
+          } else {
+            this.textContent = maskedIdNumber;
+            this.title = 'คลิกเพื่อดูหมายเลขเต็ม';
+          }
+        });
+      } else {
+        console.log('No ID number found');
+        idNumberElement.textContent = '-';
+      }
     } else {
-      idNumberElement.textContent = '-';
+      console.error('ID number element not found');
     }
     
-    document.getElementById('user-join-date').textContent = formatDate(user.created_at, currentLang);
+    // วันที่ลงทะเบียน
+    const joinDateElement = document.getElementById('user-join-date');
+    if (joinDateElement) {
+      joinDateElement.textContent = formatDate(user.created_at, window.currentLang || 'th');
+    }
     
     // แสดง badge บทบาท
     const roleElement = document.getElementById('user-role-badge');
     if (roleElement) {
       const badgeClass = user.role === 'admin' ? 'bg-danger' : 'bg-primary';
       const roleText = user.role === 'admin' ? 
-        (i18n[currentLang]?.admin?.users?.admin || 'ผู้ดูแลระบบ') : 
-        (i18n[currentLang]?.admin?.users?.student || 'นักศึกษา');
+        (window.i18n?.[window.currentLang]?.admin?.users?.admin || 'ผู้ดูแลระบบ') : 
+        (window.i18n?.[window.currentLang]?.admin?.users?.student || 'นักศึกษา');
       
       roleElement.innerHTML = `<span class="badge ${badgeClass}">${roleText}</span>`;
     }
