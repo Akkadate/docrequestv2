@@ -8,7 +8,6 @@
     "status": "ตรวจสอบสถานะ",
     "adminPanel": "จัดการระบบ",
     "login": "เข้าสู่ระบบ",
-    "noAccount": "ยังไม่มีบัญชี? <a href='register.html'>ลงทะเบียน</a>",
     "register": "ลงทะเบียน",
     "logout": "ออกจากระบบ"
   },
@@ -58,6 +57,7 @@
     "password": "รหัสผ่าน",
     "passwordPlaceholder": "กรอกรหัสผ่าน",
     "button": "เข้าสู่ระบบ",
+    "noAccountText": "ยังไม่มีบัญชี? <a href='register.html'>ลงทะเบียน</a>",
     "noAccount": "ยังไม่มีบัญชี?",
     "register": "ลงทะเบียน"
   },
