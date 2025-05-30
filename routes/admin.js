@@ -201,12 +201,30 @@ router.get('/line-config', authenticateJWT, isAdmin, async (req, res) => {
     }
   });
   
-  // จัดการผู้ใช้งาน
+  // จัดการผู้ใช้งาน - อัปเดตให้รวมฟิลด์ใหม่และการค้นหา
   router.get('/users', authenticateJWT, isAdmin, async (req, res) => {
     try {
-      const users = await pool.query(
-        'SELECT id, student_id, full_name, email, phone, faculty, role, created_at FROM users ORDER BY created_at DESC'
-      );
+      const search = req.query.search || '';
+      
+      let query = 'SELECT id, student_id, full_name, email, phone, faculty, birth_date, id_number, role, created_at FROM users';
+      let queryParams = [];
+      
+      // เพิ่มการค้นหา
+      if (search) {
+        query += ` WHERE (
+          student_id ILIKE $1 OR
+          full_name ILIKE $1 OR
+          email ILIKE $1 OR
+          phone ILIKE $1 OR
+          faculty ILIKE $1 OR
+          id_number ILIKE $1
+        )`;
+        queryParams.push(`%${search}%`);
+      }
+      
+      query += ' ORDER BY created_at DESC';
+      
+      const users = await pool.query(query, queryParams);
       
       res.status(200).json(users.rows);
     } catch (err) {
@@ -214,8 +232,6 @@ router.get('/line-config', authenticateJWT, isAdmin, async (req, res) => {
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้' });
     }
   });
-
- // เพิ่ม endpoints เหล่านี้ในไฟล์ routes/admin.js
 
   // ดึงประวัติการขอเอกสารของผู้ใช้คนเดียว
   router.get('/user/:id/requests', authenticateJWT, isAdmin, async (req, res) => {
@@ -398,13 +414,13 @@ router.get('/line-config', authenticateJWT, isAdmin, async (req, res) => {
     }
   });
  
-  // ดึงข้อมูลผู้ใช้คนเดียว
+  // ดึงข้อมูลผู้ใช้คนเดียว - อัปเดตให้รวมฟิลด์ใหม่
   router.get('/user/:id', authenticateJWT, isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       
       const user = await pool.query(
-        'SELECT id, student_id, full_name, email, phone, faculty, role, created_at FROM users WHERE id = $1',
+        'SELECT id, student_id, full_name, email, phone, faculty, birth_date, id_number, role, created_at FROM users WHERE id = $1',
         [id]
       );
       
@@ -419,10 +435,25 @@ router.get('/line-config', authenticateJWT, isAdmin, async (req, res) => {
     }
   });
   
-  // เพิ่มผู้ดูแลระบบใหม่
+  // เพิ่มผู้ดูแลระบบใหม่ - อัปเดตให้รองรับฟิลด์ใหม่
   router.post('/add-admin', authenticateJWT, isAdmin, async (req, res) => {
     try {
-      const { student_id, password, full_name, email, phone } = req.body;
+      const { student_id, password, full_name, email, phone, birth_date, id_number } = req.body;
+      
+      // ตรวจสอบข้อมูลที่จำเป็น
+      if (!student_id || !password || !full_name || !email || !phone) {
+        return res.status(400).json({ message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน' });
+      }
+      
+      // ตรวจสอบรูปแบบวันเกิด (ถ้ามีการกรอก)
+      if (birth_date && !isValidDate(birth_date)) {
+        return res.status(400).json({ message: 'รูปแบบวันเดือนปีเกิดไม่ถูกต้อง' });
+      }
+      
+      // ตรวจสอบรูปแบบหมายเลขบัตรประชาชน/Passport (ถ้ามีการกรอก)
+      if (id_number && !isValidIdNumber(id_number)) {
+        return res.status(400).json({ message: 'รูปแบบหมายเลขบัตรประชาชนหรือ Passport ไม่ถูกต้อง' });
+      }
       
       // ตรวจสอบว่ามีผู้ใช้นี้อยู่แล้วหรือไม่
       const userCheck = await pool.query(
@@ -434,14 +465,26 @@ router.get('/line-config', authenticateJWT, isAdmin, async (req, res) => {
         return res.status(400).json({ message: 'รหัสนักศึกษาหรืออีเมลนี้มีอยู่ในระบบแล้ว' });
       }
       
+      // ตรวจสอบหมายเลขบัตรประชาชน/Passport ซ้ำ (ถ้ามีการกรอก)
+      if (id_number) {
+        const idCheck = await pool.query(
+          'SELECT * FROM users WHERE id_number = $1',
+          [id_number]
+        );
+        
+        if (idCheck.rows.length > 0) {
+          return res.status(400).json({ message: 'หมายเลขบัตรประชาชนหรือ Passport นี้มีอยู่ในระบบแล้ว' });
+        }
+      }
+      
       // เข้ารหัสรหัสผ่าน
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
       
       // เพิ่มผู้ดูแลระบบใหม่
       await pool.query(
-        'INSERT INTO users (student_id, password, full_name, email, phone, faculty, role) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-        [student_id, hashedPassword, full_name, email, phone, 'Admin', 'admin']
+        'INSERT INTO users (student_id, password, full_name, email, phone, faculty, birth_date, id_number, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+        [student_id, hashedPassword, full_name, email, phone, 'Admin', birth_date || null, id_number || null, 'admin']
       );
       
       res.status(201).json({ message: 'เพิ่มผู้ดูแลระบบสำเร็จ' });
@@ -491,3 +534,48 @@ router.get('/line-config', authenticateJWT, isAdmin, async (req, res) => {
   
   return router;
 };
+
+// ฟังก์ชันตรวจสอบรูปแบบวันที่
+function isValidDate(dateString) {
+  if (!dateString) return true; // อนุญาตให้เป็นค่าว่าง
+  
+  const date = new Date(dateString);
+  const today = new Date();
+  
+  // ตรวจสอบว่าเป็นวันที่ที่ถูกต้อง
+  if (isNaN(date.getTime())) {
+    return false;
+  }
+  
+  // ตรวจสอบว่าไม่เป็นวันที่ในอนาคต
+  if (date > today) {
+    return false;
+  }
+  
+  // ตรวจสอบว่าไม่เก่าเกินไป (100 ปี)
+  const hundredYearsAgo = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+  if (date < hundredYearsAgo) {
+    return false;
+  }
+  
+  return true;
+}
+
+// ฟังก์ชันตรวจสอบรูปแบบหมายเลขบัตรประชาชน/Passport
+function isValidIdNumber(idNumber) {
+  if (!idNumber) return true; // อนุญาตให้เป็นค่าว่าง
+  
+  const trimmedId = idNumber.trim();
+  
+  // ตรวจสอบบัตรประชาชน (13 หลัก)
+  if (/^[0-9]{13}$/.test(trimmedId)) {
+    return true;
+  }
+  
+  // ตรวจสอบ Passport (6-12 ตัวอักษรและตัวเลข)
+  if (/^[A-Za-z0-9]{6,12}$/.test(trimmedId)) {
+    return true;
+  }
+  
+  return false;
+}
