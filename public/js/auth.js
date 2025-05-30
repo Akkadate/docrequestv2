@@ -241,6 +241,33 @@ function updateDatePickerLanguage() {
   }
 }
 
+// เพิ่มฟังก์ชันสำหรับบังคับภาษาให้ทั้งหน้า
+function forceEnglishDatePicker() {
+  // ตั้งค่า locale สำหรับทั้งหน้า
+  const html = document.documentElement;
+  
+  // เก็บ locale เดิมไว้
+  const originalLang = html.getAttribute('lang');
+  
+  // เมื่อ focus ที่ date input ให้เปลี่ยนเป็นภาษาอังกฤษชั่วคราว
+  const dateInputs = document.querySelectorAll('input[type="date"]');
+  
+  dateInputs.forEach(input => {
+    input.addEventListener('focus', function() {
+      html.setAttribute('lang', 'en-US');
+    });
+    
+    input.addEventListener('blur', function() {
+      // คืนค่าภาษาเดิม
+      html.setAttribute('lang', originalLang || 'th');
+    });
+    
+    // ตั้งค่าให้ชัดเจน
+    input.setAttribute('lang', 'en-US');
+    input.setAttribute('dir', 'ltr');
+  });
+}
+
 // เพิ่มการฟังเหตุการณ์เมื่อโหลดหน้าเว็บ
 document.addEventListener('DOMContentLoaded', () => {
   const registerForm = document.getElementById('register-form');
@@ -252,13 +279,17 @@ document.addEventListener('DOMContentLoaded', () => {
     setupBirthDateValidation();
     setupIdNumberValidation();
     updateDatePickerLanguage();
+    forceEnglishDatePicker(); // เพิ่มบรรทัดนี้
     
     // ฟังการเปลี่ยนภาษา
     const languageButtons = document.querySelectorAll('[data-lang]');
     languageButtons.forEach(button => {
       button.addEventListener('click', () => {
         // รอให้ระบบภาษาอัปเดตก่อน แล้วค่อยอัปเดต date picker
-        setTimeout(updateDatePickerLanguage, 100);
+        setTimeout(() => {
+          updateDatePickerLanguage();
+          forceEnglishDatePicker(); // เพิ่มบรรทัดนี้
+        }, 100);
       });
     });
   }
