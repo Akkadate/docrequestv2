@@ -149,6 +149,20 @@ function setupBirthDateValidation() {
     // ตั้งค่าวันที่ต่ำสุดเป็น 100 ปีที่แล้ว
     const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
     birthDateInput.setAttribute('min', minDate.toISOString().split('T')[0]);
+    
+    // บังคับให้ date picker เป็นภาษาอังกฤษ
+    birthDateInput.setAttribute('lang', 'en');
+    
+    // เพิ่ม event listener เพื่อตรวจสอบการเปลี่ยนแปลง
+    birthDateInput.addEventListener('change', function(e) {
+      const selectedDate = new Date(e.target.value);
+      const today = new Date();
+      
+      if (selectedDate > today) {
+        showAlert('วันเกิดไม่สามารถเป็นวันที่ในอนาคตได้', 'warning');
+        e.target.value = '';
+      }
+    });
   }
 }
 
@@ -193,6 +207,29 @@ function setupIdNumberValidation() {
   }
 }
 
+// ตั้งค่าภาษาของ date picker ตามภาษาที่เลือก
+function updateDatePickerLanguage() {
+  const birthDateInput = document.getElementById('birth_date');
+  if (birthDateInput) {
+    // บังคับให้เป็นภาษาอังกฤษเสมอเพื่อความสม่ำเสมอ
+    birthDateInput.setAttribute('lang', 'en');
+    
+    // อัปเดต help text ตามภาษาที่เลือก
+    const helpText = birthDateInput.parentNode.querySelector('.form-text small');
+    if (helpText) {
+      const currentLanguage = window.currentLang || 'th';
+      
+      const dateFormatTexts = {
+        'th': 'รูปแบบ: วัน/เดือน/ปี',
+        'en': 'Format: DD/MM/YYYY',
+        'zh': '格式：日/月/年'
+      };
+      
+      helpText.textContent = dateFormatTexts[currentLanguage] || dateFormatTexts['th'];
+    }
+  }
+}
+
 // เพิ่มการฟังเหตุการณ์เมื่อโหลดหน้าเว็บ
 document.addEventListener('DOMContentLoaded', () => {
   const registerForm = document.getElementById('register-form');
@@ -203,6 +240,16 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFaculties();
     setupBirthDateValidation();
     setupIdNumberValidation();
+    updateDatePickerLanguage();
+    
+    // ฟังการเปลี่ยนภาษา
+    const languageButtons = document.querySelectorAll('[data-lang]');
+    languageButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // รอให้ระบบภาษาอัปเดตก่อน แล้วค่อยอัปเดต date picker
+        setTimeout(updateDatePickerLanguage, 100);
+      });
+    });
   }
   
   if (loginForm) {
