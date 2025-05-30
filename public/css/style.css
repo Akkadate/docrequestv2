@@ -630,6 +630,65 @@ img.img-fluid:hover {
   transform: scale(1.2);
 }
 
+/* เพิ่มใน public/css/style.css */
+
+/* Custom styles สำหรับ Flatpickr */
+.flatpickr-calendar {
+  font-family: 'Prompt', Arial, sans-serif !important;
+  direction: ltr !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.flatpickr-calendar .flatpickr-month {
+  background: #0d6efd;
+  color: white;
+}
+
+.flatpickr-calendar .flatpickr-weekdays {
+  background: #f8f9fa;
+}
+
+.flatpickr-calendar .flatpickr-day {
+  border-radius: 4px;
+}
+
+.flatpickr-calendar .flatpickr-day:hover {
+  background: #e9ecef;
+  border-color: #e9ecef;
+}
+
+.flatpickr-calendar .flatpickr-day.selected {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+.flatpickr-calendar .flatpickr-day.today {
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+/* ปรับแต่งสำหรับ input */
+input.flatpickr-input {
+  background-color: white !important;
+  cursor: pointer;
+}
+
+input.flatpickr-input:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* ซ่อน browser date picker ถ้ามี */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-outer-spin-button {
+  display: none;
+}
 /* เพิ่มใน public/css/style.css หรือสร้างไฟล์ CSS ใหม่ */
 
 /* บังคับให้ date picker เป็นภาษาอังกฤษ */
