@@ -138,6 +138,7 @@ async function loadFaculties() {
 }
 
 // ตั้งค่าวันที่สูงสุดสำหรับวันเกิด (ป้องกันการเลือกวันที่ในอนาคต)
+// ตั้งค่าวันที่สูงสุดสำหรับวันเกิด (ป้องกันการเลือกวันที่ในอนาคต)
 function setupBirthDateValidation() {
   const birthDateInput = document.getElementById('birth_date');
   if (birthDateInput) {
@@ -151,7 +152,11 @@ function setupBirthDateValidation() {
     birthDateInput.setAttribute('min', minDate.toISOString().split('T')[0]);
     
     // บังคับให้ date picker เป็นภาษาอังกฤษ
-    birthDateInput.setAttribute('lang', 'en');
+    birthDateInput.setAttribute('lang', 'en-US');
+    birthDateInput.setAttribute('locale', 'en-US');
+    
+    // ตั้งค่า dir attribute
+    birthDateInput.setAttribute('dir', 'ltr');
     
     // เพิ่ม event listener เพื่อตรวจสอบการเปลี่ยนแปลง
     birthDateInput.addEventListener('change', function(e) {
@@ -163,9 +168,14 @@ function setupBirthDateValidation() {
         e.target.value = '';
       }
     });
+    
+    // บังคับให้ input แสดงในรูปแบบที่ต้องการ
+    birthDateInput.addEventListener('focus', function(e) {
+      // บังคับให้เป็นภาษาอังกฤษเมื่อ focus
+      e.target.setAttribute('lang', 'en-US');
+    });
   }
 }
-
 // ตั้งค่าการตรวจสอบหมายเลขบัตรประชาชน/Passport
 function setupIdNumberValidation() {
   const idNumberInput = document.getElementById('id_number');
@@ -212,7 +222,8 @@ function updateDatePickerLanguage() {
   const birthDateInput = document.getElementById('birth_date');
   if (birthDateInput) {
     // บังคับให้เป็นภาษาอังกฤษเสมอเพื่อความสม่ำเสมอ
-    birthDateInput.setAttribute('lang', 'en');
+    birthDateInput.setAttribute('lang', 'en-US');
+    birthDateInput.setAttribute('locale', 'en-US');
     
     // อัปเดต help text ตามภาษาที่เลือก
     const helpText = birthDateInput.parentNode.querySelector('.form-text small');
@@ -220,9 +231,9 @@ function updateDatePickerLanguage() {
       const currentLanguage = window.currentLang || 'th';
       
       const dateFormatTexts = {
-        'th': 'รูปแบบ: วัน/เดือน/ปี',
+        'th': 'รูปแบบ: วัน/เดือน/ปี (English Format)',
         'en': 'Format: DD/MM/YYYY',
-        'zh': '格式：日/月/年'
+        'zh': '格式：日/月/年 (English Format)'
       };
       
       helpText.textContent = dateFormatTexts[currentLanguage] || dateFormatTexts['th'];
