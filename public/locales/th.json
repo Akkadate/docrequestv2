@@ -8,6 +8,7 @@
     "status": "ตรวจสอบสถานะ",
     "adminPanel": "จัดการระบบ",
     "login": "เข้าสู่ระบบ",
+    "noAccount": "ยังไม่มีบัญชี? <a href='register.html'>ลงทะเบียน</a>",
     "register": "ลงทะเบียน",
     "logout": "ออกจากระบบ"
   },
