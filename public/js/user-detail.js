@@ -95,6 +95,26 @@ async function loadUserDetails() {
     showAdminAlert('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้', 'danger');
   }
 }
+
+// ฟังก์ชันซ่อนบางส่วนของหมายเลขบัตรประชาชน/Passport
+function maskIdNumber(idNumber) {
+  if (!idNumber) return '-';
+  
+  const str = idNumber.toString();
+  
+  // ถ้าเป็นบัตรประชาชน (13 หลัก)
+  if (str.length === 13 && /^[0-9]+$/.test(str)) {
+    return str.substring(0, 1) + '-' + str.substring(1, 5) + '-' + '*'.repeat(5) + '-' + str.substring(10, 12) + '-' + str.substring(12);
+  }
+  
+  // ถ้าเป็น Passport หรืออื่นๆ
+  if (str.length >= 6) {
+    return str.substring(0, 2) + '*'.repeat(str.length - 4) + str.substring(str.length - 2);
+  }
+  
+  return str;
+}
+
 // แสดงรายละเอียดผู้ใช้
 function displayUserDetails(user) {
   try {
