@@ -1,4 +1,4 @@
--- ตารางผู้ใช้งาน  DB_NAME=document_request_system
+-- ตารางผู้ใช้งาน  DB_NAME=document_request_system (อัปเดต)
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     student_id VARCHAR(20) UNIQUE NOT NULL,
@@ -7,9 +7,15 @@ CREATE TABLE users (
     email VARCHAR(100) UNIQUE NOT NULL,
     phone VARCHAR(20) NOT NULL,
     faculty VARCHAR(100) NOT NULL,
+    birth_date DATE,
+    id_number VARCHAR(20),
     role VARCHAR(20) DEFAULT 'student',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- เพิ่มคอลัมน์ใหม่ในตารางที่มีอยู่แล้ว (สำหรับระบบที่มีข้อมูลอยู่แล้ว)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date DATE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS id_number VARCHAR(20);
 
 -- ตารางคณะ
 CREATE TABLE faculties (
@@ -84,6 +90,9 @@ CREATE TABLE IF NOT EXISTS status_history (
 -- สร้าง index เพื่อความเร็วในการค้นหา
 CREATE INDEX IF NOT EXISTS idx_status_history_request_id ON status_history(request_id);
 
+-- เพิ่ม comment สำหรับคอลัมน์ใหม่
+COMMENT ON COLUMN users.birth_date IS 'วันเดือนปีเกิด';
+COMMENT ON COLUMN users.id_number IS 'หมายเลขบัตรประชาชนหรือ Passport';
 
 -- เพิ่มข้อมูลคณะ
 INSERT INTO faculties (name_th, name_en, name_zh) VALUES
@@ -91,7 +100,8 @@ INSERT INTO faculties (name_th, name_en, name_zh) VALUES
     ('คณะวิศวกรรมศาสตร์', 'Faculty of Engineering', '工程学院'),
     ('คณะนิติศาสตร์', 'Faculty of Law', '法学院'),
     ('คณะศิลปศาสตร์', 'Faculty of Liberal Arts', '文学院'),
-    ('คณะวิทยาศาสตร์และเทคโนโลยี', 'Faculty of Science and Technology', '科学技术学院');
+    ('คณะวิทยาศาสตร์และเทคโนโลยี', 'Faculty of Science and Technology', '科学技术学院')
+ON CONFLICT DO NOTHING;
 
 -- เพิ่มข้อมูลประเภทเอกสาร
 INSERT INTO document_types (name_th, name_en, name_zh, price) VALUES
@@ -102,8 +112,16 @@ INSERT INTO document_types (name_th, name_en, name_zh, price) VALUES
     ('หนังสือรับรองรายวิชา', 'Course Certificate', '课程证明', 100),
     ('สำเนาใบปริญญาบัตร', 'Copy of Degree Certificate', '学位证书副本', 100),
     ('หนังสือรับรองความประพฤติ', 'Certificate of Good Conduct', '品行证明', 100),
-    ('หนังสือรับรองอื่น ๆ', 'Other Certificates', '其他证明', 100);
+    ('หนังสือรับรองอื่น ๆ', 'Other Certificates', '其他证明', 100)
+ON CONFLICT DO NOTHING;
 
--- เพิ่มผู้ดูแลระบบ
+-- เพิ่มผู้ดูแลระบบ (อัปเดตรหัสผ่านถ้ามีอยู่แล้ว)
 INSERT INTO users (student_id, password, full_name, email, phone, faculty, role) VALUES
-    ('admin', '$2b$10$X9f4bQXSyxMb7sQ4b5xYG.9JcZBj5nLo8/.kG3vD8EU2TqRV0Y/EW', 'ผู้ดูแลระบบ', 'admin@nbu.ac.th', '0899999999', 'Admin', 'admin');
+    ('admin', '$2b$10$X9f4bQXSyxMb7sQ4b5xYG.9JcZBj5nLo8/.kG3vD8EU2TqRV0Y/EW', 'ผู้ดูแลระบบ', 'admin@nbu.ac.th', '0899999999', 'Admin', 'admin')
+ON CONFLICT (student_id) DO UPDATE SET
+    password = EXCLUDED.password,
+    full_name = EXCLUDED.full_name,
+    email = EXCLUDED.email,
+    phone = EXCLUDED.phone,
+    faculty = EXCLUDED.faculty,
+    role = EXCLUDED.role;
