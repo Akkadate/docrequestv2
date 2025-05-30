@@ -57,7 +57,7 @@
     "password": "密码",
     "passwordPlaceholder": "输入您的密码",
     "button": "登录",
-    "noAccount": "没有账号？",
+    "noAccount": "没有账号？ <a href='register.html'>ลงทะเบียน</a>",
     "register": "注册"
   },
   "register": {
