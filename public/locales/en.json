@@ -9,7 +9,6 @@
     "adminPanel": "Admin Panel",
     "login": "Login",
     "register": "Register",
-     "noAccount": "Don't have an account yet?<a href='register.html'>ลงทะเบียน</a>",
     "logout": "Logout"
   },
   "home": {
@@ -58,7 +57,7 @@
     "password": "Password",
     "passwordPlaceholder": "Enter your password",
     "button": "Login",
-    "noAccount": "Don't have an account?",
+    "noAccount": "Don't have an account yet?<a href='register.html'>ลงทะเบียน</a>",
     "register": "Register"
   },
   "register": {
