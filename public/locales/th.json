@@ -73,6 +73,10 @@
     "phonePlaceholder": "กรอกเบอร์โทรศัพท์",
     "faculty": "คณะ",
     "selectFaculty": "เลือกคณะ",
+    "birthDate": "วันเดือนปีเกิด",
+    "birthDatePlaceholder": "เลือกวันเดือนปีเกิด",
+    "idNumber": "หมายเลขบัตรประชาชน/Passport",
+    "idNumberPlaceholder": "กรอกหมายเลขบัตรประชาชนหรือ Passport",
     "password": "รหัสผ่าน",
     "passwordPlaceholder": "กรอกรหัสผ่าน",
     "confirmPassword": "ยืนยันรหัสผ่าน",
@@ -145,6 +149,8 @@
     "faculty": "คณะ",
     "email": "อีเมล",
     "phone": "เบอร์โทรศัพท์",
+    "birthDate": "วันเดือนปีเกิด",
+    "idNumber": "หมายเลขบัตรประชาชน/Passport",
     "joinDate": "วันที่ลงทะเบียน"
   },
   "status": {
@@ -278,6 +284,8 @@
       "email": "อีเมล",
       "phone": "เบอร์โทรศัพท์",
       "faculty": "คณะ",
+      "birthDate": "วันเดือนปีเกิด",
+      "idNumber": "หมายเลขบัตรประชาชน/Passport",
       "role": "บทบาท",
       "joinDate": "วันที่ลงทะเบียน",
       "actions": "การดำเนินการ",
