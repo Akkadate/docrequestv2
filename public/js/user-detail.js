@@ -105,6 +105,38 @@ function displayUserDetails(user) {
     document.getElementById('user-email').textContent = user.email || '-';
     document.getElementById('user-phone').textContent = user.phone || '-';
     document.getElementById('user-faculty').textContent = user.faculty || '-';
+    
+    // แสดงวันเดือนปีเกิด
+    const birthDateElement = document.getElementById('user-birth-date');
+    if (user.birth_date) {
+      birthDateElement.textContent = formatDate(user.birth_date, currentLang);
+    } else {
+      birthDateElement.textContent = '-';
+    }
+    
+    // แสดงหมายเลขบัตรประชาชน/Passport
+    const idNumberElement = document.getElementById('user-id-number');
+    if (user.id_number) {
+      // ซ่อนบางส่วนของหมายเลขเพื่อความปลอดภัย
+      const maskedIdNumber = maskIdNumber(user.id_number);
+      idNumberElement.textContent = maskedIdNumber;
+      idNumberElement.title = 'คลิกเพื่อดูหมายเลขเต็ม'; // tooltip
+      idNumberElement.style.cursor = 'pointer';
+      
+      // เพิ่มการคลิกเพื่อแสดงหมายเลขเต็ม
+      idNumberElement.addEventListener('click', function() {
+        if (this.textContent === maskedIdNumber) {
+          this.textContent = user.id_number;
+          this.title = 'คลิกเพื่อซ่อนหมายเลข';
+        } else {
+          this.textContent = maskedIdNumber;
+          this.title = 'คลิกเพื่อดูหมายเลขเต็ม';
+        }
+      });
+    } else {
+      idNumberElement.textContent = '-';
+    }
+    
     document.getElementById('user-join-date').textContent = formatDate(user.created_at, currentLang);
     
     // แสดง badge บทบาท
@@ -129,6 +161,25 @@ function displayUserDetails(user) {
   } catch (error) {
     console.error('Error displaying user details:', error);
   }
+}
+
+// ฟังก์ชันซ่อนบางส่วนของหมายเลขบัตรประชาชน/Passport
+function maskIdNumber(idNumber) {
+  if (!idNumber) return '-';
+  
+  const str = idNumber.toString();
+  
+  // ถ้าเป็นบัตรประชาชน (13 หลัก)
+  if (str.length === 13 && /^[0-9]+$/.test(str)) {
+    return str.substring(0, 1) + '-' + str.substring(1, 5) + '-' + '*'.repeat(5) + '-' + str.substring(10, 12) + '-' + str.substring(12);
+  }
+  
+  // ถ้าเป็น Passport หรืออื่นๆ
+  if (str.length >= 6) {
+    return str.substring(0, 2) + '*'.repeat(str.length - 4) + str.substring(str.length - 2);
+  }
+  
+  return str;
 }
 
 // โหลดประวัติการขอเอกสารของผู้ใช้
