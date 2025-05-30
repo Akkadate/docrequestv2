@@ -39,7 +39,7 @@
 
   <div class="container mt-5">
     <div class="row justify-content-center">
-      <div class="col-md-8">
+      <div class="col-md-10">
         <div class="card">
           <div class="card-header bg-primary text-white">
             <h3 class="mb-0" data-i18n="register.header">ลงทะเบียน</h3>
@@ -67,11 +67,26 @@
                   <input type="tel" class="form-control" id="phone" required data-i18n-placeholder="register.phonePlaceholder">
                 </div>
               </div>
-              <div class="mb-3">
-                <label for="faculty" class="form-label required" data-i18n="register.faculty">คณะ</label>
-                <select class="form-select" id="faculty" required>
-                  <option value="" selected disabled data-i18n="register.selectFaculty">เลือกคณะ</option>
-                </select>
+              <div class="row">
+                <div class="col-md-12 mb-3">
+                  <label for="faculty" class="form-label required" data-i18n="register.faculty">คณะ</label>
+                  <select class="form-select" id="faculty" required>
+                    <option value="" selected disabled data-i18n="register.selectFaculty">เลือกคณะ</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="birth_date" class="form-label required" data-i18n="register.birthDate">วันเดือนปีเกิด</label>
+                  <input type="date" class="form-control" id="birth_date" required data-i18n-placeholder="register.birthDatePlaceholder">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="id_number" class="form-label required" data-i18n="register.idNumber">หมายเลขบัตรประชาชน/Passport</label>
+                  <input type="text" class="form-control" id="id_number" required data-i18n-placeholder="register.idNumberPlaceholder">
+                  <div class="form-text">
+                    <small class="text-muted">กรอกหมายเลขบัตรประชาชน 13 หลักหรือหมายเลข Passport</small>
+                  </div>
+                </div>
               </div>
               <div class="row">
                 <div class="col-md-6 mb-3">
