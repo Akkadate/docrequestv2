@@ -103,7 +103,7 @@
 
   <!-- Modal เพิ่มผู้ดูแลระบบ -->
   <div class="modal fade" id="addAdminModal" tabindex="-1" aria-labelledby="addAdminModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white">
           <h5 class="modal-title" id="addAdminModalLabel" data-i18n="admin.users.addAdmin">เพิ่มผู้ดูแลระบบ</h5>
@@ -111,29 +111,51 @@
         </div>
         <div class="modal-body">
           <form id="add-admin-form">
-            <div class="mb-3">
-              <label for="admin-student-id" class="form-label required" data-i18n="admin.users.studentID">รหัสนักศึกษา</label>
-              <input type="text" class="form-control" id="admin-student-id" required>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="admin-student-id" class="form-label required" data-i18n="admin.users.studentID">รหัสนักศึกษา</label>
+                <input type="text" class="form-control" id="admin-student-id" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="admin-full-name" class="form-label required" data-i18n="admin.users.fullName">ชื่อ-นามสกุล</label>
+                <input type="text" class="form-control" id="admin-full-name" required>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="admin-full-name" class="form-label required" data-i18n="admin.users.fullName">ชื่อ-นามสกุล</label>
-              <input type="text" class="form-control" id="admin-full-name" required>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="admin-email" class="form-label required" data-i18n="admin.users.email">อีเมล</label>
+                <input type="email" class="form-control" id="admin-email" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="admin-phone" class="form-label required" data-i18n="admin.users.phone">เบอร์โทรศัพท์</label>
+                <input type="tel" class="form-control" id="admin-phone" required>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="admin-email" class="form-label required" data-i18n="admin.users.email">อีเมล</label>
-              <input type="email" class="form-control" id="admin-email" required>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="admin-birth-date" class="form-label" data-i18n="admin.users.birthDate">วันเดือนปีเกิด</label>
+                <input type="date" class="form-control" id="admin-birth-date">
+                <div class="form-text">
+                  <small class="text-muted">ไม่จำเป็นต้องกรอก</small>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="admin-id-number" class="form-label" data-i18n="admin.users.idNumber">หมายเลขบัตรประชาชน/Passport</label>
+                <input type="text" class="form-control" id="admin-id-number">
+                <div class="form-text">
+                  <small class="text-muted">ไม่จำเป็นต้องกรอก</small>
+                </div>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="admin-phone" class="form-label required" data-i18n="admin.users.phone">เบอร์โทรศัพท์</label>
-              <input type="tel" class="form-control" id="admin-phone" required>
-            </div>
-            <div class="mb-3">
-              <label for="admin-password" class="form-label required" data-i18n="register.password">รหัสผ่าน</label>
-              <input type="password" class="form-control" id="admin-password" required>
-            </div>
-            <div class="mb-3">
-              <label for="admin-confirm-password" class="form-label required" data-i18n="register.confirmPassword">ยืนยันรหัสผ่าน</label>
-              <input type="password" class="form-control" id="admin-confirm-password" required>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="admin-password" class="form-label required" data-i18n="register.password">รหัสผ่าน</label>
+                <input type="password" class="form-control" id="admin-password" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="admin-confirm-password" class="form-label required" data-i18n="register.confirmPassword">ยืนยันรหัสผ่าน</label>
+                <input type="password" class="form-control" id="admin-confirm-password" required>
+              </div>
             </div>
           </form>
         </div>
