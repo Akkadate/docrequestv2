@@ -73,6 +73,10 @@
     "phonePlaceholder": "Enter your phone number",
     "faculty": "Faculty",
     "selectFaculty": "Select faculty",
+    "birthDate": "Date of Birth",
+    "birthDatePlaceholder": "Select your date of birth",
+    "idNumber": "ID Card/Passport Number",
+    "idNumberPlaceholder": "Enter your ID card or passport number",
     "password": "Password",
     "passwordPlaceholder": "Enter your password",
     "confirmPassword": "Confirm Password",
@@ -145,6 +149,8 @@
     "faculty": "Faculty",
     "email": "Email",
     "phone": "Phone",
+    "birthDate": "Date of Birth",
+    "idNumber": "ID Card/Passport Number",
     "joinDate": "Registration Date"
   },
   "status": {
@@ -278,6 +284,8 @@
       "email": "Email",
       "phone": "Phone",
       "faculty": "Faculty",
+      "birthDate": "Date of Birth",
+      "idNumber": "ID Card/Passport Number",
       "role": "Role",
       "joinDate": "Registration Date",
       "actions": "Actions",
