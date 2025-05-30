@@ -136,46 +136,65 @@ async function loadFaculties() {
     console.error('Error loading faculties:', error);
   }
 }
-
-// ตั้งค่าวันที่สูงสุดสำหรับวันเกิด (ป้องกันการเลือกวันที่ในอนาคต)
-// ตั้งค่าวันที่สูงสุดสำหรับวันเกิด (ป้องกันการเลือกวันที่ในอนาคต)
+// แทนที่ฟังก์ชัน setupBirthDateValidation() ในไฟล์ auth.js
 function setupBirthDateValidation() {
   const birthDateInput = document.getElementById('birth_date');
-  if (birthDateInput) {
-    // ตั้งค่าวันที่สูงสุดเป็นวันนี้
+  if (birthDateInput && typeof flatpickr !== 'undefined') {
+    // ใช้ Flatpickr สำหรับ custom date picker
+    const today = new Date();
+    const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+    
+    const fp = flatpickr(birthDateInput, {
+      dateFormat: "Y-m-d",
+      locale: "en", // บังคับให้เป็นภาษาอังกฤษ
+      maxDate: today,
+      minDate: minDate,
+      allowInput: false,
+      clickOpens: true,
+      onChange: function(selectedDates, dateStr, instance) {
+        // ตรวจสอบวันที่ที่เลือก
+        if (selectedDates.length > 0) {
+          const selectedDate = selectedDates[0];
+          if (selectedDate > today) {
+            showAlert('วันเกิดไม่สามารถเป็นวันที่ในอนาคตได้', 'warning');
+            instance.clear();
+          }
+        }
+      },
+      onReady: function(selectedDates, dateStr, instance) {
+        // ตั้งค่าเพิ่มเติมเมื่อพร้อม
+        const calendarContainer = instance.calendarContainer;
+        if (calendarContainer) {
+          calendarContainer.style.fontFamily = "'Prompt', Arial, sans-serif";
+        }
+      }
+    });
+    
+    return fp;
+  } else if (birthDateInput) {
+    // Fallback ถ้าไม่มี Flatpickr
     const today = new Date();
     const maxDate = today.toISOString().split('T')[0];
     birthDateInput.setAttribute('max', maxDate);
     
-    // ตั้งค่าวันที่ต่ำสุดเป็น 100 ปีที่แล้ว
     const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
     birthDateInput.setAttribute('min', minDate.toISOString().split('T')[0]);
     
-    // บังคับให้ date picker เป็นภาษาอังกฤษ
+    // พยายามบังคับให้เป็นภาษาอังกฤษ
     birthDateInput.setAttribute('lang', 'en-US');
-    birthDateInput.setAttribute('locale', 'en-US');
+    birthDateInput.setAttribute('type', 'date');
     
-    // ตั้งค่า dir attribute
-    birthDateInput.setAttribute('dir', 'ltr');
-    
-    // เพิ่ม event listener เพื่อตรวจสอบการเปลี่ยนแปลง
     birthDateInput.addEventListener('change', function(e) {
       const selectedDate = new Date(e.target.value);
-      const today = new Date();
-      
       if (selectedDate > today) {
         showAlert('วันเกิดไม่สามารถเป็นวันที่ในอนาคตได้', 'warning');
         e.target.value = '';
       }
     });
-    
-    // บังคับให้ input แสดงในรูปแบบที่ต้องการ
-    birthDateInput.addEventListener('focus', function(e) {
-      // บังคับให้เป็นภาษาอังกฤษเมื่อ focus
-      e.target.setAttribute('lang', 'en-US');
-    });
   }
 }
+
+
 // ตั้งค่าการตรวจสอบหมายเลขบัตรประชาชน/Passport
 function setupIdNumberValidation() {
   const idNumberInput = document.getElementById('id_number');
@@ -217,14 +236,10 @@ function setupIdNumberValidation() {
   }
 }
 
-// ตั้งค่าภาษาของ date picker ตามภาษาที่เลือก
+// แทนที่ฟังก์ชัน updateDatePickerLanguage()
 function updateDatePickerLanguage() {
   const birthDateInput = document.getElementById('birth_date');
   if (birthDateInput) {
-    // บังคับให้เป็นภาษาอังกฤษเสมอเพื่อความสม่ำเสมอ
-    birthDateInput.setAttribute('lang', 'en-US');
-    birthDateInput.setAttribute('locale', 'en-US');
-    
     // อัปเดต help text ตามภาษาที่เลือก
     const helpText = birthDateInput.parentNode.querySelector('.form-text small');
     if (helpText) {
@@ -237,6 +252,17 @@ function updateDatePickerLanguage() {
       };
       
       helpText.textContent = dateFormatTexts[currentLanguage] || dateFormatTexts['th'];
+    }
+    
+    // ถ้าใช้ Flatpickr ให้อัปเดต placeholder
+    if (window.birthDatePicker) {
+      const placeholderTexts = {
+        'th': 'เลือกวันเกิด',
+        'en': 'Select birth date',
+        'zh': '选择出生日期'
+      };
+      
+      birthDateInput.setAttribute('placeholder', placeholderTexts[window.currentLang || 'th']);
     }
   }
 }
@@ -268,7 +294,7 @@ function forceEnglishDatePicker() {
   });
 }
 
-// เพิ่มการฟังเหตุการณ์เมื่อโหลดหน้าเว็บ
+// แก้ไข DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
   const registerForm = document.getElementById('register-form');
   const loginForm = document.getElementById('login-form');
@@ -276,19 +302,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (registerForm) {
     registerForm.addEventListener('submit', register);
     loadFaculties();
-    setupBirthDateValidation();
+    
+    // ตั้งค่า date picker และเก็บ reference
+    window.birthDatePicker = setupBirthDateValidation();
+    
     setupIdNumberValidation();
     updateDatePickerLanguage();
-    forceEnglishDatePicker(); // เพิ่มบรรทัดนี้
     
     // ฟังการเปลี่ยนภาษา
     const languageButtons = document.querySelectorAll('[data-lang]');
     languageButtons.forEach(button => {
       button.addEventListener('click', () => {
-        // รอให้ระบบภาษาอัปเดตก่อน แล้วค่อยอัปเดต date picker
         setTimeout(() => {
           updateDatePickerLanguage();
-          forceEnglishDatePicker(); // เพิ่มบรรทัดนี้
         }, 100);
       });
     });
