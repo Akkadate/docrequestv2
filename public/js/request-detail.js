@@ -196,7 +196,7 @@ function displayRequestDetails(request) {
   document.getElementById('detail-status').innerHTML = createStatusBadge(request.status);
   document.getElementById('detail-price').textContent = formatCurrency(request.total_price);
   
-  // ข้อมูลนักศึกษา
+ // ข้อมูลนักศึกษา
   const studentInfoElements = {
     'detail-student-name': request.full_name || '',
     'detail-student-id': request.student_id || '',
@@ -211,6 +211,114 @@ function displayRequestDetails(request) {
       element.textContent = studentInfoElements[id];
     }
   });
+  
+  // แสดงวันเดือนปีเกิด
+  const studentBirthDateElement = document.getElementById('detail-student-birth-date');
+  if (studentBirthDateElement) {
+    if (request.birth_date) {
+      // แปลงวันที่จาก ISO format
+      const birthDate = new Date(request.birth_date);
+      console.log('Student birth date raw:', request.birth_date, 'Parsed:', birthDate);
+      
+      const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'Asia/Bangkok'
+      };
+      
+      const formattedDate = birthDate.toLocaleDateString('th-TH', options);
+      console.log('Formatted student birth date:', formattedDate);
+      
+      studentBirthDateElement.textContent = formattedDate;
+    } else {
+      studentBirthDateElement.textContent = '-';
+    }
+  }
+  
+  // แสดงหมายเลขบัตรประชาชน/Passport
+  const studentIdNumberElement = document.getElementById('detail-student-id-number');
+  if (studentIdNumberElement) {
+    if (request.id_number) {
+      console.log('Student ID Number raw:', request.id_number);
+      
+      // ซ่อนบางส่วนของหมายเลขเพื่อความปลอดภัย
+      const maskedIdNumber = maskIdNumber(request.id_number);
+      console.log('Masked Student ID Number:', maskedIdNumber);
+      
+      studentIdNumberElement.textContent = maskedIdNumber;
+      studentIdNumberElement.title = 'คลิกเพื่อดูหมายเลขเต็ม';
+      studentIdNumberElement.style.cursor = 'pointer';
+      
+      // เพิ่มการคลิกเพื่อแสดงหมายเลขเต็ม
+      studentIdNumberElement.addEventListener('click', function() {
+        if (this.textContent === maskedIdNumber) {
+          this.textContent = request.id_number;
+          this.title = 'คลิกเพื่อซ่อนหมายเลข';
+        } else {
+          this.textContent = maskedIdNumber;
+          this.title = 'คลิกเพื่อดูหมายเลขเต็ม';
+        }
+      });
+    } else {
+      console.log('No student ID number found');
+      studentIdNumberElement.textContent = '-';
+    }
+  }
+  
+  // แสดงวันเดือนปีเกิด
+  const studentBirthDateElement = document.getElementById('detail-student-birth-date');
+  if (studentBirthDateElement) {
+    if (request.birth_date) {
+      // แปลงวันที่จาก ISO format
+      const birthDate = new Date(request.birth_date);
+      console.log('Student birth date raw:', request.birth_date, 'Parsed:', birthDate);
+      
+      const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'Asia/Bangkok'
+      };
+      
+      const formattedDate = birthDate.toLocaleDateString('th-TH', options);
+      console.log('Formatted student birth date:', formattedDate);
+      
+      studentBirthDateElement.textContent = formattedDate;
+    } else {
+      studentBirthDateElement.textContent = '-';
+    }
+  }
+  
+  // แสดงหมายเลขบัตรประชาชน/Passport
+  const studentIdNumberElement = document.getElementById('detail-student-id-number');
+  if (studentIdNumberElement) {
+    if (request.id_number) {
+      console.log('Student ID Number raw:', request.id_number);
+      
+      // ซ่อนบางส่วนของหมายเลขเพื่อความปลอดภัย
+      const maskedIdNumber = maskIdNumber(request.id_number);
+      console.log('Masked Student ID Number:', maskedIdNumber);
+      
+      studentIdNumberElement.textContent = maskedIdNumber;
+      studentIdNumberElement.title = 'คลิกเพื่อดูหมายเลขเต็ม';
+      studentIdNumberElement.style.cursor = 'pointer';
+      
+      // เพิ่มการคลิกเพื่อแสดงหมายเลขเต็ม
+      studentIdNumberElement.addEventListener('click', function() {
+        if (this.textContent === maskedIdNumber) {
+          this.textContent = request.id_number;
+          this.title = 'คลิกเพื่อซ่อนหมายเลข';
+        } else {
+          this.textContent = maskedIdNumber;
+          this.title = 'คลิกเพื่อดูหมายเลขเต็ม';
+        }
+      });
+    } else {
+      console.log('No student ID number found');
+      studentIdNumberElement.textContent = '-';
+    }
+  }
   
   // ที่อยู่จัดส่ง (ถ้ามี)
   if (request.delivery_method === 'mail' && request.address) {
