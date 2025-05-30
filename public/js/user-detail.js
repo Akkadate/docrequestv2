@@ -95,7 +95,6 @@ async function loadUserDetails() {
     showAdminAlert('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้', 'danger');
   }
 }
-
 // แสดงรายละเอียดผู้ใช้
 function displayUserDetails(user) {
   try {
