@@ -57,7 +57,7 @@
     "password": "รหัสผ่าน",
     "passwordPlaceholder": "กรอกรหัสผ่าน",
     "button": "เข้าสู่ระบบ",
-    "noAccountText": "ยังไม่มีบัญชี? <a href='register.html'>ลงทะเบียน</a>",
+    "noAccountText": "ยังไม่มีบัญชี? ",
     "noAccount": "ยังไม่มีบัญชี?",
     "register": "ลงทะเบียน"
   },
