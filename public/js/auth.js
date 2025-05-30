@@ -53,6 +53,10 @@ async function register(event) {
       showAlert(i18n[currentLang].success.registration, 'success');
       // รีเซ็ตฟอร์ม
       document.getElementById('register-form').reset();
+      // รีเซ็ต Flatpickr ถ้ามี
+      if (window.birthDatePicker) {
+        window.birthDatePicker.clear();
+      }
       // รอ 2 วินาทีแล้วไปที่หน้าล็อกอิน
       setTimeout(() => {
         window.location.href = '/login.html';
@@ -136,11 +140,15 @@ async function loadFaculties() {
     console.error('Error loading faculties:', error);
   }
 }
-// แทนที่ฟังก์ชัน setupBirthDateValidation() ในไฟล์ auth.js
+
+// ตั้งค่า Date Picker
 function setupBirthDateValidation() {
   const birthDateInput = document.getElementById('birth_date');
-  if (birthDateInput && typeof flatpickr !== 'undefined') {
-    // ใช้ Flatpickr สำหรับ custom date picker
+  if (!birthDateInput) return null;
+  
+  // ตรวจสอบว่ามี Flatpickr หรือไม่
+  if (typeof flatpickr !== 'undefined') {
+    // ใช้ Flatpickr
     const today = new Date();
     const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
     
@@ -151,8 +159,8 @@ function setupBirthDateValidation() {
       minDate: minDate,
       allowInput: false,
       clickOpens: true,
+      placeholder: "เลือกวันเกิด",
       onChange: function(selectedDates, dateStr, instance) {
-        // ตรวจสอบวันที่ที่เลือก
         if (selectedDates.length > 0) {
           const selectedDate = selectedDates[0];
           if (selectedDate > today) {
@@ -162,7 +170,6 @@ function setupBirthDateValidation() {
         }
       },
       onReady: function(selectedDates, dateStr, instance) {
-        // ตั้งค่าเพิ่มเติมเมื่อพร้อม
         const calendarContainer = instance.calendarContainer;
         if (calendarContainer) {
           calendarContainer.style.fontFamily = "'Prompt', Arial, sans-serif";
@@ -170,9 +177,14 @@ function setupBirthDateValidation() {
       }
     });
     
+    console.log('Flatpickr initialized successfully');
     return fp;
-  } else if (birthDateInput) {
-    // Fallback ถ้าไม่มี Flatpickr
+  } else {
+    // Fallback สำหรับ native date picker
+    console.log('Flatpickr not found, using native date picker');
+    
+    birthDateInput.setAttribute('type', 'date');
+    
     const today = new Date();
     const maxDate = today.toISOString().split('T')[0];
     birthDateInput.setAttribute('max', maxDate);
@@ -180,9 +192,7 @@ function setupBirthDateValidation() {
     const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
     birthDateInput.setAttribute('min', minDate.toISOString().split('T')[0]);
     
-    // พยายามบังคับให้เป็นภาษาอังกฤษ
     birthDateInput.setAttribute('lang', 'en-US');
-    birthDateInput.setAttribute('type', 'date');
     
     birthDateInput.addEventListener('change', function(e) {
       const selectedDate = new Date(e.target.value);
@@ -191,9 +201,10 @@ function setupBirthDateValidation() {
         e.target.value = '';
       }
     });
+    
+    return null;
   }
 }
-
 
 // ตั้งค่าการตรวจสอบหมายเลขบัตรประชาชน/Passport
 function setupIdNumberValidation() {
@@ -202,6 +213,8 @@ function setupIdNumberValidation() {
     idNumberInput.addEventListener('input', function(e) {
       const value = e.target.value.trim();
       const helpText = e.target.parentNode.querySelector('.form-text small');
+      
+      if (!helpText) return;
       
       if (value.length === 0) {
         helpText.textContent = 'กรอกหมายเลขบัตรประชาชน 13 หลักหรือหมายเลข Passport';
@@ -236,7 +249,7 @@ function setupIdNumberValidation() {
   }
 }
 
-// แทนที่ฟังก์ชัน updateDatePickerLanguage()
+// อัปเดตภาษาของ Date Picker
 function updateDatePickerLanguage() {
   const birthDateInput = document.getElementById('birth_date');
   if (birthDateInput) {
@@ -255,7 +268,7 @@ function updateDatePickerLanguage() {
     }
     
     // ถ้าใช้ Flatpickr ให้อัปเดต placeholder
-    if (window.birthDatePicker) {
+    if (window.birthDatePicker && window.birthDatePicker.config) {
       const placeholderTexts = {
         'th': 'เลือกวันเกิด',
         'en': 'Select birth date',
@@ -267,44 +280,22 @@ function updateDatePickerLanguage() {
   }
 }
 
-// เพิ่มฟังก์ชันสำหรับบังคับภาษาให้ทั้งหน้า
-function forceEnglishDatePicker() {
-  // ตั้งค่า locale สำหรับทั้งหน้า
-  const html = document.documentElement;
-  
-  // เก็บ locale เดิมไว้
-  const originalLang = html.getAttribute('lang');
-  
-  // เมื่อ focus ที่ date input ให้เปลี่ยนเป็นภาษาอังกฤษชั่วคราว
-  const dateInputs = document.querySelectorAll('input[type="date"]');
-  
-  dateInputs.forEach(input => {
-    input.addEventListener('focus', function() {
-      html.setAttribute('lang', 'en-US');
-    });
-    
-    input.addEventListener('blur', function() {
-      // คืนค่าภาษาเดิม
-      html.setAttribute('lang', originalLang || 'th');
-    });
-    
-    // ตั้งค่าให้ชัดเจน
-    input.setAttribute('lang', 'en-US');
-    input.setAttribute('dir', 'ltr');
-  });
-}
-
-// แก้ไข DOMContentLoaded
+// เมื่อหน้าเว็บโหลดเสร็จ
 document.addEventListener('DOMContentLoaded', () => {
   const registerForm = document.getElementById('register-form');
   const loginForm = document.getElementById('login-form');
   
   if (registerForm) {
+    console.log('Register form found, initializing...');
+    
     registerForm.addEventListener('submit', register);
     loadFaculties();
     
     // ตั้งค่า date picker และเก็บ reference
-    window.birthDatePicker = setupBirthDateValidation();
+    setTimeout(() => {
+      window.birthDatePicker = setupBirthDateValidation();
+      console.log('Birth date picker:', window.birthDatePicker);
+    }, 100);
     
     setupIdNumberValidation();
     updateDatePickerLanguage();
