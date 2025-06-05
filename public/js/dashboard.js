@@ -1,4 +1,42 @@
-// โหลดข้อมูลคำขอล่าสุด
+// ฟังก์ชันรอให้ i18n โหลดเสร็จ
+function waitForI18n(callback, maxAttempts = 10, currentAttempt = 0) {
+  if (window.i18n && window.i18n[currentLang] && window.i18n[currentLang].dashboard && window.i18n[currentLang].errors) {
+    callback();
+  } else if (currentAttempt < maxAttempts) {
+    console.log(`Waiting for i18n... attempt ${currentAttempt + 1}/${maxAttempts}`);
+    setTimeout(() => {
+      waitForI18n(callback, maxAttempts, currentAttempt + 1);
+    }, 200);
+  } else {
+    console.warn('i18n failed to load after maximum attempts, using fallback');
+    callback(); // เรียก callback ต่อไปแม้ว่า i18n จะไม่พร้อม
+  }
+}
+
+// ฟังก์ชัน helper สำหรับดึงข้อความแปล
+function getTranslation(key, fallback = '') {
+  try {
+    const keys = key.split('.');
+    let translation = window.i18n && window.i18n[currentLang];
+    
+    for (const k of keys) {
+      if (translation && translation[k]) {
+        translation = translation[k];
+      } else {
+        console.warn(`Translation not found for key: ${key}`);
+        return fallback;
+      }
+    }
+    
+    return translation || fallback;
+  } catch (error) {
+    console.warn(`Error getting translation for key: ${key}`, error);
+    return fallback;
+  }
+}
+
+
+// โหลดข้อมูลคำขอล่าสุด - แก้ไขใหม่
 async function loadRecentRequests() {
   try {
     const token = localStorage.getItem('token');
@@ -27,9 +65,13 @@ async function loadRecentRequests() {
     displayRecentRequests(requests.slice(0, 5));
   } catch (error) {
     console.error('Error loading recent requests:', error);
-    showAlert(i18n[currentLang].errors.loadingRequestsFailed, 'danger');
+    
+    // ใช้ getTranslation แทนการเข้าถึง i18n โดยตรง
+    const errorMessage = getTranslation('errors.loadingRequestsFailed', 'ไม่สามารถโหลดข้อมูลคำขอเอกสารได้');
+    showAlert(errorMessage, 'danger');
   }
 }
+
 
 // อัปเดตจำนวนคำขอ
 function updateRequestCounts(requests) {
@@ -44,7 +86,8 @@ function updateRequestCounts(requests) {
   document.getElementById('pending-requests').textContent = pendingRequests;
 }
 
-// แสดงคำขอล่าสุด
+
+// แสดงคำขอล่าสุด - แก้ไขใหม่
 function displayRecentRequests(requests) {
   const recentRequestsTable = document.getElementById('recent-requests-table');
   
@@ -53,7 +96,7 @@ function displayRecentRequests(requests) {
   if (requests.length === 0) {
     const emptyRow = document.createElement('tr');
     emptyRow.innerHTML = `
-      <td colspan="6" class="text-center" data-i18n="dashboard.noRequests">ไม่มีคำขอเอกสาร</td>
+      <td colspan="6" class="text-center">${getTranslation('dashboard.noRequests', 'ไม่มีคำขอเอกสาร')}</td>
     `;
     recentRequestsTable.appendChild(emptyRow);
     return;
@@ -62,19 +105,31 @@ function displayRecentRequests(requests) {
   requests.forEach(request => {
     const row = document.createElement('tr');
     
+    // ใช้ getTranslation สำหรับ data-label
+    const documentTypeLabel = getTranslation('dashboard.documentType', 'ประเภทเอกสาร');
+    const requestDateLabel = getTranslation('dashboard.requestDate', 'วันที่ขอ');
+    const deliveryMethodLabel = getTranslation('dashboard.deliveryMethod', 'วิธีการรับ');
+    const statusLabel = getTranslation('dashboard.status', 'สถานะ');
+    const priceLabel = getTranslation('dashboard.price', 'ราคา');
+    const actionsLabel = getTranslation('dashboard.actions', 'การดำเนินการ');
+    
+    // ใช้ getTranslation สำหรับข้อความ
+    const pickupText = getTranslation('request.pickup', 'รับด้วยตนเอง');
+    const mailText = getTranslation('request.mail', 'รับทางไปรษณีย์');
+    const urgentText = getTranslation('request.urgentLabel', 'เร่งด่วน');
+    const viewDetailsText = getTranslation('dashboard.viewDetails', 'ดูรายละเอียด');
+    
     row.innerHTML = `
-      <td data-label="${i18n[currentLang].dashboard.documentType}">${request.document_name}</td>
-      <td data-label="${i18n[currentLang].dashboard.requestDate}">${formatDate(request.created_at, currentLang)}</td>
-      <td data-label="${i18n[currentLang].dashboard.deliveryMethod}">
-        ${request.delivery_method === 'pickup' ? 
-          `<span data-i18n="request.pickup">${i18n[currentLang].request.pickup}</span>` : 
-          `<span data-i18n="request.mail">${i18n[currentLang].request.mail}</span>`}
-        ${request.urgent ? `<span class="badge bg-warning text-dark ms-2" data-i18n="request.urgent">${i18n[currentLang].request.urgentLabel}</span>` : ''}
+      <td data-label="${documentTypeLabel}">${request.document_name}</td>
+      <td data-label="${requestDateLabel}">${formatDate(request.created_at, currentLang)}</td>
+      <td data-label="${deliveryMethodLabel}">
+        ${request.delivery_method === 'pickup' ? pickupText : mailText}
+        ${request.urgent ? `<span class="badge bg-warning text-dark ms-2">${urgentText}</span>` : ''}
       </td>
-      <td data-label="${i18n[currentLang].dashboard.status}">${createStatusBadge(request.status)}</td>
-      <td data-label="${i18n[currentLang].dashboard.price}">${formatCurrency(request.total_price, currentLang)}</td>
-      <td data-label="${i18n[currentLang].dashboard.actions}">
-        <a href="request-detail.html?id=${request.id}" class="btn btn-sm btn-primary" data-i18n="dashboard.viewDetails">ดูรายละเอียด</a>
+      <td data-label="${statusLabel}">${createStatusBadge(request.status)}</td>
+      <td data-label="${priceLabel}">${formatCurrency(request.total_price, currentLang)}</td>
+      <td data-label="${actionsLabel}">
+        <a href="request-detail.html?id=${request.id}" class="btn btn-sm btn-primary">${viewDetailsText}</a>
       </td>
     `;
     
@@ -82,7 +137,8 @@ function displayRecentRequests(requests) {
   });
 }
 
-// โหลดข้อมูลผู้ใช้
+
+// โหลดข้อมูลผู้ใช้ - แก้ไขใหม่
 async function loadUserProfile() {
   try {
     const token = localStorage.getItem('token');
@@ -122,12 +178,17 @@ async function loadUserProfile() {
     
   } catch (error) {
     console.error('Error loading user profile:', error);
-    showAlert(i18n[currentLang].errors.loadingProfileFailed, 'danger');
+    
+    // ใช้ getTranslation แทนการเข้าถึง i18n โดยตรง
+    const errorMessage = getTranslation('errors.loadingProfileFailed', 'ไม่สามารถโหลดข้อมูลผู้ใช้ได้');
+    showAlert(errorMessage, 'danger');
   }
 }
 
-// เพิ่มการฟังเหตุการณ์เมื่อโหลดหน้าเว็บ
-document.addEventListener('DOMContentLoaded', () => {
+// ฟังก์ชันเริ่มต้นหลักของหน้า Dashboard
+function initializeDashboard() {
+  console.log('Initializing dashboard...');
+  
   // ตรวจสอบว่ามีการเข้าสู่ระบบหรือไม่
   checkLogin();
   
@@ -136,4 +197,15 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // โหลดข้อมูลผู้ใช้
   loadUserProfile();
+}
+
+// แก้ไข DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Dashboard page loaded, waiting for i18n...');
+  
+  // รอให้ i18n โหลดเสร็จก่อนแล้วค่อยเริ่มต้น dashboard
+  waitForI18n(() => {
+    console.log('i18n ready, initializing dashboard');
+    initializeDashboard();
+  });
 });
