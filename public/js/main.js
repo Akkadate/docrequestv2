@@ -161,19 +161,23 @@ function checkAdmin() {
   }
 }
 
-// แสดงข้อความแจ้งเตือน
+// แสดงข้อความแจ้งเตือน - แก้ไขใหม่
 function showAlert(message, type = 'success') {
   const alertContainer = document.getElementById('alert-container');
   
   if (!alertContainer) {
+    console.warn('Alert container not found, message:', message);
     return;
   }
+  
+  // ตรวจสอบว่า message ไม่เป็น undefined หรือ null
+  const displayMessage = message || 'เกิดข้อผิดพลาด';
   
   const alert = document.createElement('div');
   alert.className = `alert alert-${type} alert-dismissible fade show`;
   alert.role = 'alert';
   alert.innerHTML = `
-    ${message}
+    ${displayMessage}
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   `;
   
@@ -189,8 +193,30 @@ function showAlert(message, type = 'success') {
   }, 5000);
 }
 
-// เพิ่มการฟังเหตุการณ์เมื่อโหลดหน้าเว็บ
+
+// เพิ่มฟังก์ชันสำหรับ debug i18n
+function debugI18n() {
+  console.log('=== i18n Debug Info ===');
+  console.log('window.i18n exists:', !!window.i18n);
+  console.log('currentLang:', window.currentLang);
+  
+  if (window.i18n && window.currentLang) {
+    console.log('Current language data exists:', !!window.i18n[window.currentLang]);
+    console.log('Dashboard section exists:', !!(window.i18n[window.currentLang] && window.i18n[window.currentLang].dashboard));
+    console.log('Errors section exists:', !!(window.i18n[window.currentLang] && window.i18n[window.currentLang].errors));
+  }
+  console.log('======================');
+}
+
+// เพิ่มการฟังเหตุการณ์เมื่อโหลดหน้าเว็บ - แก้ไขใหม่
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('main.js: DOM loaded');
+  
+  // Debug i18n status
+  debugI18n();
+  
   checkAuthStatus();
   setupLogoutButton();
 });
+
+
