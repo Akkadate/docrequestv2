@@ -8,26 +8,61 @@ const i18n = {
   zh: {}
 };
 
-// โหลดไฟล์ภาษา
+// สถานะการโหลด i18n
+let i18nLoaded = false;
+
+// โหลดไฟล์ภาษา - แก้ไขใหม่
 async function loadLanguageFiles() {
   try {
+    console.log('Loading language files...');
+    
     const thResponse = await fetch('/locales/th.json');
     const enResponse = await fetch('/locales/en.json');
     const zhResponse = await fetch('/locales/zh.json');
+    
+    if (!thResponse.ok || !enResponse.ok || !zhResponse.ok) {
+      throw new Error('Failed to load language files');
+    }
     
     i18n.th = await thResponse.json();
     i18n.en = await enResponse.json();
     i18n.zh = await zhResponse.json();
     
+    console.log('Language files loaded successfully');
+    
+    // ตั้งค่าสถานะว่าโหลดเสร็จแล้ว
+    i18nLoaded = true;
+    
+    // ทำให้ตัวแปรเป็น global
+    window.i18n = i18n;
+    window.currentLang = currentLang;
+    window.i18nLoaded = i18nLoaded;
+    
     // อัปเดตภาษาในหน้าเว็บ
     updatePageLanguage();
+    
+    // ส่ง custom event เพื่อแจ้งว่า i18n พร้อมแล้ว
+    const i18nReadyEvent = new CustomEvent('i18nReady', {
+      detail: { i18n, currentLang }
+    });
+    document.dispatchEvent(i18nReadyEvent);
+    
+    console.log('i18n ready event dispatched');
+    
   } catch (error) {
     console.error('Error loading language files:', error);
+    
+    // แม้จะ error ยังต้องตั้งค่า global variables
+    window.i18n = i18n;
+    window.currentLang = currentLang;
+    window.i18nLoaded = false;
   }
 }
 
-// อัปเดตภาษาในหน้าเว็บ
+// อัปเดตภาษาในหน้าเว็บ - แก้ไขใหม่
 function updatePageLanguage() {
+  console.log('Updating page language to:', currentLang);
+  
   // กำหนดภาษาให้กับ HTML tag
   document.documentElement.lang = currentLang;
 
@@ -102,24 +137,24 @@ function updatePageLanguage() {
     }
   });
   
-  // *** เพิ่มส่วนนี้เพื่อทำให้ตัวแปรเป็น global ***
-  // ทำให้ไฟล์อื่นเข้าถึง i18n และ currentLang ได้
-  window.i18n = i18n;
-  window.currentLang = currentLang;
-  
   // อัปเดตตารางเอกสารถ้ามีฟังก์ชัน updateDocumentTable
   if (typeof window.updateDocumentTable === 'function') {
     window.updateDocumentTable();
   }
 }
 
-// เปลี่ยนภาษา
+// เปลี่ยนภาษา - แก้ไขใหม่
 function changeLanguage(lang) {
+  console.log('Changing language to:', lang);
+  
   currentLang = lang;
   localStorage.setItem('language', lang);
   
   // กำหนดภาษาให้กับ HTML tag
   document.documentElement.lang = lang;
+  
+  // อัปเดต global variable
+  window.currentLang = currentLang;
   
   updatePageLanguage();
 }
@@ -151,10 +186,20 @@ function setupLanguageSelector() {
   });
 }
 
-// โหลดภาษาเมื่อโหลดหน้าเว็บ
+// เพิ่มฟังก์ชัน helper เพื่อตรวจสอบว่า i18n พร้อมหรือไม่
+function isI18nReady() {
+  return window.i18nLoaded && window.i18n && window.i18n[currentLang];
+}
+
+// โหลดภาษาเมื่อโหลดหน้าเว็บ - แก้ไขใหม่
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('language.js: DOM loaded');
+  
   // กำหนดภาษาให้กับ HTML tag ก่อนโหลด
   document.documentElement.lang = currentLang;
+  
+  // ตั้งค่า global variables ก่อน
+  window.currentLang = currentLang;
   
   await loadLanguageFiles();
   setupLanguageSelector();
