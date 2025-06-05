@@ -103,7 +103,7 @@ function saveQuantityFromModal() {
   }
 }
 
-// ปรับปรุงฟังก์ชัน loadDocumentTypes เพื่อเพิ่ม debug logs และเรียงตาม ID
+// แก้ไขฟังก์ชัน loadDocumentTypes() ในไฟล์ request.js
 async function loadDocumentTypes() {
   try {
     console.log('Loading document types, current language:', currentLang);
@@ -116,12 +116,11 @@ async function loadDocumentTypes() {
     documentTypes = await response.json();
     console.log('Loaded document types:', documentTypes);
     
-    // **เพิ่มการเรียงลำดับตาม ID**
+    // เรียงลำดับตาม ID
     documentTypes.sort((a, b) => {
-      // แปลง ID เป็นตัวเลข (ถ้า ID เป็น string ที่มีตัวเลข)
       const idA = parseInt(a.id) || 0;
       const idB = parseInt(b.id) || 0;
-      return idA - idB; // เรียงจากน้อยไปมาก
+      return idA - idB;
     });
     
     console.log('Document types sorted by ID:', documentTypes);
@@ -131,26 +130,40 @@ async function loadDocumentTypes() {
     
     if (modalDocumentTypeSelect) {
       console.log('Found modal-document-type, populating options');
-      // ล้างตัวเลือกเดิม
       modalDocumentTypeSelect.innerHTML = '';
       
-      // เพิ่มตัวเลือกเริ่มต้น
+      // เพิ่มตัวเลือกเริ่มต้น - แก้ไขส่วนนี้
       const defaultOption = document.createElement('option');
       defaultOption.value = '';
       defaultOption.disabled = true;
       defaultOption.selected = true;
       
-      // ใช้ข้อความที่เหมาะสมกับภาษาปัจจุบัน
-      if (i18n[currentLang] && i18n[currentLang].request && i18n[currentLang].request.selectDocumentType) {
-        defaultOption.textContent = i18n[currentLang].request.selectDocumentType;
+      // ตรวจสอบและใช้ข้อความที่เหมาะสมกับภาษาปัจจุบัน
+      let selectText = 'เลือกประเภทเอกสาร'; // ค่าเริ่มต้น
+      
+      // ตรวจสอบว่า window.i18n มีอยู่และโหลดเสร็จแล้วหรือไม่
+      if (window.i18n && window.i18n[currentLang] && window.i18n[currentLang].request) {
+        if (window.i18n[currentLang].request.selectDocumentType) {
+          selectText = window.i18n[currentLang].request.selectDocumentType;
+        } else {
+          console.warn(`Translation for 'request.selectDocumentType' not found in language ${currentLang}`);
+        }
       } else {
-        defaultOption.textContent = 'เลือกประเภทเอกสาร';
-        console.warn(`Translation for 'request.selectDocumentType' not found in language ${currentLang}`);
+        console.warn('i18n object not ready yet, using default text');
+        
+        // ถ้า i18n ยังไม่พร้อม ให้รอแล้วลองใหม่
+        setTimeout(() => {
+          if (window.i18n && window.i18n[currentLang] && window.i18n[currentLang].request && window.i18n[currentLang].request.selectDocumentType) {
+            defaultOption.textContent = window.i18n[currentLang].request.selectDocumentType;
+            console.log('Updated select text after i18n loaded');
+          }
+        }, 500);
       }
       
+      defaultOption.textContent = selectText;
       modalDocumentTypeSelect.appendChild(defaultOption);
       
-      // เพิ่มรายการประเภทเอกสาร (ตามลำดับ ID ที่เรียงแล้ว)
+      // เพิ่มรายการประเภทเอกสาร
       if (documentTypes && documentTypes.length > 0) {
         documentTypes.forEach(type => {
           const option = document.createElement('option');
@@ -172,6 +185,22 @@ async function loadDocumentTypes() {
     showAlert('ไม่สามารถโหลดข้อมูลประเภทเอกสารได้', 'danger');
   }
 }
+
+// เพิ่มฟังก์ชันรอให้ i18n โหลดเสร็จ
+function waitForI18n(callback, maxAttempts = 10, currentAttempt = 0) {
+  if (window.i18n && window.i18n[currentLang] && window.i18n[currentLang].request) {
+    callback();
+  } else if (currentAttempt < maxAttempts) {
+    setTimeout(() => {
+      waitForI18n(callback, maxAttempts, currentAttempt + 1);
+    }, 200);
+  } else {
+    console.warn('i18n failed to load after maximum attempts');
+    callback(); // เรียก callback ต่อไปแม้ว่า i18n จะไม่พร้อม
+  }
+}
+
+
 
 // เพิ่มเอกสารที่เลือกลงในตาราง
 function addDocumentToSelection() {
@@ -621,8 +650,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ตรวจสอบว่ามีการเข้าสู่ระบบหรือไม่
   checkLogin();
   
-  // โหลดข้อมูลประเภทเอกสาร
-  loadDocumentTypes();
+  // รอให้ i18n โหลดเสร็จก่อนแล้วค่อยโหลดประเภทเอกสาร
+  waitForI18n(() => {
+    loadDocumentTypes();
+  });
   
   // ตั้งค่าปุ่มเพิ่มเอกสาร
   const addDocumentButton = document.getElementById('add-document-button');
