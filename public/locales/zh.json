@@ -117,14 +117,13 @@
     "scanQR": "扫描二维码支付",
     "bankTransfer": "或通过银行账户转账：",
     "bankName": "银行：",
-    "accountNumber": "账号：",
     "accountName": "账户名：",
     "shippingFee": "邮寄费",
     "urgentService": "加急服务",
     "qrAmount": "金额",
     "selectFile": "选择文件",
     "bankNameValue": "曼谷银行",
-    "accountNumber": "134-5-567992",
+    "accountNumber": "账号：",
     "accountNameValue": "北曼谷大学"
   },
   "dashboard": {
