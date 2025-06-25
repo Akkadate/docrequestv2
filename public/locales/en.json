@@ -117,14 +117,13 @@
     "scanQR": "Scan QR Code to pay",
     "bankTransfer": "Or transfer via bank account:",
     "bankName": "Bank:",
-    "accountNumber": "Account Number:",
     "accountName": "Account Name:",
     "shippingFee": "Shipping Fee",
     "urgentService": "Urgent Service",
     "qrAmount": "Amount",
     "selectFile": "Choose File",
     "bankNameValue": "Bangkok Bank",
-    "accountNumber": "134-5-567992",
+    "accountNumber": "Account Number:",
     "accountNameValue": "North Bangkok University"
   },
   "dashboard": {
