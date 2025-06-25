@@ -90,6 +90,7 @@
     "header": "申请文件",
     "documentType": "文件类型",
     "addDocument": "添加文件",
+    "cancel": "取消",
     "documentName": "文件名称",
     "unitPrice": "单价",
     "currency": "泰铢",
