@@ -89,6 +89,7 @@
     "title": "Request Document - Document Request System",
     "header": "Request Document",
     "addDocument": "Add Document",
+     "cancel": "Cancel",
     "documentType": "Document Type",
     "documentName": "Document Name",
     "unitPrice": "Unit Price",
