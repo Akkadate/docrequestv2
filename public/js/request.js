@@ -736,7 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const accountNameElement = document.getElementById('account-name');
   
   if (bankNameElement) bankNameElement.textContent = 'ธนาคารกรุงไทย';
-  if (accountNumberElement) accountNumberElement.textContent = '1234567890';
+  if (accountNumberElement) accountNumberElement.textContent = '134-5-567992';
   if (accountNameElement) accountNameElement.textContent = 'มหาวิทยาลัยนอร์ทกรุงเทพ';
   
   // เริ่มแสดงตารางเอกสารที่ว่าง
