@@ -102,7 +102,7 @@
     "selectDocumentType": "选择文件类型",
     "deliveryMethod": "接收方式",
     "pickup": "自取 (萨潘迈登记部)",
-    "pickuprangsit": "自取 (兰实登记部)",
+    "pickupRangsit": "自取 (兰实登记部)",
     "mail": "邮寄",
     "address": "邮寄地址",
     "addressPlaceholder": "输入您的邮寄地址",
