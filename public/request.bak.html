@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="request.title">ขอเอกสาร - ระบบขอเอกสารออนไลน์</title>
+  <!-- เพิ่มฟอนต์ Prompt สำหรับภาษาไทยและอังกฤษ -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- เพิ่มฟอนต์ Noto Sans SC สำหรับภาษาจีน -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  
+  <!-- ใช้ QR Code API แทน library -->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script> -->
+  
+  <!-- เพิ่ม CSS สำหรับปรับความกว้างตาราง -->
+  <style>
+    #document-selection-table {
+      table-layout: fixed;
+      width: 100%;
+    }
+    
+    #document-selection-table th:nth-child(1), /* ชื่อเอกสาร */
+    #document-selection-table td:nth-child(1) {
+      width: 45%;
+    }
+    
+    #document-selection-table th:nth-child(2), /* ราคาต่อชิ้น */
+    #document-selection-table td:nth-child(2) {
+      width: 15%;
+      text-align: right;
+    }
+    
+    #document-selection-table th:nth-child(3), /* จำนวน */
+    #document-selection-table td:nth-child(3) {
+      width: 15%;
+      text-align: center;
+    }
+    
+    #document-selection-table th:nth-child(4), /* รวม */
+    #document-selection-table td:nth-child(4) {
+      width: 15%;
+      text-align: right;
+    }
+    
+    #document-selection-table th:nth-child(5), /* ปุ่มลบ */
+    #document-selection-table td:nth-child(5) {
+      width: 10%;
+      text-align: center;
+      min-width: 60px;
+    }
+    
+    /* ปรับ input group ในคอลัมน์จำนวน */
+    #document-selection-table .input-group {
+      max-width: 120px;
+      margin: 0 auto;
+    }
+    
+    #document-selection-table .quantity-input {
+      max-width: 50px;
+      text-align: center;
+      padding: 2px 4px;
+      font-size: 14px;
+    }
+    
+    #document-selection-table .btn-outline-secondary {
+      padding: 2px 6px;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+    
+    /* ปรับขนาดปุ่มลบ */
+    #document-selection-table .remove-document {
+      padding: 4px 8px;
+      font-size: 12px;
+      min-width: 30px;
+    }
+    
+    /* CSS สำหรับ QR Code container */
+    .qr-code-container {
+      text-align: center;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      border: 2px solid #dee2e6;
+      margin-bottom: 15px;
+    }
+    
+    #qr-canvas {
+      max-width: 100%;
+      height: auto;
+      border: 3px solid #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: block;
+      margin: 0 auto;
+    }
+    
+    .qr-amount-display {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    
+    .qr-info {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 10px;
+    }
+    
+    /* CSS สำหรับ custom file input */
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .file-input-wrapper input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      z-index: 2;
+    }
+    
+    .file-input-label {
+      display: block;
+      padding: 0.375rem 0.75rem;
+      margin-bottom: 0;
+      font-weight: 400;
+      line-height: 1.5;
+      color: #212529;
+      text-align: center;
+      background-color: #fff;
+      border: 1px solid #ced4da;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .file-input-wrapper:hover .file-input-label {
+      border-color: #86b7fe;
+    }
+    
+    .file-input-wrapper input[type="file"]:focus + .file-input-label {
+      border-color: #86b7fe;
+      outline: 0;
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .file-input-selected {
+      color: #0d6efd;
+      font-weight: 500;
+    }
+    
+    /* ปรับแต่งสำหรับ responsive */
+    @media (max-width: 768px) {
+      #document-selection-table th:nth-child(1),
+      #document-selection-table td:nth-child(1) {
+        width: 30%;
+      }
+      
+      #document-selection-table th:nth-child(2),
+      #document-selection-table td:nth-child(2) {
+        width: 22%;
+      }
+      
+      #document-selection-table th:nth-child(3),
+      #document-selection-table td:nth-child(3) {
+        width: 25%;
+      }
+      
+      #document-selection-table th:nth-child(4),
+      #document-selection-table td:nth-child(4) {
+        width: 15%;
+      }
+      
+      #document-selection-table th:nth-child(5),
+      #document-selection-table td:nth-child(5) {
+        width: 8%;
+        min-width: 40px;
+      }
+      
+      .qr-code-container {
+        padding: 15px;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      #document-selection-table th:nth-child(5),
+      #document-selection-table td:nth-child(5) {
+        width: 10%;
+        min-width: 35px;
+      }
+      
+      #document-selection-table .remove-document {
+        padding: 2px 4px;
+        font-size: 11px;
+        min-width: 25px;
+      }
+      
+      .qr-code-container {
+        padding: 10px;
+      }
+      
+      .qr-amount-display {
+        font-size: 1em;
+        padding: 8px 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#" data-i18n="navbar.title">ระบบขอเอกสารออนไลน์</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html" data-i18n="navbar.home">หน้าหลัก</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="dashboard.html" data-i18n="navbar.dashboard">แดชบอร์ด</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="request.html" data-i18n="navbar.request">ขอเอกสาร</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="status.html" data-i18n="navbar.status">ตรวจสอบสถานะ</a>
+          </li>
+        </ul>
+        <div class="language-selector d-flex me-3">
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="th">ไทย</button>
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="en">English</button>
+          <button class="btn btn-sm btn-outline-light" data-lang="zh">中文</button>
+        </div>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="logout" data-i18n="navbar.logout">ออกจากระบบ</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+    <h2 class="mb-4" data-i18n="request.header">ขอเอกสาร</h2>
+    
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card mb-4">
+          <div class="card-body">
+            <div id="alert-container"></div>
+            <form id="document-request-form">
+              <!-- Document Selection Table -->
+              <div class="mb-4">
+                <label class="form-label required" data-i18n="request.documentType">ประเภทเอกสาร</label>
+                <div class="table-responsive">
+                  <table class="table table-hover" id="document-selection-table">
+                    <thead>
+                      <tr>
+                        <th data-i18n="request.documentName">ชื่อเอกสาร</th>
+                        <th data-i18n="request.unitPrice">ราคาต่อชิ้น</th>
+                        <th data-i18n="request.quantity">จำนวน</th>
+                        <th data-i18n="request.subtotal">รวม</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="selected-documents">
+                      <!-- Selected documents will be added here -->
+                    </tbody>
+                  </table>
+                </div>
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
+                  <i class="bi bi-plus-circle"></i> <span data-i18n="request.addDocument">เพิ่มเอกสาร</span>
+                </button>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label required" data-i18n="request.deliveryMethod">วิธีการรับเอกสาร</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="delivery_method" id="pickup" value="pickup" checked>
+                  <label class="form-check-label" for="pickup" data-i18n="request.pickup">รับด้วยตนเอง</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="delivery_method" id="mail" value="mail">
+                  <label class="form-check-label" for="mail" data-i18n="request.mail">รับทางไปรษณีย์</label>
+                </div>
+              </div>
+              
+              <div id="address-container" class="mb-3" style="display: none;">
+                <label for="address" class="form-label required" data-i18n="request.address">ที่อยู่สำหรับจัดส่ง</label>
+                <textarea class="form-control" id="address" rows="3" data-i18n-placeholder="request.addressPlaceholder"></textarea>
+              </div>
+              
+              <div id="urgent-container" class="mb-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="urgent">
+                  <label class="form-check-label" for="urgent" data-i18n="request.urgent">บริการเร่งด่วน (เพิ่ม 50 บาทต่อฉบับ)</label>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="payment_slip" class="form-label required" data-i18n="request.paymentSlip">หลักฐานการชำระเงิน</label>
+                <div class="file-input-wrapper">
+                  <input type="file" class="form-control" id="payment_slip" accept="image/*,.pdf" required>
+                  <label for="payment_slip" class="file-input-label" data-i18n="request.selectFile">เลือกไฟล์</label>
+                </div>
+                <div class="form-text" data-i18n="request.paymentSlipInfo">อัปโหลดสลิปหรือหลักฐานการชำระเงิน (ไฟล์ภาพหรือ PDF)</div>
+              </div>
+              
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary" data-i18n="request.submitButton">ส่งคำขอเอกสาร</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-4">
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0" data-i18n="request.summary">สรุปรายการ</h5>
+          </div>
+          <div class="card-body">
+            <div id="summary-container">
+              <p data-i18n="request.emptySelection">กรุณาเลือกประเภทเอกสารและวิธีการรับเอกสาร</p>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between">
+              <strong data-i18n="request.documentSubtotal">ราคาเอกสารรวม:</strong>
+              <span id="documents-subtotal"> 0.00 </span>
+            </div>
+            <div id="shipping-fee-container" class="d-flex justify-content-between mt-2" style="display: none;">
+              <strong data-i18n="request.shippingFee">ค่าจัดส่ง:</strong>
+              <span id="shipping-fee"> 0.00 </span>
+            </div>
+            <div id="urgent-fee-container" class="d-flex justify-content-between mt-2" style="display: none;">
+              <strong data-i18n="request.urgentService">บริการเร่งด่วน:</strong>
+              <span id="urgent-fee"> 0.00 </span>
+            </div>
+            <div class="d-flex justify-content-between mt-3 pt-2 border-top fw-bold">
+              <strong data-i18n="request.totalPrice">ราคารวม:</strong>
+              <span id="total-price"> 0.00 </span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0" data-i18n="request.payment">ช่องทางการชำระเงิน</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <div class="qr-code-container">
+                <canvas id="qr-canvas" style="display: none;"></canvas>
+                <div id="qr-placeholder" class="text-muted">
+                  <i class="bi bi-qr-code" style="font-size: 3rem;"></i>
+                  <p class="mt-2" data-i18n="request.selectDocumentForQR">เลือกเอกสารเพื่อสร้าง QR Code</p>
+                </div>
+                <div id="qr-amount-display" class="qr-amount-display" style="display: none;">
+                  <span data-i18n="request.qrAmount">จำนวนเงิน</span>: <span id="qr-amount">0.00 บาท</span>
+                </div>
+              </div>
+              <p class="text-center mt-2" data-i18n="request.scanQR">สแกน QR Code เพื่อชำระเงิน</p>
+        <!--      <div class="qr-info">
+                <small class="text-muted">
+                  <i class="bi bi-info-circle"></i> 
+                  QR Code จะอัปเดตอัตโนมัติตามจำนวนเงินที่ต้องชำระ
+                </small>
+              </div>-->
+            </div>
+            <div class="mb-3">
+              <p data-i18n="request.bankTransfer">หรือโอนเงินผ่านบัญชีธนาคาร:</p>
+              <p>
+                <strong data-i18n="request.bankName">ธนาคาร:</strong> <span id="bank-name" data-i18n="request.bankNameValue">ธนาคารกรุงเทพ</span><br>
+                <strong data-i18n="request.accountNumber">เลขที่บัญชี:</strong> <span id="account-number">134-5-567992</span><br>
+                <strong data-i18n="request.accountName">ชื่อบัญชี:</strong> <span id="account-name" data-i18n="request.accountNameValue">มหาวิทยาลัยนอร์ทกรุงเทพ 2</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal เพิ่มเอกสาร -->
+  <div class="modal fade" id="addDocumentModal" tabindex="-1" aria-labelledby="addDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="addDocumentModalLabel" data-i18n="request.addDocument">เพิ่มเอกสาร</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-alert-container"></div>
+          <form id="add-document-form">
+            <div class="mb-3">
+              <label for="modal-document-type" class="form-label required" data-i18n="request.documentType">ประเภทเอกสาร</label>
+              <select class="form-select" id="modal-document-type" required>
+                <option value="" selected disabled data-i18n="request.selectDocumentType">เลือกประเภทเอกสาร</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="modal-document-quantity" class="form-label required" data-i18n="request.quantity">จำนวน</label>
+              <input type="number" class="form-control" id="modal-document-quantity" min="1" value="1" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="request.cancel">ยกเลิก</button>
+          <button type="button" class="btn btn-primary" id="add-document-button" data-i18n="request.addDocument">เพิ่มเอกสาร</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- เพิ่มโค้ดนี้ก่อนปิด tag </body> -->
+  <script>
+    // ติดตามการเปลี่ยนแปลงของช่องเร่งด่วน
+    document.addEventListener('DOMContentLoaded', function() {
+      const urgentCheckbox = document.getElementById('urgent');
+      if (urgentCheckbox) {
+        urgentCheckbox.addEventListener('change', function() {
+          setTimeout(function() {
+            // ตรวจสอบการคำนวณค่าบริการเร่งด่วน
+            if (urgentCheckbox.checked && document.querySelector('input[name="delivery_method"]:checked').value === 'pickup') {
+              // นับจำนวนเอกสารทั้งหมด
+              if (typeof selectedDocuments !== 'undefined' && selectedDocuments.length > 0) {
+                const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+                const correctUrgentFee = 50 * totalDocuments;
+                
+                // ตรวจสอบและแก้ไขการแสดงผลค่าบริการเร่งด่วน
+                const urgentFeeElement = document.getElementById('urgent-fee');
+                if (urgentFeeElement) {
+                  // ตรวจสอบว่าค่าที่แสดงถูกต้องหรือไม่
+                  const currentDisplay = urgentFeeElement.textContent;
+                  const correctDisplay = formatCurrency ? formatCurrency(correctUrgentFee, currentLang || 'th') : `${correctUrgentFee}.00 บาท`;
+                  
+                  if (currentDisplay !== correctDisplay) {
+                    console.log('Fixing urgent fee display:', {current: currentDisplay, correct: correctDisplay});
+                    urgentFeeElement.textContent = correctDisplay;
+                    
+                    // แก้ไขราคารวมด้วย
+                    const totalPriceElement = document.getElementById('total-price');
+                    if (totalPriceElement) {
+                      const documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
+                      const totalPrice = documentSubtotal + correctUrgentFee;
+                      totalPriceElement.textContent = formatCurrency ? formatCurrency(totalPrice, currentLang || 'th') : `${totalPrice}.00 บาท`;
+                    }
+                    
+                    // แก้ไขสรุปรายการ
+                    const summaryContainer = document.getElementById('summary-container');
+                    if (summaryContainer) {
+                      const urgentServiceElement = summaryContainer.querySelector('div:contains("บริการเร่งด่วน")');
+                      if (urgentServiceElement) {
+                        const urgentServiceTextElement = urgentServiceElement.querySelector('div');
+                        if (urgentServiceTextElement) {
+                          urgentServiceTextElement.textContent = `${correctDisplay} (${totalDocuments} ฉบับ x 50 บาท)`;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            // อัปเดต QR Code เมื่อมีการเปลี่ยนแปลง
+            updateQRCode();
+          }, 100);
+        });
+      }
+      
+      // แก้ไขปัญหาเมื่อเพิ่มเอกสาร
+      const addDocumentButton = document.getElementById('add-document-button');
+      if (addDocumentButton) {
+        const originalClick = addDocumentButton.onclick;
+        addDocumentButton.onclick = function(event) {
+          if (originalClick) {
+            originalClick.call(this, event);
+          }
+          
+          // ตรวจสอบการคำนวณหลังจากเพิ่มเอกสาร
+          setTimeout(function() {
+            const urgentCheckbox = document.getElementById('urgent');
+            if (urgentCheckbox && urgentCheckbox.checked && document.querySelector('input[name="delivery_method"]:checked').value === 'pickup') {
+              // นับจำนวนเอกสารทั้งหมด
+              if (typeof selectedDocuments !== 'undefined' && selectedDocuments.length > 0) {
+                const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+                const correctUrgentFee = 50 * totalDocuments;
+                
+                // ปรับแก้การแสดงผลค่าบริการเร่งด่วน
+                const urgentFeeElement = document.getElementById('urgent-fee');
+                if (urgentFeeElement) {
+                  urgentFeeElement.textContent = formatCurrency ? formatCurrency(correctUrgentFee, currentLang || 'th') : `${correctUrgentFee}.00 บาท`;
+                  
+                  // ปรับแก้ราคารวม
+                  const totalPriceElement = document.getElementById('total-price');
+                  if (totalPriceElement) {
+                    const documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
+                    const totalPrice = documentSubtotal + correctUrgentFee;
+                    totalPriceElement.textContent = formatCurrency ? formatCurrency(totalPrice, currentLang || 'th') : `${totalPrice}.00 บาท`;
+                  }
+                }
+              }
+            }
+            // อัปเดต QR Code เมื่อมีการเปลี่ยนแปลง
+            updateQRCode();
+          }, 100);
+        };
+      }
+    });
+
+    // ฟังก์ชันสร้าง Cross Bank Bill Payment QR Code
+    function generateCrossBankBillPayment(billingId, ref1, ref2, amount) {
+      // รูปแบบ Cross Bank Bill Payment ด้วย line break แยกแต่ละบรรทัด
+      // Billing ID
+      // Student ID  
+      // Ref2
+      // Amount (ในสตางค์)
+      
+      // เก็บ Billing ID ตามที่ระบุ (มี | ข้างหน้า)
+      const fullBillingId = billingId;
+      
+      // Ref1 และ Ref2 ใช้ตามที่ได้รับมา
+      const studentId = ref1;
+      const reference2 = ref2;
+      
+      // แปลงจำนวนเงินเป็นสตางค์ (คูณ 100)
+      const amountInSatang = Math.round(amount * 100);
+      
+      // สร้าง QR Data ด้วย line break (\r หรือ \r\n)
+      const qrData = `${fullBillingId}\r${studentId}\r${reference2}\r${amountInSatang}`;
+      
+      console.log('Cross Bank Bill Payment QR Data:');
+      console.log('Billing ID:', fullBillingId);
+      console.log('Student ID:', studentId);
+      console.log('Reference 2:', reference2);
+      console.log('Amount (Satang):', amountInSatang);
+      console.log('Full QR Data:', qrData);
+      console.log('QR Data (formatted):');
+      console.log(qrData);
+      
+      return qrData;
+    }
+
+    // ฟังก์ชันอัปเดต QR Code โดยใช้ QR Server API
+    function updateQRCode() {
+      const canvas = document.getElementById('qr-canvas');
+      const placeholder = document.getElementById('qr-placeholder');
+      const amountDisplay = document.getElementById('qr-amount-display');
+      const amountSpan = document.getElementById('qr-amount');
+      
+      if (!canvas || !placeholder || !amountDisplay || !amountSpan) {
+        console.error('QR Code elements not found');
+        return;
+      }
+      
+      // ดึงข้อมูล student ID จาก localStorage (key: userId) หรือใช้ค่าเริ่มต้น
+      const studentId = localStorage.getItem('studentId') || '6401234567';
+      
+      // คำนวณราคารวม
+      let totalPrice = 0;
+      
+      if (typeof selectedDocuments !== 'undefined' && selectedDocuments && selectedDocuments.length > 0) {
+        const documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
+        
+        // ค่าจัดส่ง
+        const deliveryMethod = document.querySelector('input[name="delivery_method"]:checked')?.value || 'pickup';
+        const shippingFee = deliveryMethod === 'mail' ? 200 : 0;
+        
+        // ค่าบริการเร่งด่วน
+        const isUrgent = document.getElementById('urgent')?.checked || false;
+        const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
+        const urgentFee = (isUrgent && deliveryMethod === 'pickup') ? 50 * totalDocuments : 0;
+        
+        totalPrice = documentSubtotal + shippingFee + urgentFee;
+      }
+      
+      console.log('updateQRCode called, totalPrice:', totalPrice);
+      
+      if (totalPrice > 0) {
+        // สร้าง QR Code สำหรับ Bill Payment
+        const billingId = '|099400000518106';
+        const ref1 = studentId; // ใช้ student ID เป็น ref1
+        const ref2 = '77777'; // ใช้ 777 เป็น ref2
+        
+        try {
+          const qrData = generateCrossBankBillPayment(billingId, ref1, ref2, totalPrice);
+          console.log('Cross Bank QR Data generated:', qrData);
+          
+          // ใช้ QR Server API แทน library
+          generateQRCodeImage(qrData, canvas, function(success) {
+            if (success) {
+              console.log('QR Code generated successfully via API');
+              placeholder.style.display = 'none';
+              canvas.style.display = 'block';
+              amountDisplay.style.display = 'block';
+              
+              // อัปเดตจำนวนเงิน
+              if (typeof formatCurrency === 'function') {
+                amountSpan.textContent = formatCurrency(totalPrice, currentLang || 'th');
+              } else {
+                amountSpan.textContent = totalPrice.toFixed(2) + ' บาท';
+              }
+            } else {
+              console.error('Failed to generate QR Code via API');
+              placeholder.style.display = 'block';
+              canvas.style.display = 'none';
+              amountDisplay.style.display = 'none';
+            }
+          });
+          
+        } catch (error) {
+          console.error('Error creating QR Code:', error);
+          placeholder.style.display = 'block';
+          canvas.style.display = 'none';
+          amountDisplay.style.display = 'none';
+        }
+      } else {
+        // ไม่มีเอกสารหรือราคาเป็น 0
+        console.log('No documents selected or price is 0');
+        placeholder.style.display = 'block';
+        canvas.style.display = 'none';
+        amountDisplay.style.display = 'none';
+      }
+    }
+
+    // ฟังก์ชันสร้าง QR Code ด้วย API
+    function generateQRCodeImage(data, canvas, callback) {
+      try {
+        // ใช้ QR Server API (ฟรี)
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data)}`;
+        
+        // สร้าง image element
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        img.onload = function() {
+          try {
+            // วาด image ลงใน canvas
+            const ctx = canvas.getContext('2d');
+            canvas.width = 200;
+            canvas.height = 200;
+            ctx.drawImage(img, 0, 0, 200, 200);
+            callback(true);
+          } catch (error) {
+            console.error('Error drawing QR Code to canvas:', error);
+            callback(false);
+          }
+        };
+        
+        img.onerror = function() {
+          console.error('Error loading QR Code image');
+          callback(false);
+        };
+        
+        img.src = qrApiUrl;
+        
+      } catch (error) {
+        console.error('Error in generateQRCodeImage:', error);
+        callback(false);
+      }
+    }
+
+    // Override calculatePrice function เพื่อให้อัปเดต QR Code ด้วย
+    const originalCalculatePrice = window.calculatePrice;
+    
+    window.calculatePrice = function() {
+      if (originalCalculatePrice) {
+        originalCalculatePrice();
+      }
+      // อัปเดต QR Code หลังจากคำนวณราคา
+      setTimeout(updateQRCode, 100);
+    };
+
+    // ฟังก์ชันเพิ่มเติมสำหรับ quantity changes ในตาราง
+    function attachQuantityChangeListeners() {
+      // ฟังการเปลี่ยนแปลงของ quantity input ในตาราง
+      const quantityInputs = document.querySelectorAll('#selected-documents .quantity-input');
+      quantityInputs.forEach(input => {
+        // ลบ event listeners เดิมก่อน (ถ้ามี)
+        input.removeEventListener('input', updateQROnQuantityChange);
+        input.removeEventListener('change', updateQROnQuantityChange);
+        
+        // เพิ่ม event listeners ใหม่
+        input.addEventListener('input', updateQROnQuantityChange);
+        input.addEventListener('change', updateQROnQuantityChange);
+      });
+      
+      // ฟังการคลิกปุ่ม + และ - ในตาราง
+      const quantityButtons = document.querySelectorAll('#selected-documents .btn-outline-secondary');
+      quantityButtons.forEach(button => {
+        button.removeEventListener('click', updateQROnQuantityChange);
+        button.addEventListener('click', updateQROnQuantityChange);
+      });
+    }
+
+    // ฟังก์ชันอัปเดต QR Code เมื่อ quantity เปลี่ยน
+    function updateQROnQuantityChange() {
+      setTimeout(() => {
+        console.log('Quantity changed, updating QR Code...');
+        updateQRCode();
+      }, 200);
+    }
+
+    // ต้อง override การเพิ่มเอกสารเพื่อให้ attach listeners
+    const originalAddDocument = window.addDocument || function() {};
+
+    window.addDocument = function() {
+      const result = originalAddDocument.apply(this, arguments);
+      
+      // Attach listeners หลังจากเพิ่มเอกสาร
+      setTimeout(() => {
+        attachQuantityChangeListeners();
+        updateQRCode();
+      }, 100);
+      
+      return result;
+    };
+
+    // MutationObserver เพื่อติดตามการเปลี่ยนแปลงในตาราง
+    const tableObserver = new MutationObserver(function(mutations) {
+      let shouldUpdate = false;
+      
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'childList' && mutation.target.id === 'selected-documents') {
+          shouldUpdate = true;
+        }
+      });
+      
+      if (shouldUpdate) {
+        setTimeout(() => {
+          attachQuantityChangeListeners();
+          updateQRCode();
+        }, 100);
+      }
+    });
+
+    // เริ่มต้น observer
+    const selectedDocumentsTable = document.getElementById('selected-documents');
+    if (selectedDocumentsTable) {
+      tableObserver.observe(selectedDocumentsTable, {
+        childList: true,
+        subtree: true
+      });
+    }
+  </script>
+
+  <footer class="footer mt-5 py-3 bg-light">
+    <div class="container text-center">
+      <span class="text-muted" data-i18n="footer.copyright">
+        © 2025 ระบบขอเอกสารออนไลน์สำหรับนักศึกษา มหาวิทยาลัยนอร์ทกรุงเทพ
+      </span>
+    </div>
+  </footer>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/language.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/request.js"></script>
+  
+  <script>
+    // เพิ่ม event listeners เมื่อ DOM โหลดเสร็จ
+    document.addEventListener('DOMContentLoaded', function() {
+      // ไม่ต้องรอ QRCode library แล้ว เพราะใช้ API
+      console.log('Initializing QR Code events...');
+      
+      // ฟังการเปลี่ยนแปลงวิธีการรับเอกสาร
+      const deliveryMethods = document.querySelectorAll('input[name="delivery_method"]');
+      deliveryMethods.forEach(method => {
+        method.addEventListener('change', function() {
+          setTimeout(updateQRCode, 100);
+        });
+      });
+      
+      // ฟังการเปลี่ยนแปลงบริการเร่งด่วน
+      const urgentCheckbox = document.getElementById('urgent');
+      if (urgentCheckbox) {
+        urgentCheckbox.addEventListener('change', function() {
+          setTimeout(updateQRCode, 100);
+        });
+      }
+      
+      // จัดการ file input custom
+      const fileInput = document.getElementById('payment_slip');
+      const fileLabel = document.querySelector('.file-input-label');
+      
+      if (fileInput && fileLabel) {
+        fileInput.addEventListener('change', function() {
+          if (this.files && this.files.length > 0) {
+            const fileName = this.files[0].name;
+            fileLabel.textContent = fileName;
+            fileLabel.classList.add('file-input-selected');
+          } else {
+            // รีเซ็ตกลับเป็นข้อความเดิม
+            const currentLang = localStorage.getItem('language') || 'th';
+            const labels = {
+              'th': 'เลือกไฟล์',
+              'en': 'Choose File', 
+              'zh': '选择文件'
+            };
+            fileLabel.textContent = labels[currentLang] || 'เลือกไฟล์';
+            fileLabel.classList.remove('file-input-selected');
+          }
+        });
+      }
+      
+      // อัปเดต QR Code ครั้งแรก
+      setTimeout(() => {
+        attachQuantityChangeListeners();
+        updateQRCode();
+      }, 300);
+    });
+  </script>
+</body>
+</html>
