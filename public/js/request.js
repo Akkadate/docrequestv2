@@ -200,8 +200,6 @@ function waitForI18n(callback, maxAttempts = 10, currentAttempt = 0) {
   }
 }
 
-
-
 // เพิ่มเอกสารที่เลือกลงในตาราง
 function addDocumentToSelection() {
   // รับข้อมูลจาก Modal
@@ -268,10 +266,6 @@ function addDocumentToSelection() {
   updateDocumentTable();
   calculatePrice();
 }
-
-// แก้ไขส่วนนี้ในไฟล์ request.js
-
-// แก้ไขส่วนนี้ในไฟล์ request.js
 
 // อัปเดตตารางเอกสารที่เลือก - แก้ไขใหม่เพื่อรองรับมือถือ
 function updateDocumentTable() {
@@ -352,7 +346,7 @@ function updateDocumentTable() {
   });
 }
 
-// คำนวณราคาทั้งหมด - แก้ไขใหม่
+// คำนวณราคาทั้งหมด - แก้ไขใหม่เพื่อรองรับวิธีการรับเอกสารใหม่
 function calculatePrice() {
   try {
     // รับอิลิเมนต์แสดงราคาต่างๆ
@@ -379,9 +373,7 @@ function calculatePrice() {
       documentSubtotal = selectedDocuments.reduce((total, doc) => total + doc.subtotal, 0);
     }
 
-    // เพิ่มบรรทัดนี้ในส่วนต้นของฟังก์ชัน calculatePrice()
-console.log('calculatePrice called, selectedDocuments:', selectedDocuments);
-
+    console.log('calculatePrice called, selectedDocuments:', selectedDocuments);
     
     // ตรวจสอบวิธีการรับเอกสาร
     const deliveryMethodElement = document.querySelector('input[name="delivery_method"]:checked');
@@ -392,7 +384,7 @@ console.log('calculatePrice called, selectedDocuments:', selectedDocuments);
     
     const deliveryMethod = deliveryMethodElement.value;
     
-    // ค่าจัดส่งทางไปรษณีย์
+    // ค่าจัดส่งทางไปรษณีย์ (เฉพาะวิธีการส่งทางไปรษณีย์เท่านั้น)
     if (deliveryMethod === 'mail') {
       shippingFee = 200; // ค่าจัดส่ง 200 บาท
       
@@ -421,7 +413,8 @@ console.log('calculatePrice called, selectedDocuments:', selectedDocuments);
       totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
     }
     
-    if (isUrgent && deliveryMethod === 'pickup') {
+    // บริการเร่งด่วนใช้ได้กับการรับด้วยตนเองทั้งสองวิธี (pickup และ pickup_rangsit)
+    if (isUrgent && (deliveryMethod === 'pickup' || deliveryMethod === 'pickup_rangsit')) {
       // คำนวณค่าบริการเร่งด่วนเป็น 50 บาทต่อฉบับ
       urgentFee = 50 * totalDocuments;
       
@@ -435,9 +428,7 @@ console.log('calculatePrice called, selectedDocuments:', selectedDocuments);
       }
     }
 
-    // เพิ่มบรรทัดนี้หลังจากคำนวณค่าบริการเร่งด่วน
-console.log('Urgent fee calculation:', totalDocuments, 'documents x 50 =', urgentFee);
-
+    console.log('Urgent fee calculation:', totalDocuments, 'documents x 50 =', urgentFee);
     
     // คำนวณราคารวมทั้งหมด
     totalPrice = documentSubtotal + shippingFee + urgentFee;
@@ -458,15 +449,14 @@ console.log('Urgent fee calculation:', totalDocuments, 'documents x 50 =', urgen
     // อัปเดตสรุปรายการ
     updateSummary(deliveryMethod, isUrgent);
 
-    // เพิ่มบรรทัดนี้ในส่วนท้ายของฟังก์ชัน calculatePrice()
-console.log('Final prices:', {documentSubtotal, shippingFee, urgentFee, totalPrice});
+    console.log('Final prices:', {documentSubtotal, shippingFee, urgentFee, totalPrice});
     
   } catch (error) {
     console.error('Error in calculatePrice function:', error);
   }
 }
 
-// อัปเดตสรุปรายการ - แก้ไขใหม่
+// อัปเดตสรุปรายการ - แก้ไขใหม่เพื่อรองรับวิธีการรับเอกสารใหม่
 function updateSummary(deliveryMethod, isUrgent) {
   try {
     const summaryContainer = document.getElementById('summary-container');
@@ -502,13 +492,26 @@ function updateSummary(deliveryMethod, isUrgent) {
       </div>
     `;
     
-    // วิธีการรับเอกสาร
+    // วิธีการรับเอกสาร - เพิ่มตัวเลือกใหม่
+    let deliveryMethodText = '';
+    switch(deliveryMethod) {
+      case 'pickup':
+        deliveryMethodText = i18n[currentLang]?.request?.pickup || 'รับด้วยตนเอง';
+        break;
+      case 'pickup_rangsit':
+        deliveryMethodText = i18n[currentLang]?.request?.pickupRangsit || 'รับด้วยตนเอง (แผนกทะเบียน รังสิต)';
+        break;
+      case 'mail':
+        deliveryMethodText = i18n[currentLang]?.request?.mail || 'รับทางไปรษณีย์';
+        break;
+      default:
+        deliveryMethodText = 'ไม่ระบุ';
+    }
+    
     summaryHTML += `
       <div class="mb-3">
         <strong>${i18n[currentLang]?.request?.deliveryMethod || 'วิธีการรับเอกสาร'}:</strong>
-        <div>${deliveryMethod === 'pickup' ? 
-          (i18n[currentLang]?.request?.pickup || 'รับด้วยตนเอง') : 
-          (i18n[currentLang]?.request?.mail || 'รับทางไปรษณีย์')}</div>
+        <div>${deliveryMethodText}</div>
     `;
     
     // ค่าจัดส่ง (ถ้ามี)
@@ -518,8 +521,8 @@ function updateSummary(deliveryMethod, isUrgent) {
     
     summaryHTML += `</div>`;
     
-    // บริการเร่งด่วน (ถ้ามี)
-    if (isUrgent && deliveryMethod === 'pickup') {
+    // บริการเร่งด่วน (ถ้ามี) - ใช้ได้กับการรับด้วยตนเองทั้งสองวิธี
+    if (isUrgent && (deliveryMethod === 'pickup' || deliveryMethod === 'pickup_rangsit')) {
       const urgentFee = 50 * totalDocuments; // 50 บาท x จำนวนเอกสารทั้งหมด
       
       summaryHTML += `
@@ -536,7 +539,7 @@ function updateSummary(deliveryMethod, isUrgent) {
   }
 }
 
-// ส่งคำขอเอกสาร - แก้ไขเล็กน้อย
+// ส่งคำขอเอกสาร - แก้ไขเพื่อรองรับวิธีการรับเอกสารใหม่
 async function submitDocumentRequest(event) {
   event.preventDefault();
   
@@ -577,9 +580,9 @@ async function submitDocumentRequest(event) {
   // คำนวณค่าจัดส่ง (ถ้ามี)
   const shippingFee = deliveryMethod === 'mail' ? 200 : 0;
   
-  // คำนวณค่าบริการเร่งด่วน (ถ้ามี)
+  // คำนวณค่าบริการเร่งด่วน (ถ้ามี) - ใช้ได้กับการรับด้วยตนเองทั้งสองวิธี
   const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-  const urgentFee = (urgent && deliveryMethod === 'pickup') ? 50 * totalDocuments : 0;
+  const urgentFee = (urgent && (deliveryMethod === 'pickup' || deliveryMethod === 'pickup_rangsit')) ? 50 * totalDocuments : 0;
   
   // คำนวณราคารวมทั้งหมด
   const totalPrice = documentsSubtotal + shippingFee + urgentFee;
@@ -664,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('Element with id "add-document-button" not found');
   }
   
-  // เพิ่มการฟังเหตุการณ์เมื่อเลือกวิธีการรับเอกสาร
+  // เพิ่มการฟังเหตุการณ์เมื่อเลือกวิธีการรับเอกสาร - แก้ไขเพื่อรองรับตัวเลือกใหม่
   const deliveryMethods = document.querySelectorAll('input[name="delivery_method"]');
   if (deliveryMethods && deliveryMethods.length > 0) {
     deliveryMethods.forEach(method => {
@@ -676,6 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (addressContainer && urgentContainer) {
           if (method.value === 'mail') {
+            // กรณีเลือกส่งทางไปรษณีย์
             addressContainer.style.display = 'block';
             if (document.getElementById('address')) {
               document.getElementById('address').required = true;
@@ -685,6 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
               document.getElementById('urgent').checked = false;
             }
           } else {
+            // กรณีเลือกรับด้วยตนเอง (ทั้งสองวิธี)
             addressContainer.style.display = 'none';
             if (document.getElementById('address')) {
               document.getElementById('address').required = false;
