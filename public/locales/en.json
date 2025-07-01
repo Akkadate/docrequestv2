@@ -102,7 +102,7 @@
     "selectDocumentType": "Select document type",
     "deliveryMethod": "Delivery Method",
     "pickup": "Pickup (Registration Department, Sapanmai)",
-    "pickuprangsit": "Pickup (Registration Department, Rangsit)",
+    "pickupRangsit": "Pickup (Registration Department, Rangsit)",
     "mail": "Mail",
     "address": "Shipping Address",
     "addressPlaceholder": "Enter your shipping address",
