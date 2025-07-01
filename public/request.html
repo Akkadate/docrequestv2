@@ -296,10 +296,6 @@
                   <label class="form-check-label" for="pickup" data-i18n="request.pickup">รับด้วยตนเอง</label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="radio" name="delivery_method" id="pickup_rangsit" value="pickup_rangsit">
-                  <label class="form-check-label" for="pickup_rangsit" data-i18n="request.pickupRangsit">รับด้วยตนเอง (แผนกทะเบียน รังสิต)</label>
-                </div>
-                <div class="form-check">
                   <input class="form-check-input" type="radio" name="delivery_method" id="mail" value="mail">
                   <label class="form-check-label" for="mail" data-i18n="request.mail">รับทางไปรษณีย์</label>
                 </div>
@@ -441,8 +437,7 @@
         urgentCheckbox.addEventListener('change', function() {
           setTimeout(function() {
             // ตรวจสอบการคำนวณค่าบริการเร่งด่วน
-            const deliveryMethod = document.querySelector('input[name="delivery_method"]:checked').value;
-            if (urgentCheckbox.checked && (deliveryMethod === 'pickup' || deliveryMethod === 'pickup_rangsit')) {
+            if (urgentCheckbox.checked && document.querySelector('input[name="delivery_method"]:checked').value === 'pickup') {
               // นับจำนวนเอกสารทั้งหมด
               if (typeof selectedDocuments !== 'undefined' && selectedDocuments.length > 0) {
                 const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
@@ -500,8 +495,7 @@
           // ตรวจสอบการคำนวณหลังจากเพิ่มเอกสาร
           setTimeout(function() {
             const urgentCheckbox = document.getElementById('urgent');
-            const deliveryMethod = document.querySelector('input[name="delivery_method"]:checked').value;
-            if (urgentCheckbox && urgentCheckbox.checked && (deliveryMethod === 'pickup' || deliveryMethod === 'pickup_rangsit')) {
+            if (urgentCheckbox && urgentCheckbox.checked && document.querySelector('input[name="delivery_method"]:checked').value === 'pickup') {
               // นับจำนวนเอกสารทั้งหมด
               if (typeof selectedDocuments !== 'undefined' && selectedDocuments.length > 0) {
                 const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
@@ -590,7 +584,7 @@
         // ค่าบริการเร่งด่วน
         const isUrgent = document.getElementById('urgent')?.checked || false;
         const totalDocuments = selectedDocuments.reduce((count, doc) => count + doc.quantity, 0);
-        const urgentFee = (isUrgent && (deliveryMethod === 'pickup' || deliveryMethod === 'pickup_rangsit')) ? 50 * totalDocuments : 0;
+        const urgentFee = (isUrgent && deliveryMethod === 'pickup') ? 50 * totalDocuments : 0;
         
         totalPrice = documentSubtotal + shippingFee + urgentFee;
       }
