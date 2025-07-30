@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const multer = require('multer');
 const { Pool } = require('pg');
-
+const { addPoolToRequest } = require('./middleware/advisor');
 // สร้าง Express app
 const app = express();
 const PORT = process.env.PORT || 3200;
@@ -38,7 +38,9 @@ const upload = multer({ storage: storage });
 
 // นำเข้าเส้นทาง (routes)
 const authRoutes = require('./routes/auth')(pool);
+
 const documentRoutes = require('./routes/documents')(pool, upload);
+
 
 // ตรวจสอบว่ามีไฟล์ admin routes หรือไม่
 let adminRoutes;
@@ -57,6 +59,26 @@ try {
   console.log('Report routes not found, skipping...');
   reportRoutes = null;
 }
+
+let approvalWorkflowRoutes;
+try {
+  approvalWorkflowRoutes = require('./routes/approval-workflow')(pool);
+  console.log('✅ Approval workflow routes loaded');
+} catch (error) {
+  console.log('⚠️ Approval workflow routes not found, skipping...');
+  approvalWorkflowRoutes = null;
+}
+
+// ตรวจสอบว่ามี Email Service หรือไม่ (ใหม่)
+let emailService;
+try {
+  emailService = require('./services/emailService');
+  console.log('✅ Email service loaded');
+} catch (error) {
+  console.log('⚠️ Email service not found, email notifications will be disabled');
+  emailService = null;
+}
+
 
 // ตรวจสอบว่ามี LINE notification service หรือไม่
 let testLineNotification, getLineConfiguration;
@@ -81,6 +103,76 @@ if (adminRoutes) {
 
 if (reportRoutes) {
   app.use('/api/reports', reportRoutes);
+}
+
+
+// เพิ่ม Approval Workflow routes (ใหม่)
+if (approvalWorkflowRoutes) {
+  app.use('/api/approval-workflow', approvalWorkflowRoutes);
+  console.log('🔄 Approval workflow API endpoints available at /api/approval-workflow/*');
+}
+
+// เพิ่ม endpoint สำหรับทดสอบ Email service (ใหม่)
+if (emailService) {
+  app.get('/api/test-email', async (req, res) => {
+    try {
+      console.log('🧪 Testing email service...');
+      
+      const config = emailService.getEmailConfiguration();
+      console.log('Email Configuration:', config);
+      
+      if (!config.configured) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email service not properly configured',
+          config: config
+        });
+      }
+      
+      const connectionStatus = await emailService.verifyConnection();
+      
+      res.json({
+        success: connectionStatus.success,
+        message: connectionStatus.message,
+        config: config,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error testing email service:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  });
+
+  // เพิ่ม endpoint สำหรับดูการตั้งค่า Email
+  app.get('/api/email-config', (req, res) => {
+    try {
+      const config = emailService.getEmailConfiguration();
+      res.json(config);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  });
+} else {
+  // ถ้าไม่มี Email service ให้แสดงข้อความแจ้งเตือน
+  app.get('/api/test-email', (req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'Email service not available. Please check if nodemailer is installed and emailService.js exists.'
+    });
+  });
+
+  app.get('/api/email-config', (req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'Email service not available.'
+    });
+  });
 }
 
 // เพิ่ม endpoint สำหรับทดสอบ LINE notification (ถ้ามี)
@@ -157,10 +249,28 @@ app.use((error, req, res, next) => {
   res.status(500).json({ message: 'Internal Server Error' });
 });
 
-// เริ่มเซิร์ฟเวอร์
+
+app.use(addPoolToRequest(pool));
+
+
+// เริ่มเซิร์ฟเวอร์ (อัปเดตข้อความ)
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`🌐 Access URL: http://localhost:${PORT}`);
+  
+  // แสดงสถานะ services
+  if (approvalWorkflowRoutes) {
+    console.log(`✅ Approval Workflow API: http://localhost:${PORT}/api/approval-workflow`);
+  } else {
+    console.log(`❌ Approval Workflow API not available`);
+  }
+  
+  if (emailService) {
+    console.log(`📧 Email Service: http://localhost:${PORT}/api/test-email`);
+    console.log(`⚙️ Email Config: http://localhost:${PORT}/api/email-config`);
+  } else {
+    console.log(`❌ Email Service not available - install nodemailer to enable`);
+  }
   
   if (testLineNotification && getLineConfiguration) {
     console.log(`🔗 Test LINE notification: http://localhost:${PORT}/api/test-line`);
@@ -169,5 +279,12 @@ app.listen(PORT, () => {
     console.log(`ℹ️ LINE notification not available - install @line/bot-sdk to enable`);
   }
   
+   console.log('────────────────────────────────────────────────');
+  console.log('🎯 New Features Available:');
+  console.log('   • Approval Workflow for Late Registration & Add/Drop Courses');
+  console.log('   • Email Notifications to Faculty Advisors');
+  console.log('   • Advisor Dashboard for Approval Management');
+  console.log('   • Multi-language Email Templates (TH/EN/ZH)');
+  console.log('   • Enhanced Security with Role-based Access Control');
   console.log('────────────────────────────────────────────────');
 });
