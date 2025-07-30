@@ -1,11 +1,19 @@
 {
   "name": "document-request-system",
-  "version": "3.2.0",
-  "description": "ระบบขอเอกสารออนไลน์สำหรับนักศึกษามหาวิทยาลัยนอร์ทกรุงเทพ",
+  "version": "3.3.0",
+  "description": "ระบบขอเอกสารออนไลน์สำหรับนักศึกษามหาวิทยาลัยนอร์ทกรุงเทพ - พร้อม Approval Workflow",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "db:migrate": "psql $DATABASE_URL -f database/schema.sql",
+    "db:migrate:approval": "psql $DATABASE_URL -f database/approval_schema.sql",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "jest --testPathPattern=tests/unit",
+    "test:integration": "jest --testPathPattern=tests/integration",
+    "test:email": "node scripts/test-email.js",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix"
   },
   "dependencies": {
     "@line/bot-sdk": "^9.9.0",
@@ -16,9 +24,37 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
     "multer": "^1.4.5-lts.1",
-    "pg": "^8.10.0"
+    "pg": "^8.10.0",
+    "nodemailer": "^6.9.8"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
-  }
+    "nodemon": "^2.0.22",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.56.0",
+    "@types/jest": "^29.5.8"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "document-request",
+    "university",
+    "approval-workflow",
+    "email-notifications",
+    "nodejs",
+    "express",
+    "postgresql"
+  ],
+  "author": "North Bangkok University",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Akkadate/document-request-system"
+  },
+  "bugs": {
+    "url": "https://github.com/Akkadate/document-request-system/issues"
+  },
+  "homepage": "https://github.com/Akkadate/document-request-system#readme"
 }
