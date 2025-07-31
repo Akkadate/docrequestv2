@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="approvalRequest.title">ขอเอกสารที่ต้องอนุมัติ - ระบบขอเอกสารออนไลน์</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="#" data-i18n="navbar.title">ระบบขอเอกสารออนไลน์</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html" data-i18n="navbar.home">หน้าหลัก</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="dashboard.html" data-i18n="navbar.dashboard">แดชบอร์ด</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="request.html" data-i18n="navbar.request">ขอเอกสาร</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="approval-request.html" data-i18n="approvalRequest.nav">ขอเอกสารที่ต้องอนุมัติ</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="status.html" data-i18n="navbar.status">ตรวจสอบสถานะ</a>
+          </li>
+        </ul>
+        <div class="language-selector d-flex me-3">
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="th">ไทย</button>
+          <button class="btn btn-sm btn-outline-light me-2" data-lang="en">English</button>
+          <button class="btn btn-sm btn-outline-light" data-lang="zh">中文</button>
+        </div>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="logout" data-i18n="navbar.logout">ออกจากระบบ</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h2 data-i18n="approvalRequest.header">ขอเอกสารที่ต้องการการอนุมัติ</h2>
+            <p class="text-muted" data-i18n="approvalRequest.subtitle">
+              เอกสารประเภทนี้ต้องได้รับการอนุมัติจากอาจารย์ที่ปรึกษาก่อนดำเนินการ
+            </p>
+          </div>
+          <a href="dashboard.html" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left"></i> <span data-i18n="general.back">กลับ</span>
+          </a>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alert-container"></div>
+
+        <!-- Main Form -->
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-file-earmark-check me-2"></i>
+              <span data-i18n="approvalRequest.formTitle">ฟอร์มขอเอกสารที่ต้องอนุมัติ</span>
+            </h5>
+          </div>
+          <div class="card-body">
+            <form id="approval-request-form">
+              
+              <!-- Document Type Selection -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <label for="document-type" class="form-label required" data-i18n="approvalRequest.documentType">
+                    ประเภทเอกสาร
+                  </label>
+                  <select class="form-select" id="document-type" required>
+                    <option value="" data-i18n="approvalRequest.selectDocumentType">เลือกประเภทเอกสาร</option>
+                    <option value="late_registration" data-i18n="approvalRequest.lateRegistration">
+                      เอกสารขออนุมัติลงทะเบียนเกินกำหนด
+                    </option>
+                    <option value="add_drop_course" data-i18n="approvalRequest.addDropCourse">
+                      เอกสารขออนุมัติเพิ่มถอนรายวิชา
+                    </option>
+                  </select>
+                  <div class="form-text" data-i18n="approvalRequest.documentTypeHelp">
+                    เลือกประเภทเอกสารที่ต้องการขอ
+                  </div>
+                </div>
+              </div>
+
+              <!-- Request Title -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <label for="request-title" class="form-label required" data-i18n="approvalRequest.requestTitle">
+                    หัวข้อคำขอ
+                  </label>
+                  <input type="text" class="form-control" id="request-title" required 
+                         data-i18n-placeholder="approvalRequest.requestTitlePlaceholder"
+                         placeholder="กรอกหัวข้อคำขอ เช่น ขออนุมัติลงทะเบียนเกินกำหนด ภาคเรียนที่ 2/2567">
+                  <div class="form-text" data-i18n="approvalRequest.requestTitleHelp">
+                    กรอกหัวข้อคำขอให้ชัดเจนและเฉพาะเจาะจง
+                  </div>
+                </div>
+              </div>
+
+              <!-- Request Description -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <label for="request-description" class="form-label required" data-i18n="approvalRequest.requestDescription">
+                    รายละเอียดคำขอ
+                  </label>
+                  <textarea class="form-control" id="request-description" rows="4" required
+                            data-i18n-placeholder="approvalRequest.requestDescriptionPlaceholder"
+                            placeholder="อธิบายรายละเอียดเหตุผลในการขอเอกสารนี้..."></textarea>
+                  <div class="form-text" data-i18n="approvalRequest.requestDescriptionHelp">
+                    อธิบายเหตุผลและรายละเอียดที่จำเป็นสำหรับการพิจารณาอนุมัติ
+                  </div>
+                </div>
+              </div>
+
+              <!-- Additional Documents Upload -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <label for="additional-documents" class="form-label" data-i18n="approvalRequest.additionalDocuments">
+                    เอกสารประกอบ (ถ้ามี)
+                  </label>
+                  <input type="file" class="form-control" id="additional-documents" multiple 
+                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                  <div class="form-text" data-i18n="approvalRequest.additionalDocumentsHelp">
+                    อัปโหลดเอกสารประกอบการพิจารณา (PDF, JPG, PNG, DOC, DOCX)
+                  </div>
+                  <div id="file-list" class="mt-2"></div>
+                </div>
+              </div>
+
+              <!-- Delivery Method -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <label class="form-label required" data-i18n="approvalRequest.deliveryMethod">วิธีการรับเอกสาร</label>
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <div class="form-check p-3 border rounded delivery-option">
+                        <input class="form-check-input" type="radio" name="delivery-method" id="pickup" value="pickup" required>
+                        <label class="form-check-label w-100" for="pickup">
+                          <div class="d-flex align-items-center">
+                            <i class="bi bi-building me-2 text-primary fs-4"></i>
+                            <div>
+                              <div class="fw-semibold" data-i18n="approvalRequest.pickup">รับด้วยตนเอง</div>
+                              <small class="text-muted" data-i18n="approvalRequest.pickupDescription">
+                                รับที่แผนกทะเบียนและประมวลผล
+                              </small>
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-check p-3 border rounded delivery-option">
+                        <input class="form-check-input" type="radio" name="delivery-method" id="mail" value="mail">
+                        <label class="form-check-label w-100" for="mail">
+                          <div class="d-flex align-items-center">
+                            <i class="bi bi-mailbox me-2 text-primary fs-4"></i>
+                            <div>
+                              <div class="fw-semibold" data-i18n="approvalRequest.mail">จัดส่งทางไปรษณีย์</div>
+                              <small class="text-muted" data-i18n="approvalRequest.mailDescription">
+                                เพิ่มค่าจัดส่ง 200 บาท
+                              </small>
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Shipping Address (Only show when mail is selected) -->
+              <div class="row mb-4" id="address-section" style="display: none;">
+                <div class="col-12">
+                  <label for="address" class="form-label required" data-i18n="approvalRequest.address">ที่อยู่จัดส่ง</label>
+                  <textarea class="form-control" id="address" rows="3" 
+                            data-i18n-placeholder="approvalRequest.addressPlaceholder"
+                            placeholder="กรอกที่อยู่สำหรับจัดส่งเอกสาร"></textarea>
+                </div>
+              </div>
+
+              <!-- Urgent Service -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <div class="form-check p-3 border rounded">
+                    <input class="form-check-input" type="checkbox" id="urgent">
+                    <label class="form-check-label" for="urgent">
+                      <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                          <div class="fw-semibold text-warning">
+                            <i class="bi bi-lightning-charge me-1"></i>
+                            <span data-i18n="approvalRequest.urgentService">บริการเร่งด่วน</span>
+                          </div>
+                          <small class="text-muted" data-i18n="approvalRequest.urgentDescription">
+                            เพิ่มค่าบริการ 50 บาท (เฉพาะการรับด้วยตนเอง)
+                          </small>
+                        </div>
+                        <span class="badge bg-warning text-dark">+50 ฿</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Price Summary -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <div class="card bg-light">
+                    <div class="card-body">
+                      <h6 class="card-title" data-i18n="approvalRequest.priceSummary">สรุปค่าใช้จ่าย</h6>
+                      <div class="d-flex justify-content-between mb-2">
+                        <span data-i18n="approvalRequest.documentFee">ค่าเอกสาร:</span>
+                        <span id="document-price">150 ฿</span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-2" id="shipping-fee-row" style="display: none;">
+                        <span data-i18n="approvalRequest.shippingFee">ค่าจัดส่ง:</span>
+                        <span id="shipping-fee">200 ฿</span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-2" id="urgent-fee-row" style="display: none;">
+                        <span data-i18n="approvalRequest.urgentFee">ค่าบริการเร่งด่วน:</span>
+                        <span id="urgent-fee">50 ฿</span>
+                      </div>
+                      <hr>
+                      <div class="d-flex justify-content-between fw-bold">
+                        <span data-i18n="approvalRequest.totalPrice">ราคารวม:</span>
+                        <span id="total-price" class="text-primary">150 ฿</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="row">
+                <div class="col-12">
+                  <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="button" class="btn btn-outline-secondary me-md-2" onclick="window.history.back()">
+                      <i class="bi bi-x-circle me-1"></i>
+                      <span data-i18n="general.cancel">ยกเลิก</span>
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                      <i class="bi bi-send me-1"></i>
+                      <span data-i18n="approvalRequest.submitButton">ส่งคำขออนุมัติ</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+        <!-- Information Card -->
+        <div class="card mt-4 border-info">
+          <div class="card-header bg-info text-white">
+            <h6 class="mb-0">
+              <i class="bi bi-info-circle me-2"></i>
+              <span data-i18n="approvalRequest.importantInfo">ข้อมูลสำคัญ</span>
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h6 data-i18n="approvalRequest.process">ขั้นตอนการดำเนินการ:</h6>
+                <ol class="small">
+                  <li data-i18n="approvalRequest.step1">ส่งคำขออนุมัติ</li>
+                  <li data-i18n="approvalRequest.step2">ระบบส่งอีเมลแจ้งอาจารย์ที่ปรึกษา</li>
+                  <li data-i18n="approvalRequest.step3">อาจารย์พิจารณาและอนุมัติ</li>
+                  <li data-i18n="approvalRequest.step4">ส่งต่อไปยังแผนกทะเบียน</li>
+                  <li data-i18n="approvalRequest.step5">จัดเตรียมและส่งมอบเอกสาร</li>
+                </ol>
+              </div>
+              <div class="col-md-6">
+                <h6 data-i18n="approvalRequest.timeframe">ระยะเวลาดำเนินการ:</h6>
+                <ul class="small">
+                  <li data-i18n="approvalRequest.approvalTime">การอนุมัติ: 1-3 วันทำการ</li>
+                  <li data-i18n="approvalRequest.documentTime">จัดเตรียมเอกสาร: 2-5 วันทำการ</li>
+                  <li data-i18n="approvalRequest.urgentTime">บริการเร่งด่วน: 1-2 วันทำการ</li>
+                </ul>
+                
+                <h6 class="mt-3" data-i18n="approvalRequest.contact">ติดต่อสอบถาม:</h6>
+                <p class="small mb-0">
+                  <i class="bi bi-telephone me-1"></i> 02-555-2222<br>
+                  <i class="bi bi-envelope me-1"></i> registrar@nbu.ac.th
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Modal -->
+  <div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3 mb-0" data-i18n="approvalRequest.submitting">กำลังส่งคำขออนุมัติ...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer mt-5 py-3 bg-light">
+    <div class="container text-center">
+      <span class="text-muted" data-i18n="footer.copyright">
+        © 2025 ระบบขอเอกสารออนไลน์สำหรับนักศึกษามหาวิทยาลัยนอร์ทกรุงเทพ
+      </span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/language.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/approval-request.js"></script>
+
+  <style>
+    .required::after {
+      content: " *";
+      color: red;
+    }
+    
+    .delivery-option {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .delivery-option:hover {
+      background-color: #f8f9fa;
+      border-color: #0d6efd !important;
+    }
+    
+    .delivery-option:has(input:checked) {
+      background-color: #e7f3ff;
+      border-color: #0d6efd !important;
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+    }
+    
+    #file-list .file-item {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 0.375rem;
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: between;
+      align-items: center;
+    }
+    
+    .file-item .file-name {
+      flex: 1;
+      font-size: 0.875rem;
+    }
+    
+    .file-item .file-size {
+      font-size: 0.75rem;
+      color: #6c757d;
+      margin-right: 0.5rem;
+    }
+    
+    .file-item .btn-remove {
+      font-size: 0.75rem;
+      padding: 0.125rem 0.375rem;
+    }
+  </style>
+
+</body>
+</html>
