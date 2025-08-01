@@ -158,217 +158,161 @@ document.addEventListener('DOMContentLoaded', function() {
      * โหลดสถิติ
      */
     async function loadStatistics() {
-        try {
-            // โหลดสถิติจาก API
-            const [advisorStatsResponse, approvalStatsResponse] = await Promise.all([
-                fetch('/api/admin/faculty-advisors/stats', {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                }),
-                fetch('/api/approval-workflow/admin/system-stats', {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                })
-            ]);
-            
-            let advisorStats = { total: 0, active: 0 };
-            let approvalStats = { pending: 0, emailsSent: 0 };
-            
-            if (advisorStatsResponse.ok) {
-                advisorStats = await advisorStatsResponse.json();
+    try {
+        const response = await fetch('/api/admin/faculty-advisors/stats', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
-            
-            if (approvalStatsResponse.ok) {
-                approvalStats = await approvalStatsResponse.json();
-            }
+        });
+        
+        if (response.ok) {
+            const stats = await response.json();
             
             // อัปเดตสถิติ
             totalFacultiesSpan.textContent = faculties.length || 5;
-            activeAdvisorsSpan.textContent = advisorStats.active || 0;
-            pendingApprovalsSpan.textContent = approvalStats.pending || 0;
-            emailsSentSpan.textContent = approvalStats.emailsSent || 0;
+            activeAdvisorsSpan.textContent = stats.active || 0;
+            pendingApprovalsSpan.textContent = stats.todayStats?.pending || 0;
+            emailsSentSpan.textContent = stats.todayStats?.emailsSent || 0;
             
-        } catch (error) {
-            console.error('Error loading statistics:', error);
-            // แสดงค่าเริ่มต้น
-            totalFacultiesSpan.textContent = '5';
-            activeAdvisorsSpan.textContent = '0';
-            pendingApprovalsSpan.textContent = '0';
-            emailsSentSpan.textContent = '0';
-        }
-    }
-    
-    /**
-     * โหลดรายการอาจารย์ที่ปรึกษา (ใช้ข้อมูล mock)
-     */
-    async function loadAdvisors() {
-        try {
-            showLoadingInTable();
-            
-            // Mock data สำหรับการทดสอบ
-            // ในการใช้งานจริงจะเรียก API: /api/admin/faculty-advisors
-            advisors = [
-                {
-                    id: 1,
-                    advisor_name: 'ผศ.ดร.สมชาย วิชาการ',
-                    advisor_email: 'somchai.business@nbu.ac.th',
-                    advisor_phone: '02-555-0001',
-                    department: 'ภาควิชาการจัดการ',
-                    faculty_id: 1,
-                    faculty_name: 'คณะบริหารธุรกิจ',
-                    is_active: true,
-                    created_at: '2025-01-15T10:00:00Z'
-                },
-                {
-                    id: 2,
-                    advisor_name: 'รศ.ดร.สมหญิง เทคโนโลยี',
-                    advisor_email: 'somying.engineer@nbu.ac.th',
-                    advisor_phone: '02-555-0002',
-                    department: 'ภาควิชาวิศวกรรมคอมพิวเตอร์',
-                    faculty_id: 2,
-                    faculty_name: 'คณะวิศวกรรมศาสตร์',
-                    is_active: true,
-                    created_at: '2025-01-15T10:00:00Z'
-                },
-                {
-                    id: 3,
-                    advisor_name: 'ผศ.ดร.วิรัตน์ กฎหมาย',
-                    advisor_email: 'wirat.law@nbu.ac.th',
-                    advisor_phone: '02-555-0003',
-                    department: 'ภาควิชานิติศาสตร์',
-                    faculty_id: 3,
-                    faculty_name: 'คณะนิติศาสตร์',
-                    is_active: false,
-                    created_at: '2025-01-15T10:00:00Z'
-                },
-                {
-                    id: 4,
-                    advisor_name: 'อ.ดร.นิภา ศิลปกรรม',
-                    advisor_email: 'nipha.liberal@nbu.ac.th',
-                    advisor_phone: '02-555-0004',
-                    department: 'ภาควิชาภาษาไทย',
-                    faculty_id: 4,
-                    faculty_name: 'คณะศิลปกรรมศาสตร์',
-                    is_active: true,
-                    created_at: '2025-01-15T10:00:00Z'
-                },
-                {
-                    id: 5,
-                    advisor_name: 'ผศ.ดร.ประชาต วิทยาศาสตร์',
-                    advisor_email: 'prachat.science@nbu.ac.th',
-                    advisor_phone: '02-555-0005',
-                    department: 'ภาควิชาวิทยาการคอมพิวเตอร์',
-                    faculty_id: 5,
-                    faculty_name: 'คณะวิทยาศาสตร์และเทคโนโลยี',
-                    is_active: true,
-                    created_at: '2025-01-15T10:00:00Z'
-                }
-            ];
-            
-            renderAdvisorsTable();
-            
-        } catch (error) {
-            console.error('Error loading advisors:', error);
-            showErrorInTable('เกิดข้อผิดพลาดในการโหลดข้อมูลอาจารย์ที่ปรึกษา');
-        }
-    }
-    
-    /**
-     * แสดงข้อมูลในตารางอาจารย์ที่ปรึกษา
-     */
-    function renderAdvisorsTable() {
-        if (!advisors || advisors.length === 0) {
-            showEmptyTable();
-            return;
+        } else {
+            console.error('Failed to load statistics');
         }
         
-        // กรองข้อมูล
-        let filteredAdvisors = advisors;
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+        // แสดงค่าเริ่มต้น
+        totalFacultiesSpan.textContent = '5';
+        activeAdvisorsSpan.textContent = '0';
+        pendingApprovalsSpan.textContent = '0';
+        emailsSentSpan.textContent = '0';
+    }
+}
+
+    
+  async function loadAdvisors() {
+    try {
+        showLoadingInTable();
+        
+        // สร้าง URL พร้อม query parameters
+        const url = new URL('/api/admin/faculty-advisors', window.location.origin);
+        url.searchParams.append('page', currentPage.toString());
+        url.searchParams.append('limit', '10');
         
         if (currentFilter) {
-            filteredAdvisors = filteredAdvisors.filter(advisor => 
-                advisor.faculty_id == currentFilter
-            );
+            url.searchParams.append('faculty_id', currentFilter);
         }
         
         if (currentSearch) {
-            const searchLower = currentSearch.toLowerCase();
-            filteredAdvisors = filteredAdvisors.filter(advisor => 
-                advisor.advisor_name.toLowerCase().includes(searchLower) ||
-                advisor.advisor_email.toLowerCase().includes(searchLower) ||
-                advisor.department.toLowerCase().includes(searchLower)
-            );
+            url.searchParams.append('search', currentSearch);
         }
         
-        // Pagination
-        const itemsPerPage = 10;
-        const totalPages = Math.ceil(filteredAdvisors.length / itemsPerPage);
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const pageAdvisors = filteredAdvisors.slice(startIndex, endIndex);
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
         
-        // สร้าง HTML
-        const tableHtml = pageAdvisors.map(advisor => {
-            const statusClass = advisor.is_active ? 'status-active' : 'status-inactive';
-            const statusText = advisor.is_active ? 'ใช้งาน' : 'ระงับ';
+        if (response.ok) {
+            const data = await response.json();
+            advisors = data.advisors || [];
             
-            return `
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <i class="bi bi-person-circle fs-4 text-primary"></i>
-                            </div>
-                            <div>
-                                <div class="fw-semibold">${escapeHtml(advisor.advisor_name)}</div>
-                                <small class="text-muted">ID: ${advisor.id}</small>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="badge bg-light text-dark border">
-                            ${escapeHtml(advisor.faculty_name)}
-                        </span>
-                    </td>
-                    <td>
-                        <div>${escapeHtml(advisor.department || '-')}</div>
-                    </td>
-                    <td>
-                        <div>
-                            <i class="bi bi-envelope me-1"></i>
-                            <a href="mailto:${advisor.advisor_email}" class="text-decoration-none">
-                                ${escapeHtml(advisor.advisor_email)}
-                            </a>
-                        </div>
-                    </td>
-                    <td>
-                        <div>
-                            <i class="bi bi-telephone me-1"></i>
-                            ${escapeHtml(advisor.advisor_phone || '-')}
-                        </div>
-                    </td>
-                    <td>
-                        <span class="${statusClass}">${statusText}</span>
-                    </td>
-                    <td>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <button class="btn btn-outline-warning btn-action" onclick="editAdvisor(${advisor.id})"
-                                    title="แก้ไขข้อมูล">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-outline-info btn-action" onclick="sendTestEmail('${advisor.advisor_email}')"
-                                    title="ส่งอีเมลทดสอบ">
-                                <i class="bi bi-envelope"></i>
-                            </button>
-                            <button class="btn btn-outline-danger btn-action" onclick="deleteAdvisor(${advisor.id})"
-                                    title="ลบอาจารย์">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+            // อัปเดตข้อมูล pagination
+            if (data.pagination) {
+                updateTableInfo(
+                    data.pagination.totalItems,
+                    ((data.pagination.currentPage - 1) * data.pagination.itemsPerPage) + 1,
+                    Math.min(data.pagination.currentPage * data.pagination.itemsPerPage, data.pagination.totalItems)
+                );
+                updatePagination(data.pagination.currentPage, data.pagination.totalPages);
+            }
+            
+            renderAdvisorsTable();
+            
+        } else {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to load advisors');
+        }
         
-        advisorsTable.innerHTML = tableHtml;
+    } catch (error) {
+        console.error('Error loading advisors:', error);
+        showErrorInTable('เกิดข้อผิดพลาดในการโหลดข้อมูลอาจารย์ที่ปรึกษา: ' + error.message);
+    }
+}
+
+  /**
+ * แสดงข้อมูลในตารางอาจารย์ที่ปรึกษา (ใช้ข้อมูลจาก API)
+ */
+function renderAdvisorsTable() {
+    if (!advisors || advisors.length === 0) {
+        showEmptyTable();
+        return;
+    }
+    
+    // สร้าง HTML (ไม่ต้องกรองข้อมูลเพราะ API กรองให้แล้ว)
+    const tableHtml = advisors.map(advisor => {
+        const statusClass = advisor.is_active ? 'status-active' : 'status-inactive';
+        const statusText = advisor.is_active ? 'ใช้งาน' : 'ระงับ';
+        
+        return `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="bi bi-person-circle fs-4 text-primary"></i>
+                        </div>
+                        <div>
+                            <div class="fw-semibold">${escapeHtml(advisor.advisor_name)}</div>
+                            <small class="text-muted">ID: ${advisor.id}</small>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-light text-dark border">
+                        ${escapeHtml(advisor.faculty_name_th)}
+                    </span>
+                </td>
+                <td>
+                    <div>${escapeHtml(advisor.department || '-')}</div>
+                </td>
+                <td>
+                    <div>
+                        <i class="bi bi-envelope me-1"></i>
+                        <a href="mailto:${advisor.advisor_email}" class="text-decoration-none">
+                            ${escapeHtml(advisor.advisor_email)}
+                        </a>
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        <i class="bi bi-telephone me-1"></i>
+                        ${escapeHtml(advisor.advisor_phone || '-')}
+                    </div>
+                </td>
+                <td>
+                    <span class="${statusClass}">${statusText}</span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-warning btn-action" onclick="editAdvisor(${advisor.id})"
+                                title="แก้ไขข้อมูล">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-info btn-action" onclick="sendTestEmail('${advisor.advisor_email}')"
+                                title="ส่งอีเมลทดสอบ">
+                            <i class="bi bi-envelope"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-action" onclick="deleteAdvisor(${advisor.id})"
+                                title="ลบอาจารย์">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    advisorsTable.innerHTML = tableHtml;
+}
         
         // อัปเดตข้อมูลตาราง
         updateTableInfo(filteredAdvisors.length, startIndex + 1, Math.min(endIndex, filteredAdvisors.length));
@@ -733,63 +677,65 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * บันทึกอาจารย์ใหม่
      */
-    async function saveAdvisor() {
-        try {
-            const formData = {
-                advisor_name: document.getElementById('advisor-name').value.trim(),
-                advisor_email: document.getElementById('advisor-email').value.trim(),
-                faculty_id: parseInt(document.getElementById('advisor-faculty').value),
-                advisor_phone: document.getElementById('advisor-phone').value.trim(),
-                department: document.getElementById('advisor-department').value.trim(),
-                is_active: document.getElementById('advisor-active').checked
-            };
-            
-            // Validation
-            if (!formData.advisor_name || !formData.advisor_email || !formData.faculty_id) {
-                showAlert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน', 'warning');
-                return;
-            }
-            
-            if (!isValidEmail(formData.advisor_email)) {
-                showAlert('รูปแบบอีเมลไม่ถูกต้อง', 'warning');
-                return;
-            }
-            
-            // Check duplicate email
-            if (advisors.some(a => a.advisor_email === formData.advisor_email)) {
-                showAlert('อีเมลนี้มีการใช้งานแล้ว', 'warning');
-                return;
-            }
-            
-            showLoading('กำลังบันทึกข้อมูล...');
-            
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // เพิ่มข้อมูลใหม่ (mock)
-            const newAdvisor = {
-                id: Math.max(...advisors.map(a => a.id)) + 1,
-                ...formData,
-                faculty_name: faculties.find(f => f.id === formData.faculty_id)?.name_th || '',
-                created_at: new Date().toISOString()
-            };
-            
-            advisors.unshift(newAdvisor);
-            
+  /**
+ * บันทึกอาจารย์ใหม่ใน Database
+ */
+async function saveAdvisor() {
+    try {
+        const formData = {
+            advisor_name: document.getElementById('advisor-name').value.trim(),
+            advisor_email: document.getElementById('advisor-email').value.trim(),
+            faculty_id: parseInt(document.getElementById('advisor-faculty').value),
+            advisor_phone: document.getElementById('advisor-phone').value.trim(),
+            department: document.getElementById('advisor-department').value.trim(),
+            is_active: document.getElementById('advisor-active').checked
+        };
+        
+        // Validation
+        if (!formData.advisor_name || !formData.advisor_email || !formData.faculty_id) {
+            showAlert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน', 'warning');
+            return;
+        }
+        
+        if (!isValidEmail(formData.advisor_email)) {
+            showAlert('รูปแบบอีเมลไม่ถูกต้อง', 'warning');
+            return;
+        }
+        
+        showLoading('กำลังบันทึกข้อมูล...');
+        
+        const response = await fetch('/api/admin/faculty-advisors', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
             addAdvisorModal.hide();
             addAdvisorForm.reset();
-            renderAdvisorsTable();
+            
+            // รีโหลดข้อมูล
+            await loadAdvisors();
             await loadStatistics();
             
-            showAlert('เพิ่มอาจารย์ที่ปรึกษาสำเร็จ', 'success');
+            showAlert(result.message || 'เพิ่มอาจารย์ที่ปรึกษาสำเร็จ', 'success');
             
-        } catch (error) {
-            console.error('Error saving advisor:', error);
-            showAlert('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'danger');
-        } finally {
-            hideLoading();
+        } else {
+            throw new Error(result.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         }
+        
+    } catch (error) {
+        console.error('Error saving advisor:', error);
+        showAlert(error.message, 'danger');
+    } finally {
+        hideLoading();
     }
+}
     
     /**
      * อัปเดตข้อมูลอาจารย์
