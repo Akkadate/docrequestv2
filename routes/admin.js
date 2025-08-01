@@ -538,6 +538,412 @@ router.get('/request/:id', authenticateJWT, isAdmin, async (req, res) => {
   
   return router;
 };
+ /**
+   * ดึงรายการอาจารย์ที่ปรึกษาทั้งหมด
+   * GET /api/admin/faculty-advisors
+   */
+  router.get('/faculty-advisors', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+      const { faculty_id, search, page = 1, limit = 10 } = req.query;
+      
+      let whereClause = 'WHERE 1=1';
+      let queryParams = [];
+      let paramIndex = 1;
+      
+      // กรองตามคณะ
+      if (faculty_id) {
+        whereClause += ` AND fa.faculty_id = $${paramIndex}`;
+        queryParams.push(faculty_id);
+        paramIndex++;
+      }
+      
+      // ค้นหา
+      if (search) {
+        whereClause += ` AND (
+          fa.advisor_name ILIKE $${paramIndex} OR
+          fa.advisor_email ILIKE $${paramIndex} OR
+          fa.department ILIKE $${paramIndex}
+        )`;
+        queryParams.push(`%${search}%`);
+        paramIndex++;
+      }
+      
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+      
+      const query = `
+        SELECT 
+          fa.*,
+          f.name_th as faculty_name_th,
+          f.name_en as faculty_name_en,
+          u.id as user_id,
+          u.full_name as user_full_name
+        FROM faculty_advisors fa
+        JOIN faculties f ON fa.faculty_id = f.id
+        LEFT JOIN users u ON u.email = fa.advisor_email AND u.is_advisor = true
+        ${whereClause}
+        ORDER BY fa.created_at DESC
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      `;
+      
+      queryParams.push(parseInt(limit), offset);
+      
+      const result = await pool.query(query, queryParams);
+      
+      // นับจำนวนรวม
+      const countQuery = `
+        SELECT COUNT(*) 
+        FROM faculty_advisors fa
+        JOIN faculties f ON fa.faculty_id = f.id
+        ${whereClause}
+      `;
+      const countResult = await pool.query(countQuery, queryParams.slice(0, -2));
+      const totalItems = parseInt(countResult.rows[0].count);
+      
+      res.status(200).json({
+        advisors: result.rows,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(totalItems / parseInt(limit)),
+          totalItems: totalItems,
+          itemsPerPage: parseInt(limit)
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error fetching faculty advisors:', error);
+      res.status(500).json({ 
+        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลอาจารย์ที่ปรึกษา' 
+      });
+    }
+  });
+
+  /**
+   * เพิ่มอาจารย์ที่ปรึกษาใหม่
+   * POST /api/admin/faculty-advisors
+   */
+  router.post('/faculty-advisors', authenticateJWT, isAdmin, async (req, res) => {
+    const client = await pool.connect();
+    
+    try {
+      const { 
+        advisor_name, 
+        advisor_email, 
+        faculty_id, 
+        advisor_phone, 
+        department, 
+        is_active = true 
+      } = req.body;
+      
+      // Validation
+      if (!advisor_name || !advisor_email || !faculty_id) {
+        return res.status(400).json({ 
+          message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน',
+          required: ['advisor_name', 'advisor_email', 'faculty_id']
+        });
+      }
+      
+      // ตรวจสอบรูปแบบอีเมล
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(advisor_email)) {
+        return res.status(400).json({ message: 'รูปแบบอีเมลไม่ถูกต้อง' });
+      }
+      
+      await client.query('BEGIN');
+      
+      // ตรวจสอบอีเมลซ้ำ
+      const duplicateCheck = await client.query(
+        'SELECT id FROM faculty_advisors WHERE advisor_email = $1',
+        [advisor_email]
+      );
+      
+      if (duplicateCheck.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ message: 'อีเมลนี้มีการใช้งานแล้ว' });
+      }
+      
+      // ตรวจสอบคณะมีอยู่จริง
+      const facultyCheck = await client.query(
+        'SELECT id FROM faculties WHERE id = $1',
+        [faculty_id]
+      );
+      
+      if (facultyCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ message: 'ไม่พบข้อมูลคณะที่ระบุ' });
+      }
+      
+      // เพิ่มอาจารย์ที่ปรึกษา
+      const insertQuery = `
+        INSERT INTO faculty_advisors 
+        (advisor_name, advisor_email, faculty_id, advisor_phone, department, is_active, created_by)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+      `;
+      
+      const insertResult = await client.query(insertQuery, [
+        advisor_name,
+        advisor_email,
+        faculty_id,
+        advisor_phone || null,
+        department || null,
+        is_active,
+        req.user.id
+      ]);
+      
+      const newAdvisor = insertResult.rows[0];
+      
+      // ดึงข้อมูลคณะ
+      const facultyResult = await client.query(
+        'SELECT name_th, name_en FROM faculties WHERE id = $1',
+        [faculty_id]
+      );
+      
+      await client.query('COMMIT');
+      
+      const response = {
+        ...newAdvisor,
+        faculty_name_th: facultyResult.rows[0]?.name_th,
+        faculty_name_en: facultyResult.rows[0]?.name_en
+      };
+      
+      res.status(201).json({
+        message: 'เพิ่มอาจารย์ที่ปรึกษาสำเร็จ',
+        advisor: response
+      });
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error creating faculty advisor:', error);
+      res.status(500).json({ 
+        message: 'เกิดข้อผิดพลาดในการเพิ่มอาจารย์ที่ปรึกษา' 
+      });
+    } finally {
+      client.release();
+    }
+  });
+
+  /**
+   * อัปเดตข้อมูลอาจารย์ที่ปรึกษา
+   * PUT /api/admin/faculty-advisors/:id
+   */
+  router.put('/faculty-advisors/:id', authenticateJWT, isAdmin, async (req, res) => {
+    const client = await pool.connect();
+    
+    try {
+      const { id } = req.params;
+      const { 
+        advisor_name, 
+        advisor_email, 
+        faculty_id, 
+        advisor_phone, 
+        department, 
+        is_active 
+      } = req.body;
+      
+      // Validation
+      if (!advisor_name || !advisor_email || !faculty_id) {
+        return res.status(400).json({ 
+          message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน' 
+        });
+      }
+      
+      await client.query('BEGIN');
+      
+      // ตรวจสอบอาจารย์มีอยู่จริง
+      const advisorCheck = await client.query(
+        'SELECT id FROM faculty_advisors WHERE id = $1',
+        [id]
+      );
+      
+      if (advisorCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ message: 'ไม่พบอาจารย์ที่ปรึกษา' });
+      }
+      
+      // ตรวจสอบอีเมลซ้ำ (ยกเว้นตัวเอง)
+      const duplicateCheck = await client.query(
+        'SELECT id FROM faculty_advisors WHERE advisor_email = $1 AND id != $2',
+        [advisor_email, id]
+      );
+      
+      if (duplicateCheck.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ message: 'อีเมลนี้มีการใช้งานแล้ว' });
+      }
+      
+      // อัปเดตข้อมูล
+      const updateQuery = `
+        UPDATE faculty_advisors 
+        SET 
+          advisor_name = $1,
+          advisor_email = $2,
+          faculty_id = $3,
+          advisor_phone = $4,
+          department = $5,
+          is_active = $6,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $7
+        RETURNING *
+      `;
+      
+      const updateResult = await client.query(updateQuery, [
+        advisor_name,
+        advisor_email,
+        faculty_id,
+        advisor_phone || null,
+        department || null,
+        is_active,
+        id
+      ]);
+      
+      // ดึงข้อมูลคณะ
+      const facultyResult = await client.query(
+        'SELECT name_th, name_en FROM faculties WHERE id = $1',
+        [faculty_id]
+      );
+      
+      await client.query('COMMIT');
+      
+      const response = {
+        ...updateResult.rows[0],
+        faculty_name_th: facultyResult.rows[0]?.name_th,
+        faculty_name_en: facultyResult.rows[0]?.name_en
+      };
+      
+      res.status(200).json({
+        message: 'อัปเดตข้อมูลอาจารย์ที่ปรึกษาสำเร็จ',
+        advisor: response
+      });
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error updating faculty advisor:', error);
+      res.status(500).json({ 
+        message: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล' 
+      });
+    } finally {
+      client.release();
+    }
+  });
+
+  /**
+   * ลบอาจารย์ที่ปรึกษา
+   * DELETE /api/admin/faculty-advisors/:id
+   */
+  router.delete('/faculty-advisors/:id', authenticateJWT, isAdmin, async (req, res) => {
+    const client = await pool.connect();
+    
+    try {
+      const { id } = req.params;
+      
+      await client.query('BEGIN');
+      
+      // ตรวจสอบอาจารย์มีอยู่จริง
+      const advisorCheck = await client.query(
+        'SELECT advisor_name, advisor_email FROM faculty_advisors WHERE id = $1',
+        [id]
+      );
+      
+      if (advisorCheck.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ message: 'ไม่พบอาจารย์ที่ปรึกษา' });
+      }
+      
+      const advisor = advisorCheck.rows[0];
+      
+      // ตรวจสอบว่ามีคำขออนุมัติที่ยังไม่เสร็จสิ้นหรือไม่
+      const pendingCheck = await client.query(
+        'SELECT COUNT(*) FROM approval_requests WHERE advisor_id = $1 AND approval_status = $2',
+        [id, 'waiting_approval']
+      );
+      
+      const pendingCount = parseInt(pendingCheck.rows[0].count);
+      
+      if (pendingCount > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ 
+          message: `ไม่สามารถลบอาจารย์ได้ เนื่องจากมีคำขออนุมัติ ${pendingCount} รายการที่รอการพิจารณา`,
+          pendingCount: pendingCount
+        });
+      }
+      
+      // ลบอาจารย์
+      await client.query('DELETE FROM faculty_advisors WHERE id = $1', [id]);
+      
+      await client.query('COMMIT');
+      
+      console.log(`Faculty advisor deleted: ${advisor.advisor_name} (${advisor.advisor_email})`);
+      
+      res.status(200).json({
+        message: 'ลบอาจารย์ที่ปรึกษาสำเร็จ',
+        deletedAdvisor: advisor
+      });
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error deleting faculty advisor:', error);
+      res.status(500).json({ 
+        message: 'เกิดข้อผิดพลาดในการลบอาจารย์ที่ปรึกษา' 
+      });
+    } finally {
+      client.release();
+    }
+  });
+
+  /**
+   * ดึงสถิติอาจารย์ที่ปรึกษา
+   * GET /api/admin/faculty-advisors/stats
+   */
+  router.get('/faculty-advisors/stats', authenticateJWT, isAdmin, async (req, res) => {
+    try {
+      // จำนวนอาจารย์ทั้งหมด
+      const totalQuery = 'SELECT COUNT(*) FROM faculty_advisors';
+      const totalResult = await pool.query(totalQuery);
+      
+      // จำนวนอาจารย์ที่ใช้งาน
+      const activeQuery = 'SELECT COUNT(*) FROM faculty_advisors WHERE is_active = true';
+      const activeResult = await pool.query(activeQuery);
+      
+      // สถิติการอนุมัติ
+      const approvalStatsQuery = `
+        SELECT 
+          COUNT(*) as total_requests,
+          COUNT(CASE WHEN approval_status = 'waiting_approval' THEN 1 END) as pending,
+          COUNT(CASE WHEN approval_status = 'approved_by_advisor' THEN 1 END) as approved,
+          COUNT(CASE WHEN approval_status = 'rejected_by_advisor' THEN 1 END) as rejected
+        FROM approval_requests
+        WHERE created_at >= CURRENT_DATE
+      `;
+      const approvalStatsResult = await pool.query(approvalStatsQuery);
+      
+      // จำนวนอีเมลที่ส่งวันนี้
+      const emailsQuery = `
+        SELECT COUNT(*) 
+        FROM approval_requests 
+        WHERE email_sent_at >= CURRENT_DATE
+      `;
+      const emailsResult = await pool.query(emailsQuery);
+      
+      res.status(200).json({
+        total: parseInt(totalResult.rows[0].count),
+        active: parseInt(activeResult.rows[0].count),
+        inactive: parseInt(totalResult.rows[0].count) - parseInt(activeResult.rows[0].count),
+        todayStats: {
+          ...approvalStatsResult.rows[0],
+          emailsSent: parseInt(emailsResult.rows[0].count)
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error fetching advisor stats:', error);
+      res.status(500).json({ 
+        message: 'เกิดข้อผิดพลาดในการดึงสถิติ' 
+      });
+    }
+  });
+
+  return router;
+};
 
 // ฟังก์ชันตรวจสอบรูปแบบวันที่
 function isValidDate(dateString) {
